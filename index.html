@@ -1,0 +1,2969 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sitzplan – Zufallsverteilung</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#2563eb">
+<link rel="icon" type="image/png" href="icons/favicon-48.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Sitzplan">
+<style id="pageStyle">@page { size: A4 portrait; margin: 10mm; }</style>
+<style>
+  :root {
+    --bg: #f6f5f1; --panel: #ffffff; --ink: #1f2937; --muted: #6b7280;
+    --line: #1e3a8a; --desk: #fffdf7; --accent: #2563eb; --empty: #b8bbc6; --danger: #dc2626;
+    --obj: #e7e5e0; --obj-line: #78716c; --ok: #15803d;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--bg); color: var(--ink); }
+  .wrap { max-width: 1320px; margin: 0 auto; padding: 16px; }
+  h1 { font-size: 1.4rem; margin: 4px 0 14px; }
+
+  .layout { display: grid; grid-template-columns: 380px 1fr; gap: 16px; align-items: start; }
+  /* rechter Bereich mit dem Plan bleibt stehen, nur die linke Spalte scrollt */
+  main { position: sticky; top: 12px; max-height: calc(100vh - 24px); display: flex; flex-direction: column; min-width: 0; }
+  main .room { width: min(100%, max(320px, calc(100vh - 175px))); margin: 0 auto; flex: none; }
+  .sidebar { display: flex; flex-direction: column; gap: 10px; }
+  details.card { background: var(--panel); border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+  details.card > summary { list-style: none; cursor: pointer; padding: 12px 14px; font-size: .8rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+  details.card > summary::-webkit-details-marker { display: none; }
+  details.card > summary::after { content: "▸"; margin-left: auto; transition: transform .15s; }
+  details.card[open] > summary::after { transform: rotate(90deg); }
+  details.card > summary .badge { text-transform: none; letter-spacing: 0; font-weight: 600; color: var(--accent); }
+  .cbody { padding: 0 14px 14px; display: flex; flex-direction: column; gap: 8px; }
+
+  textarea, input[type=text], select { font: inherit; font-size: .9rem; padding: 6px 8px; border: 1px solid #d1d5db; border-radius: 7px; background: #fff; color: var(--ink); }
+  textarea { width: 100%; min-height: 90px; resize: vertical; }
+  button { font: inherit; font-weight: 600; font-size: .9rem; padding: 7px 12px; border-radius: 8px; border: 1px solid var(--accent); cursor: pointer; background: #fff; color: var(--accent); }
+  button:disabled { opacity: .4; cursor: default; }
+  .primary { background: var(--accent); color: #fff; }
+  .danger { border-color: var(--danger); color: var(--danger); }
+  .row { display: flex; gap: 6px; align-items: center; } .row.fill > * { flex: 1; }
+  .hint { margin: 0; font-size: .8rem; color: var(--muted); line-height: 1.4; }
+  label.chk { display: flex; align-items: center; gap: 6px; font-size: .9rem; cursor: pointer; }
+
+  /* Schülerliste */
+  .slist { max-height: 340px; overflow: auto; border: 1px solid #eceef2; border-radius: 8px; }
+  .slist:empty { display: none; }
+  .srow { display: grid; grid-template-columns: 36px 1fr 1fr 44px 22px 22px 26px 22px; gap: 4px; align-items: center; padding: 4px; border-bottom: 1px solid #f1f2f5; }
+  .srow:last-child { border-bottom: none; }
+  .srow input[type=text], .srow select { padding: 3px 4px; font-size: .82rem; min-width: 0; width: 100%; }
+  .srow .fr { display: flex; align-items: center; justify-content: center; cursor: pointer; }
+  .sw { width: 100%; height: 26px; padding: 0; border: 1px solid #d1d5db; border-radius: 6px; background: #fff; display: flex; align-items: center; justify-content: center; }
+  .sw i { width: 15px; height: 15px; border-radius: 50%; background: var(--sw); }
+  .sw.none i { background: transparent; border: 2px dashed #b8bbc6; width: 13px; height: 13px; }
+  #palette { position: fixed; z-index: 2000; display: none; grid-template-columns: repeat(5, 28px); gap: 6px; background: #fff; padding: 9px; border-radius: 10px; box-shadow: 0 6px 22px rgba(0,0,0,.22); }
+  #palette.show { display: grid; }
+  #palette button { width: 28px; height: 28px; padding: 0; border-radius: 50%; border: 2px solid #fff; background: var(--sw); box-shadow: 0 0 0 1px #d1d5db; }
+  #palette button.cur { box-shadow: 0 0 0 3px var(--ink); }
+  #palette button.none { background: #fff; border: 2px dashed #b8bbc6; box-shadow: none; }
+  #palette .more { grid-column: 1 / -1; width: auto; height: auto; border-radius: 7px; border: 1px solid var(--accent); background: #fff; box-shadow: none; padding: 5px 8px; font-size: .82rem; }
+  #palette .sep { grid-column: 1 / -1; font-size: .72rem; color: var(--muted); margin-top: 2px; }
+  #palette .pn { grid-column: 1 / -1; font-size: .78rem; color: var(--muted); text-align: center; min-height: 1.1em; }
+  .srow .nb { padding: 0; border: none; background: none; font-size: .85rem; opacity: .3; filter: grayscale(1); }
+  .srow .nb.has { opacity: 1; filter: none; }
+  .srow.abs input[type=text] { color: var(--muted); text-decoration: line-through; }
+  .srow .x { padding: 2px 0; border: none; color: var(--muted); font-size: .9rem; }
+  .srow.head { font-size: .7rem; color: var(--muted); font-weight: 700; position: sticky; top: 0; background: #fafafa; z-index: 1; }
+
+  .rules { display: flex; flex-direction: column; gap: 4px; }
+  .rule { display: flex; align-items: center; gap: 6px; font-size: .85rem; padding: 5px 8px; border-radius: 7px; background: #f5f6f8; }
+  .rule .tag { font-size: .72rem; font-weight: 700; padding: 1px 6px; border-radius: 999px; white-space: nowrap; }
+  .rule .tag.apart { background: #fee2e2; color: #b91c1c; } .rule .tag.together { background: #dcfce7; color: #15803d; }
+  .rule button { margin-left: auto; border: none; padding: 0 4px; color: var(--muted); }
+
+  .glist { display: flex; flex-direction: column; gap: 4px; }
+  .grow { display: flex; align-items: center; gap: 6px; font-size: .85rem; }
+  .grow .dot { width: 14px; height: 14px; border-radius: 50%; flex: none; }
+  .grow input { flex: 1; padding: 3px 6px; font-size: .85rem; }
+
+  /* Werkzeugleiste über dem Raum */
+  .topbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 8px; }
+  .topbar + .topbar { margin-top: -2px; }
+  .topbar > button, .topbar .modes button, .topbar .tgroup button { padding: 6px 10px; font-size: .88rem; }
+  .topbar .tgroup { display: flex; gap: 8px; margin-left: auto; }
+  .topbar .spacer { flex: 1; }
+  .modes { display: flex; background: #e9ebf0; border-radius: 10px; padding: 3px; gap: 3px; }
+  .modes button { border: none; background: transparent; color: var(--muted); padding: 7px 10px; }
+  .modes button.active { background: #fff; color: var(--accent); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+  .modes button:disabled { opacity: .35; }
+  .toggle.on { background: #1e3a8a; border-color: #1e3a8a; color: #fff; }
+  .result { margin-top: 8px; font-size: .9rem; min-height: 1.3em; }
+  .result.ok { color: var(--ok); } .result.warn { color: #b45309; }
+  .mode-room .only-students, .mode-students .only-room { display: none; }
+  .sub { font-size: .78rem; font-weight: 700; color: var(--muted); margin-top: 4px; }
+  .info { font-size: .85rem; color: var(--muted); }
+  .picklog { display: flex; flex-wrap: wrap; gap: 4px; }
+  .picklog span { font-size: .8rem; background: #eef2ff; color: #3730a3; padding: 2px 8px; border-radius: 999px; }
+  .picklog span:first-child { background: #3730a3; color: #fff; }
+  .teams { display: flex; flex-direction: column; gap: 4px; }
+  .team { font-size: .85rem; padding: 5px 8px; border-left: 4px solid var(--tc); background: #f8fafc; border-radius: 6px; }
+  .team b { color: var(--tc); margin-right: 6px; }
+  .tm { display: inline-block; cursor: grab; user-select: none; touch-action: none; padding: 1px 7px; margin: 2px 3px 2px 0; border-radius: 999px; background: #fff; border: 1px solid #e5e7eb; }
+  .tm:hover { border-color: var(--tc); }
+  .tm.dragsrc { opacity: .35; }
+  .tm.tdrop { background: #dcfce7; border-color: #16a34a; }
+  .team.tdrop, .tcard.tdrop { outline: 3px dashed #16a34a; outline-offset: 2px; }
+  .tcard .tm { display: block; font-size: 1em; border: none; background: none; padding: 2px 4px; margin: 0; border-radius: 6px; }
+  .tcard .tm:hover { background: #f1f5f9; }
+  .tcard .tm.tdrop { background: #dcfce7; }
+  .tcard h3 small { font-weight: 600; opacity: .7; }
+  .seat .tb { position: absolute; left: 50%; bottom: 2px; transform: translateX(-50%); font-size: clamp(9px, 1.35cqw, 15px); font-weight: 800; color: #fff !important; background: var(--cfg); padding: 0 .45em; border-radius: 999px; line-height: 1.35; box-shadow: 0 1px 2px rgba(0,0,0,.25); }
+  .seat.team { padding-bottom: clamp(9px, 1.6cqw, 17px); }
+  .seat.team::after { width: 8px; }
+  .gcol { display: flex; flex-direction: column; gap: 6px; background: #f8fafc; border-radius: 8px; padding: 8px; }
+  .gcol .row { font-size: .82rem; gap: 5px; flex-wrap: wrap; }
+  .gcol .legend span { display: inline-flex; align-items: center; gap: 4px; margin-right: 8px; }
+  .gcol .legend i { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+  .plans, .duties { display: flex; flex-direction: column; gap: 6px; }
+  .plan { display: flex; align-items: center; gap: 4px; font-size: .85rem; padding: 6px 8px; background: #f5f6f8; border-radius: 7px; }
+  .plan > div { flex: 1; min-width: 0; }
+  .plan.on { outline: 2px solid var(--accent); }
+  .plan button, .duty .x { padding: 2px 6px; font-size: .85rem; }
+  .duty { background: #f5f6f8; border-radius: 7px; padding: 6px; display: flex; flex-direction: column; gap: 4px; }
+  .duty .row input { flex: 1; min-width: 0; padding: 3px 6px; font-size: .85rem; font-weight: 600; }
+  .duty select { font-size: .82rem; padding: 2px 4px; }
+  .duty .row.wrap { flex-wrap: wrap; } .duty .row.wrap select { flex: 1 1 45%; min-width: 0; }
+  .duty .x { border: none; color: var(--muted); }
+  .duty .pin { border: none; padding: 2px 5px; opacity: .35; filter: grayscale(1); background: none; }
+  .duty .pin.on { opacity: 1; filter: none; }
+  .duty.fixed { background: #fef9c3; box-shadow: inset 3px 0 0 #ca8a04; }
+  .chk.small { font-size: .8rem; }
+
+  /* Raum */
+  .room { position: relative; width: 100%; aspect-ratio: 1 / 1; background: var(--panel); border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.08); container-type: inline-size; overflow: hidden; touch-action: none; user-select: none; }
+  .stage { position: absolute; left: 0; top: 0; width: 100%; height: 100%; container-type: inline-size; }
+
+  /* Präsentationsmodus: Plan füllt den Bildschirm, leere Flächen werden abgeschnitten */
+  body.present { overflow: hidden; background: #fff; }
+  body.present .wrap { max-width: none; padding: 0; }
+  body.present h1, body.present .sidebar, body.present .topbar, body.present .result, body.present main > .hint, body.present .print-header { display: none !important; }
+  body.present .layout { display: block; }
+  body.present main { position: fixed; inset: 0; max-height: none; z-index: 50; background: #fff; }
+  body.present main .room, body.present .room { width: 100vw; height: 100vh; aspect-ratio: auto; border-radius: 0; box-shadow: none; margin: 0; }
+  #presentBar { display: none; position: fixed; top: 10px; right: 10px; z-index: 60; gap: 4px; background: rgba(255,255,255,.92); padding: 5px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,.15); opacity: .35; transition: opacity .2s; }
+  #presentBar:hover { opacity: 1; }
+  body.present #presentBar { display: flex; }
+  #presentBar button { padding: 5px 9px; }
+  body.present #dutyBox { font-size: clamp(14px, 1.6vw, 28px); max-width: none; }
+  body.present #timerBox { right: auto; }
+  body.present #pickBanner { transform: none; justify-content: center; padding: 10px 14px; }
+  body.present #pickBanner .pn { font-size: clamp(22px, 2.6vw, 52px); white-space: nowrap; }
+  body.present #timerBox, body.present #pickBanner, body.present #teamsPanel, body.present #dutyBox { box-sizing: border-box; }
+  #teamsPanel { position: absolute; z-index: 6; background: rgba(255,255,255,.96); border: 1.5px solid #c7cbd4; border-radius: 10px; padding: 8px 12px; font-size: clamp(13px, 1.35vw, 24px); box-shadow: 0 1px 4px rgba(0,0,0,.08); max-width: 46vw; }
+  #teamsPanel[hidden] { display: none; }
+  #teamsPanel > b { display: block; color: var(--line); margin-bottom: 4px; }
+  #teamsPanel .tgrid2 { display: grid; gap: 4px 14px; }
+  #teamsPanel .team { font-size: 1em; padding: 3px 8px; }
+  #teamsPanel .tm { font-size: .9em; padding: 0 6px; margin: 1px 2px 1px 0; }
+  #teamsPanel .empty-hint { font-size: .8em; color: var(--muted); }
+  .pb-wrap { position: relative; display: inline-flex; }
+  #teamsMenu { position: fixed; z-index: 2600; background: #fff; border-radius: 12px; box-shadow: 0 8px 28px rgba(0,0,0,.25); padding: 12px; display: flex; flex-direction: column; gap: 8px; width: 320px; }
+  #teamsMenu[hidden] { display: none; }
+  #teamsMenu .tp-title { font-weight: 700; }
+  body:not(.present) #teamsMenu .only-present, body.present #teamsMenu .not-present { display: none; }
+  body.present #timerBox .tt { font-size: clamp(40px, 6vw, 120px); }
+  #presentBar { top: auto !important; bottom: 10px; }
+
+  /* Timer */
+  #timerBox { position: absolute; top: 2%; right: 2%; z-index: 13; background: #fff; border: 3px solid #16a34a; border-radius: 16px; padding: 6px 14px 8px; box-shadow: 0 8px 24px rgba(0,0,0,.18); text-align: center; cursor: pointer; min-width: 9em; }
+  #timerBox[hidden] { display: none; }
+  #timerBox .tt { font-size: clamp(26px, 6.5cqw, 120px); font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.05; color: #15803d; }
+  #timerBox .tbar { height: 8px; background: #e5e7eb; border-radius: 99px; overflow: hidden; margin-top: 4px; }
+  #timerBox .tbar i { display: block; height: 100%; background: currentColor; color: #16a34a; transition: width 1s linear; }
+  #timerBox .tl { font-size: clamp(10px, 1.2cqw, 16px); color: var(--muted); display: flex; justify-content: space-between; gap: 8px; margin-top: 2px; }
+  #timerBox .tl button { border: none; padding: 0 4px; font-size: 1em; color: var(--muted); background: none; }
+  #timerBox.warn { border-color: #f59e0b; } #timerBox.warn .tt { color: #b45309; } #timerBox.warn .tbar i { color: #f59e0b; }
+  #timerBox.done { border-color: #dc2626; animation: tblink .7s step-end infinite; } #timerBox.done .tt { color: #dc2626; }
+  #timerBox.paused .tt { opacity: .45; }
+  #timerBox.ready .tt { opacity: 1; color: #6b7280; } #timerBox.ready { border-color: #9ca3af; }
+  @keyframes tblink { 50% { background: #fee2e2; } }
+  #timerPop { position: fixed; z-index: 2600; width: 330px; background: #fff; border-radius: 12px; box-shadow: 0 8px 28px rgba(0,0,0,.25); padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+  #timerPop[hidden] { display: none; }
+  #timerPop .tp-title { font-weight: 700; }
+  #timerPop .tp-presets { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+  #timerPop .tp-presets button { padding: 6px 0; }
+  #timerPop input[type=number] { font: inherit; padding: 4px 6px; border: 1px solid #d1d5db; border-radius: 6px; }
+  .item { position: absolute; transform: translate(-50%, -50%) rotate(var(--r)); cursor: grab; }
+  .room.locked .item { cursor: default; }
+  .item.dragging { cursor: grabbing; box-shadow: 0 6px 16px rgba(0,0,0,.18); z-index: 5; }
+  .item.selected { outline: 3px solid var(--accent); outline-offset: 3px; z-index: 4; }
+
+  .desk { display: flex; border: 2px solid var(--line); border-radius: 4px; background: var(--desk); }
+  .room.flipped .desk { flex-direction: row-reverse; }
+  .seat { position: relative; flex: 1 1 0; min-width: 0; display: flex; align-items: center; justify-content: center; text-align: center; padding: 2px 4px 2px 7px; font-size: clamp(8px, 1.3cqw, 14px); font-weight: 600; line-height: 1.1; overflow-wrap: break-word; hyphens: auto; background: var(--desk); }
+  .seat + .seat { border-left: 2px solid var(--line); }
+  .room.flipped .seat + .seat { border-left: none; border-right: 2px solid var(--line); }
+  .seat.empty { color: var(--empty); font-weight: 400; font-style: italic; }
+  .seat.blocked { color: var(--muted); font-weight: 400; font-size: clamp(7px, 1.1cqw, 12px); background: repeating-linear-gradient(45deg, #eceef2 0 6px, #f8f9fb 6px 12px); }
+  .seat::after { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: transparent; }
+  .seat .g { position: absolute; left: 7px; top: 1px; font-size: clamp(7px, 1cqw, 11px); color: var(--muted); font-weight: 700; }
+  .seat.pinned::before { content: "📌"; position: absolute; top: 1px; right: 2px; font-size: clamp(7px, 1cqw, 11px); }
+  .seat.pinned:not([data-c]) { background: #fef3c7; }
+  .room.locked .seat.named { cursor: grab; }
+  .seat.sel { box-shadow: inset 0 0 0 3px var(--accent); }
+  .seat.drop { box-shadow: inset 0 0 0 3px #16a34a; background: #dcfce7 !important; }
+  .seat.dragsrc { opacity: .35; }
+  .seat.absent { background: repeating-linear-gradient(-45deg, #f3f4f6 0 5px, #fafafa 5px 10px) !important; color: #9ca3af; }
+  .seat.absent .nm { text-decoration: line-through; }
+  .seat .nt { position: absolute; right: 2px; bottom: 0; font-size: clamp(7px, .95cqw, 10px); opacity: .8; }
+  /* „Wer ist dran?“: gezogenes Kind deutlich hervorheben – alles andere tritt zurück */
+  .seat.picking { box-shadow: inset 0 0 0 4px #111827; background: #fde047 !important; color: #111827 !important; }
+  .room.has-picked .item { opacity: .28; filter: grayscale(.85); transition: opacity .3s, filter .3s; }
+  .room.has-picked .item.pickhost { opacity: 1; filter: none; z-index: 20; }
+  .room.has-picked .item.pickhost .seat:not(.picked) { opacity: .35; }
+  .seat.picked { background: #fde047 !important; color: #111827 !important; z-index: 3; transform: scale(1.12); border-radius: 4px;
+    box-shadow: inset 0 0 0 5px #b45309, 0 0 0 4px #fff, 0 0 0 9px #dc2626; animation: pickpulse 1s ease-in-out infinite alternate; }
+  .seat.picked::after { display: none; }
+  .seat.picked .pk { position: absolute; left: 50%; bottom: 100%; transform: translateX(-50%); font-size: clamp(18px, 4cqw, 60px); line-height: 1; animation: pickbounce .7s ease-in-out infinite alternate; pointer-events: none; filter: drop-shadow(0 2px 2px rgba(0,0,0,.35)); }
+  @keyframes pickpulse { from { box-shadow: inset 0 0 0 5px #b45309, 0 0 0 4px #fff, 0 0 0 9px #dc2626, 0 0 0 0 rgba(220,38,38,.6); }
+                         to   { box-shadow: inset 0 0 0 5px #b45309, 0 0 0 4px #fff, 0 0 0 9px #dc2626, 0 0 30px 18px rgba(220,38,38,.55); } }
+  @keyframes pickbounce { from { transform: translate(-50%, -2px); } to { transform: translate(-50%, -14px); } }
+  .marquee { position: absolute; border: 1.5px dashed var(--accent); background: rgba(37,99,235,.08); pointer-events: none; z-index: 8; }
+  .itembar .cnt { font-size: .82rem; font-weight: 700; color: var(--muted); padding: 0 4px; }
+  .itembar .barnote { flex-basis: 100%; font-size: .8rem; color: #374151; background: #fffbeb; border-radius: 6px; padding: 4px 8px; max-width: 360px; white-space: pre-wrap; }
+  .roombar { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); z-index: 12; background: #1e3a8a; color: #fff; padding: 6px 8px 6px 14px; border-radius: 999px; font-size: .88rem; display: flex; gap: 6px; align-items: center; white-space: nowrap; box-shadow: 0 4px 14px rgba(0,0,0,.2); }
+  .roombar[hidden] { display: none; }
+  .roombar button { padding: 3px 10px; font-size: .82rem; border-color: #fff; }
+  #pickBanner { position: absolute; top: 10%; left: 50%; transform: translateX(-50%); z-index: 12; background: #fff; border: 3px solid #f59e0b; border-radius: 16px; padding: 10px 14px 10px 22px; box-shadow: 0 10px 30px rgba(0,0,0,.2); display: flex; align-items: center; gap: 10px; cursor: pointer; }
+  #pickBanner[hidden] { display: none; }
+  #pickBanner .pn { font-size: clamp(18px, 4.2cqw, 44px); font-weight: 800; color: #92400e; white-space: nowrap; }
+  #pickBanner.rolling .pn { color: #b45309; opacity: .75; }
+  #pickBanner button { border: none; color: var(--muted); padding: 2px 6px; }
+  #dutyBox { position: absolute; top: 1.5%; left: 1.5%; z-index: 6; background: rgba(255,255,255,.94); border: 1.5px solid #c7cbd4; border-radius: 10px; padding: 8px 14px; font-size: clamp(11px, 1.75cqw, 19px); line-height: 1.4; max-width: 46%; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+  #dutyBox[hidden] { display: none; }
+  #dutyBox b { display: block; color: var(--line); margin-bottom: 3px; font-size: 1.05em; }
+  #dutyBox div { font-weight: 600; }
+  #dutyBox span { color: var(--muted); }
+  #notePop { position: fixed; z-index: 2500; width: 300px; background: #fff; border-radius: 10px; box-shadow: 0 8px 28px rgba(0,0,0,.25); padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+  #notePop[hidden] { display: none; }
+  #notePop .np-title { font-weight: 700; font-size: .9rem; }
+  #notePop textarea { min-height: 80px; }
+  .teams-big { background: #fff; border-radius: 14px; width: min(1200px, 100%); max-height: 100%; overflow: auto; padding: 16px; }
+  .tb-head { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; font-size: 1.1rem; }
+  .tb-head .spacer { flex: 1; }
+  .tgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+  .tcard { border: 3px solid var(--tc); border-radius: 12px; padding: 10px 14px; font-size: clamp(16px, 1.8vw, 26px); font-weight: 600; }
+  .tcard h3 { margin: 0 0 6px; color: var(--tc); font-size: .8em; text-transform: uppercase; letter-spacing: .05em; }
+  #subSheet { display: none; }
+  .roombar.lastbar { top: 12px; background: #fff; color: var(--ink); border: 2px solid var(--accent); padding: 8px 8px 8px 16px; font-size: .95rem; }
+  .roombar.lastbar .lb-t { color: var(--muted); font-size: .85em; }
+  .roombar.lastbar button { border-color: var(--accent); }
+  .roombar.lastbar button[data-l="open"] { background: var(--accent); color: #fff; }
+  .roombar.lastbar { top: 12px; background: #fff; color: var(--ink); border: 2px solid var(--accent); padding: 8px 8px 8px 16px; font-size: .95rem; }
+  .roombar.lastbar .lb-t { color: var(--muted); font-size: .85em; }
+  .roombar.lastbar button { border-color: var(--accent); }
+  .roombar.lastbar button[data-l="open"] { background: var(--accent); color: #fff; }
+  .cdlg.nc { width: 440px; }
+  .nc-body { padding: 16px; display: flex; flex-direction: column; gap: 9px; }
+  .nc-name { display: flex; flex-direction: column; gap: 4px; font-weight: 600; font-size: .9rem; }
+  .nc-name input { font-weight: 400; }
+  .nc-body .ind { margin-left: 24px; }
+  .nc-body label.off { opacity: .45; }
+  /* Vertretungsblatt: Raum auf Papiermaß, Plan wie im Präsentationsmodus eingepasst (gilt auch kurz vor dem Druck am Bildschirm) */
+  body.print-fit main .room, body.print-fit .room { width: var(--rw) !important; height: var(--rh) !important; aspect-ratio: auto !important; margin: 0 auto; border-radius: 0; }
+  body.print-fit #dutyBox { font-size: 11pt; max-width: none; }
+  .msel { position: relative; }
+  .msel-btn { width: 100%; text-align: left; font-weight: 400; color: var(--muted); border-color: #d1d5db; padding: 6px 28px 6px 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; position: relative; }
+  .msel-btn::after { content: "▾"; position: absolute; right: 9px; top: 50%; transform: translateY(-50%); color: var(--muted); }
+  .msel-btn.has { color: var(--ink); font-weight: 600; }
+  .msel-list { margin-top: 4px; background: #fff; border: 1px solid #d1d5db; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,.08); max-height: 240px; overflow: auto; padding: 6px; }
+  .msel-list[hidden] { display: none; }
+  .msel-list label { display: flex; align-items: center; gap: 8px; padding: 4px 6px; border-radius: 6px; font-size: .9rem; cursor: pointer; }
+  .msel-list label:hover { background: #f1f5f9; }
+  .msel-tools { display: flex; gap: 6px; padding: 2px 4px 6px; border-bottom: 1px solid #eee; margin-bottom: 4px; }
+  .msel-tools button { padding: 2px 10px; font-size: .8rem; }
+  body.present .seat .nm, body.print-fit .seat .nm { overflow-wrap: normal; hyphens: none; }
+  .howto { font-size: .8rem; color: var(--muted); line-height: 1.45; background: #f8fafc; border-radius: 8px; padding: 8px 10px; }
+  .howto b { color: var(--ink); }
+  .howto code { display: block; margin: 4px 0; padding: 4px 8px; background: #fff; border: 1px solid #e5e7eb; border-radius: 6px; color: var(--ink); font-size: .85rem; }
+  .duty .ico { padding: 1px 4px; font-size: 1rem; border-color: #d1d5db; background: #fff; flex: none; }
+  #iconPop { position: fixed; z-index: 2600; display: none; grid-template-columns: repeat(8, 30px); gap: 4px; background: #fff; padding: 8px; border-radius: 10px; box-shadow: 0 6px 22px rgba(0,0,0,.22); }
+  #iconPop.show { display: grid; }
+  #iconPop button { width: 30px; height: 30px; padding: 0; font-size: 1.1rem; border: 1px solid transparent; background: none; border-radius: 6px; }
+  #iconPop button:hover, #iconPop button.cur { border-color: var(--accent); background: #eff6ff; }
+  #iconPop input { grid-column: 1 / -1; font-size: .85rem; padding: 4px 6px; }
+  .seat .dt { position: absolute; top: 1px; left: 50%; transform: translateX(-50%); font-size: clamp(9px, 1.35cqw, 15px); line-height: 1; white-space: nowrap; letter-spacing: 1px; }
+  .seat.hasduty { padding-top: clamp(8px, 1.4cqw, 15px); }
+  .fileinfo { font-size: .85rem; overflow-wrap: anywhere; }
+  .fileinfo .unsaved { color: #b45309; font-weight: 600; } .fileinfo .saved { color: var(--ok); }
+  .recents { display: flex; flex-direction: column; gap: 4px; }
+  .recent { display: flex; justify-content: space-between; align-items: center; gap: 8px; text-align: left; font-weight: 500; padding: 6px 10px; border-color: #d1d5db; color: var(--ink); }
+  .recent span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .recent small { color: var(--muted); flex: none; }
+  .recent:hover { border-color: var(--accent); background: #eff6ff; }
+  .seat.pop { animation: pop .35s ease; }
+  .seat.spin { background: var(--desk) !important; color: var(--ink) !important; font-style: normal !important; font-weight: 600 !important; filter: blur(.4px); }
+  .seat.spin::after, .seat.spin::before, .seat.spin .g { display: none; }
+  @keyframes pop { from { opacity: 0; transform: scale(.85); } to { opacity: 1; transform: none; } }
+  .nr { position: absolute; top: -1.7em; left: 0; background: rgba(255,255,255,.85); padding: 0 3px; border-radius: 3px; line-height: 1.3; font-size: clamp(8px, 1.2cqw, 12px); color: var(--muted); pointer-events: none; white-space: nowrap; }
+
+  .obj { display: flex; align-items: center; justify-content: center; text-align: center; background: var(--obj); border: 2px solid var(--obj-line); border-radius: 3px; color: #57534e; font-size: clamp(8px, 1.4cqw, 14px); font-weight: 600; padding: 2px 4px; }
+  .obj.round { border-radius: 50%; padding: 4px 8px; }
+  .obj.round .size-handle { right: calc(14.6% - 9px); bottom: calc(14.6% - 9px); }
+  .obj .lbl { max-width: 100%; max-height: 100%; overflow: hidden; overflow-wrap: break-word; pointer-events: none; }
+
+  /* Gruppen: Tische in der Gruppenfarbe umrandet */
+  .desk.grouped { border: 3px solid var(--gc); }
+  .desk.grouped .nr { color: var(--gc); font-weight: 700; }
+
+  .handle { position: absolute; width: 18px; height: 18px; border-radius: 50%; background: var(--accent); border: 2px solid #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3); display: none; z-index: 2; }
+  .rot-handle { left: 50%; top: -38px; margin-left: -9px; cursor: alias; }
+  .rot-handle::after { content: ""; position: absolute; left: 50%; top: 16px; width: 2px; height: 20px; margin-left: -1px; background: var(--accent); pointer-events: none; }
+  .size-handle { right: -11px; bottom: -11px; border-radius: 4px; cursor: nwse-resize; }
+  .item.selected .handle { display: block; }
+  .room.locked .handle { display: none !important; }
+
+  .itembar { position: absolute; transform: translate(-50%, 0); display: none; flex-wrap: wrap; justify-content: center; align-items: center; gap: 4px; background: #fff; padding: 5px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,.18); z-index: 10; max-width: 480px; }
+  .itembar.show { display: flex; }
+  .itembar button { padding: 4px 9px; font-size: .82rem; white-space: nowrap; }
+  .itembar button.on { background: #374151; border-color: #374151; color: #fff; }
+  .itembar input, .itembar select { font-size: .82rem; padding: 3px 6px; }
+  .itembar input { width: 140px; }
+
+  .front { position: absolute; left: 50%; bottom: 2%; transform: translateX(-50%); width: 40%; padding: .5em; text-align: center; border-top: 3px solid var(--line); color: var(--line); font-weight: 700; font-size: clamp(10px, 1.8cqw, 18px); letter-spacing: .05em; pointer-events: none; }
+  .room.flipped .front { bottom: auto; top: 2%; border-top: none; border-bottom: 3px solid var(--line); }
+
+  .ghost { position: fixed; z-index: 1000; pointer-events: none; transform: translate(-50%, -60%); background: var(--accent); color: #fff; font-weight: 700; padding: 6px 12px; border-radius: 999px; box-shadow: 0 6px 18px rgba(0,0,0,.25); font-size: .9rem; white-space: nowrap; }
+  .print-header { display: none; }
+
+  /* Dialog „Weitere Farben“ (angelehnt an den Farbdialog von Office) */
+  .cdlg-back { position: fixed; inset: 0; background: rgba(15,23,42,.35); z-index: 3000; display: flex; align-items: center; justify-content: center; padding: 16px; }
+  .cdlg-back[hidden] { display: none; }
+  .cdlg { background: #fff; border-radius: 10px; box-shadow: 0 20px 50px rgba(0,0,0,.3); width: 470px; max-width: 100%; user-select: none; }
+  .cdlg-title { padding: 12px 16px; font-weight: 700; border-bottom: 1px solid #e5e7eb; }
+  .cdlg-body { display: flex; gap: 16px; padding: 16px; flex-wrap: wrap; }
+  .cdlg-left { flex: 1 1 290px; display: flex; flex-direction: column; gap: 8px; }
+  .cdlg-pick { display: flex; gap: 12px; align-items: flex-start; }
+  .cdlg .mwrap, .cdlg .swrap { position: relative; touch-action: none; cursor: crosshair; }
+  .cdlg canvas { display: block; border: 1px solid #9ca3af; }
+  #cdMatrix { width: 240px; height: 150px; } #cdSlider { width: 18px; height: 150px; cursor: ns-resize; }
+  #cdCross { position: absolute; width: 15px; height: 15px; margin: -7px 0 0 -7px; pointer-events: none;
+    background: linear-gradient(#000,#000) center/1.5px 100% no-repeat, linear-gradient(#000,#000) center/100% 1.5px no-repeat; }
+  #cdCross::after { content: ""; position: absolute; inset: 5px; background: inherit; }
+  #cdArrow { position: absolute; right: -9px; width: 0; height: 0; margin-top: -6px; border: 6px solid transparent; border-right: 8px solid #111; pointer-events: none; }
+  .cdlg-grid { display: grid; grid-template-columns: 110px 1fr; gap: 6px 8px; align-items: center; font-size: .9rem; }
+  .cdlg-grid input, .cdlg-grid select { width: 100%; max-width: 150px; }
+  .cdlg-grid input[type=number] { font: inherit; padding: 5px 6px; border: 1px solid #d1d5db; border-radius: 6px; }
+  .cdlg-right { flex: 0 0 120px; display: flex; flex-direction: column; gap: 8px; }
+  .cdlg-prev { margin-top: auto; text-align: center; font-size: .85rem; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .cdlg-prev .sq { width: 80px; border: 1px solid #9ca3af; }
+  .cdlg-prev #cdNew, .cdlg-prev #cdOld { width: 80px; height: 40px; }
+
+  @media (max-width: 960px) { .layout { grid-template-columns: 1fr; } main { position: static; max-height: none; } main .room { width: 100%; } }
+  @media print {
+    body { background: #fff; } .wrap { padding: 0; max-width: none; }
+    h1, .sidebar, .itembar, .topbar, .result, main > .hint, .roombar, #pickBanner, .marquee, #timerBox, #presentBar { display: none !important; }
+    main { position: static; max-height: none; display: block; }
+    .seat .nt, .seat .pk { display: none; } .room.has-picked .item { opacity: 1 !important; filter: none !important; } .seat.picked { transform: none; } body.pr-nocolor .seat .tb { display: none; } .seat.picked, .seat.picking { box-shadow: none; animation: none; background: var(--desk) !important; }
+    body.print-fit .print-header { width: var(--rw) !important; }
+    body.print-sub #subSheet { display: block; width: var(--rw); margin: 4mm auto 0; font-size: 11pt; }
+    body.print-fit #dutyBox { font-size: 11pt; box-shadow: none; }
+    #subSheet h3 { font-size: 11pt; margin: 4mm 0 1mm; border-bottom: 1px solid #ccc; }
+    #subSheet p { margin: 0; } #subSheet .pre { white-space: pre-wrap; }
+    #subSheet table { width: 100%; border-collapse: collapse; } #subSheet th, #subSheet td { border: 1px solid #bbb; padding: 1.2mm 2mm; text-align: left; vertical-align: top; }
+    #subSheet th { background: #f0f0f0; } #subSheet tr.abs td { color: #888; } #subSheet tr { break-inside: avoid; }
+    .layout { display: block; }
+    .print-header { display: flex; justify-content: space-between; align-items: baseline; width: 180mm; margin: 0 auto 4mm; border-bottom: 1px solid #999; padding-bottom: 2mm; }
+    .print-header h2 { margin: 0; font-size: 16pt; }
+    .print-header span { font-size: 10pt; color: #444; }
+    .room, main .room { box-shadow: none; width: 180mm; margin: 0 auto; border: 1px solid #ccc; border-radius: 0; }
+    body.pr-land .room, body.pr-land main .room, body.pr-land .print-header { width: 165mm; }
+    .item.selected { outline: none; } .handle { display: none !important; }
+    .seat.sel { box-shadow: none; } .seat.pinned::before { display: none; } .seat.pinned:not([data-c]) { background: var(--desk); }
+    body.pr-nocolor .seat[data-c] { background: var(--desk) !important; } body.pr-nocolor .seat::after { display: none; }
+    body.pr-nogroups .desk.grouped { border: 2px solid var(--line); }
+    body.pr-nogroups .desk.grouped .nr { color: var(--muted); font-weight: 400; } body.pr-nogroups .nr .gn { display: none; }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body class="mode-room">
+<div class="wrap">
+  <h1>Sitzplan – Zufallsverteilung</h1>
+  <div class="layout">
+    <aside class="sidebar">
+      <details class="card" open>
+        <summary>Datei</summary>
+        <div class="cbody">
+          <div class="fileinfo" id="fileInfo"></div>
+          <div class="row fill">
+            <button id="newFile" title="Leeren Plan beginnen">📄 Neu</button>
+            <button id="loadFile" title="Sitzplan-Datei öffnen (Strg+O)">📂 Öffnen</button>
+            <button class="primary" id="saveFile" title="In die geöffnete Datei speichern (Strg+S)">💾 Speichern</button>
+            <button id="saveAs" title="Als neue Datei speichern (Strg+Umschalt+S)">Speichern unter …</button>
+          </div>
+          <input type="file" id="fileInput" accept=".json,application/json" hidden>
+          <button id="installBtn" hidden>⬇ Als App installieren</button>
+          <div class="sub">Zuletzt verwendet</div>
+          <div class="recents" id="recentList"></div>
+          <p class="hint">Eine Datei enthält alle Klassen mit Schülern, Regeln, Räumen, Verlauf und Diensten. Für „Zuletzt verwendet“ merkt sich der Browser nur die Verweise auf die Dateien, nicht deren Inhalt.</p>
+        </div>
+      </details>
+
+      <details class="card">
+        <summary>Klasse</summary>
+        <div class="cbody">
+          <select id="classSel"></select>
+          <div class="row fill">
+            <button id="classNew">＋ Neu</button>
+            <button id="classRename">Umbenennen</button>
+            <button id="classDel" class="danger">Löschen</button>
+          </div>
+        </div>
+      </details>
+
+      <details class="card">
+        <summary>Schüler <span class="badge" id="stuBadge"></span></summary>
+        <div class="cbody">
+          <textarea id="importText" placeholder="Namen einfügen – direkt aus Excel kopieren (z. B. Spalten Vorname | Nachname | Geschlecht) oder ein Name pro Zeile"></textarea>
+          <div class="row">
+            <span class="hint" style="flex:none">Ohne Überschrift:</span>
+            <select id="importOrder" style="flex:1; min-width:0">
+              <option value="first-last">1. Spalte Vorname, 2. Nachname</option>
+              <option value="last-first">1. Spalte Nachname, 2. Vorname</option>
+            </select>
+          </div>
+          <div class="row fill">
+            <button id="importAdd">Hinzufügen</button>
+            <button id="importReplace">Liste ersetzen</button>
+            <button id="importFile" title="CSV-Datei aus Excel laden">CSV…</button>
+          </div>
+          <input type="file" id="csvInput" accept=".csv,.txt,text/csv,text/plain" hidden>
+          <div class="howto">
+            <b>Neues Kind eingeben:</b> Vorname, Nachname und Geschlecht mit <b>Semikolon</b> trennen, jedes Kind in eine eigene Zeile, dann <b>„Hinzufügen“</b> klicken (nicht „Liste ersetzen“):
+            <code>Lena;Müller;w<br>Tom;Brand;m</code>
+            Geschlecht: m / w / d (auch „männlich“, „weiblich“, „Junge“, „Mädchen“). Nicht mit Leerzeichen oder Komma trennen – „Lena Müller w“ wird ein einziger Name, ein Komma trennt verschiedene Kinder. Aus Excel kopierte Spalten funktionieren direkt; eine Überschrift wie „Vorname | Nachname | Geschlecht“ wird erkannt. Gibt es das Kind schon, wird nur das Geschlecht aktualisiert.<br>
+            <b>Oder:</b> unten auf „＋ Schüler hinzufügen“ klicken und die leere Zeile direkt ausfüllen.
+          </div>
+          <div class="gcol">
+            <label class="chk"><input type="checkbox" id="colOn"> Eigene Farben der Kinder anzeigen (vorübergehend)</label>
+            <label class="chk"><input type="checkbox" id="gcOn"> Geschlechter farbig anzeigen (vorübergehend)</label>
+            <div class="row legend"><span><i style="background:#fb7185"></i>Mädchen</span><span><i style="background:#2563eb"></i>Jungen</span><span><i style="background:#9333ea"></i>divers</span></div>
+            <p class="hint">Beides sind nur Ansichten zum Ein- und Ausschalten – die eingestellten Farben bleiben erhalten. Auch oben über dem Plan mit 🎨 und ⚥ schaltbar.</p>
+          </div>
+          <div class="slist" id="slist"></div>
+          <div id="palette"></div>
+          <div class="row fill"><button id="stuAdd">＋ Schüler hinzufügen</button><button id="allPresent" title="Alle Abwesenheitsmarkierungen entfernen">Alle anwesend</button></div>
+          <p class="hint">Farbe = Markierung auf dem Tisch · ⬆ = soll nach vorne (Nähe Tafel) · 🤒 = heute abwesend (gilt nur heute, morgen automatisch wieder anwesend) · 📝 = Notiz</p>
+        </div>
+      </details>
+
+      <details class="card">
+        <summary>👥 Partner &amp; Gruppen</summary>
+        <div class="cbody">
+          <div class="row fill">
+            <select id="teamMode">
+              <option value="pairs">Paare</option>
+              <option value="size">Gruppen mit je … Kindern</option>
+              <option value="count">… Gruppen</option>
+            </select>
+            <input type="number" id="teamN" value="4" min="2" max="30" style="flex:0 0 64px" title="Anzahl">
+          </div>
+          <label class="chk"><input type="checkbox" id="teamRules" checked> Regeln „nicht/gerne neben“ beachten</label>
+          <label class="chk"><input type="checkbox" id="teamMix"> Jungen und Mädchen mischen</label>
+          <div class="row fill"><button class="primary" id="teamMake">🎲 Bilden</button><button id="teamShow" disabled>⛶ Groß anzeigen</button><button id="teamClear" disabled title="Partner/Gruppen verwerfen" style="flex:0 0 auto">✕</button></div>
+          <label class="chk"><input type="checkbox" id="teamColor" checked> Plätze im Sitzplan in Gruppenfarben anzeigen</label>
+          <div class="teams" id="teamList"></div>
+          <p class="hint">Nur anwesende Kinder. Namen lassen sich per Ziehen umsetzen: auf einen anderen Namen = tauschen, auf eine Gruppe = dorthin verschieben (auch in der großen Ansicht). Bei ungerader Zahl entsteht eine Dreiergruppe.</p>
+        </div>
+      </details>
+
+      <details class="card">
+        <summary>🎯 Wer ist dran?</summary>
+        <div class="cbody">
+          <button class="primary" id="pickBtn">🎯 Zufällig auswählen</button>
+          <label class="chk"><input type="checkbox" id="pickFair" checked> Jeder kommt erst wieder dran, wenn alle dran waren</label>
+          <div class="info" id="pickInfo"></div>
+          <div class="picklog" id="pickLog"></div>
+          <button id="pickReset">Neue Runde starten</button>
+          <p class="hint">Abwesende Kinder werden übersprungen. Der Platz des gezogenen Kindes leuchtet im Plan auf.</p>
+        </div>
+      </details>
+
+      <details class="card">
+        <summary>🧽 Dienste &amp; Ämter <span class="badge" id="dutyBadge"></span></summary>
+        <div class="cbody">
+          <div class="row"><input type="text" id="dutyName" list="dutySuggest" placeholder="z. B. Tafeldienst" style="flex:1"><button id="dutyAdd">＋</button></div>
+          <datalist id="dutySuggest"><option>Tafeldienst</option><option>Klassenbuch</option><option>Ordnungsdienst</option><option>Fegedienst</option><option>Blumendienst</option><option>Austeildienst</option><option>Lichtdienst</option><option>Mülldienst</option><option>Fensterdienst</option><option>Klassensprecher</option></datalist>
+          <div class="duties" id="dutyList"></div>
+          <button class="primary" id="dutyDeal">🎲 Dienste neu vergeben</button>
+          <label class="chk"><input type="checkbox" id="dutyShow"> Dienste-Liste im Plan anzeigen</label>
+          <label class="chk"><input type="checkbox" id="dutyIcons" checked> Dienst-Symbole auf den Tischen anzeigen</label>
+          <button id="dutyResetCount">Dienst-Zähler zurücksetzen</button>
+          <p class="hint">Beim Neu-Vergeben kommen zuerst die Kinder dran, die bisher am seltensten einen Dienst hatten (abwesende werden übersprungen). Einzelne Kinder kannst du auch direkt auswählen. 📌 fixiert einen Dienst (z. B. Klassensprecher): Er bleibt beim Neu-Vergeben unverändert. Mit „bekommt trotzdem weitere Dienste“ legst du fest, ob diese Kinder zusätzlich andere Dienste übernehmen können.</p>
+        </div>
+      </details>
+
+      <details class="card">
+        <summary>Regeln <span class="badge" id="ruleBadge"></span></summary>
+        <div class="cbody">
+          <select id="ruleA"></select>
+          <select id="ruleType">
+            <option value="apart">soll NICHT neben</option>
+            <option value="together">soll GERNE neben</option>
+          </select>
+          <div class="msel" id="ruleBBox">
+            <button type="button" id="ruleBBtn" class="msel-btn">– Schüler wählen –</button>
+            <div class="msel-list" id="ruleBList" hidden></div>
+          </div>
+          <button id="ruleAdd">＋ Regel hinzufügen</button>
+          <div class="rules" id="ruleList"></div>
+          <label class="chk"><input type="checkbox" id="ruleMix"> Jungen und Mädchen möglichst gemischt</label>
+          <p class="hint">Im dritten Feld kannst du mehrere Kinder ankreuzen – dann werden alle Regeln in einem Schritt angelegt. „Nebeneinander“ heißt: am selben Tisch oder an direkt angestellten Tischen. „Nicht neben“ meidet zusätzlich dieselbe Tischgruppe. „Nach vorne“ (⬆ in der Schülerliste) = das Drittel der Plätze, das der Tafel am nächsten ist. Die Regeln werden so gut wie möglich erfüllt; was nicht klappt, steht nach dem Verteilen unter dem Plan.</p>
+        </div>
+      </details>
+
+      <details class="card">
+        <summary>Tischgruppen <span class="badge" id="groupBadge"></span></summary>
+        <div class="cbody">
+          <button id="groupAuto">Gruppen aus aneinanderstehenden Tischen bilden</button>
+          <button id="groupClear" class="danger">Alle Gruppen auflösen</button>
+          <div class="glist" id="groupList"></div>
+          <p class="hint">Tische einer Gruppe werden in der Gruppenfarbe umrandet. Einzelne Tische ordnest du im Modus „Raum einrichten“ zu: Tisch anklicken → Gruppe wählen. Gruppennamen kannst du hier ändern.</p>
+        </div>
+      </details>
+
+      <details class="card">
+        <summary>Tische &amp; Objekte</summary>
+        <div class="cbody">
+          <button id="addDesk2">＋ Zweiertisch</button>
+          <button id="addDesk1">＋ Einzeltisch</button>
+          <button id="addObj">＋ Objekt eckig (Schrank, Regal)</button>
+          <button id="addRound">＋ Objekt rund (Pflanze, Mülleimer)</button>
+          <div class="sub">Raumvorlage</div>
+          <select id="tplType">
+            <option value="rows">Reihen (Zweiertische)</option>
+            <option value="u">U-Form</option>
+            <option value="g4">Gruppentische (4er)</option>
+            <option value="g6">Gruppentische (6er)</option>
+            <option value="single">Einzeltische in Reihen (Prüfung)</option>
+            <option value="arc">Bogen (Ausgangs-Anordnung, 10 Tische)</option>
+          </select>
+          <div class="row"><span class="hint" id="tplCountLbl" style="flex:none">Zweiertische:</span><input type="number" id="tplCount" value="12" min="1" max="36" style="width:70px"><button id="tplApply" style="flex:1">Vorlage anwenden</button></div>
+          <p class="hint">Im Modus „Raum einrichten“: Ziehen = verschieben · Anklicken = drehen, Platz sperren, Gruppe, entfernen · Doppelklick auf einen Platz = sperren/freigeben · Objekte über das Eck-Quadrat in der Größe ändern</p>
+          <p class="hint"><b>Mehrere Tische:</b> Shift- bzw. Strg-Klick fügt Tische zur Auswahl hinzu, oder auf freier Fläche einen Rahmen aufziehen · Strg+A = alle · dann gemeinsam ziehen, drehen, gruppieren oder entfernen</p>
+        </div>
+      </details>
+
+      <details class="card">
+        <summary>🗂 Sitzplan-Verlauf <span class="badge" id="planBadge"></span></summary>
+        <div class="cbody">
+          <div class="row"><span class="hint" style="flex:none">gültig ab</span><input type="date" id="planDate" style="flex:1"></div>
+          <input type="text" id="planNote" placeholder="Notiz (optional), z. B. „nach den Herbstferien“">
+          <button class="primary" id="planSave">📸 Aktuellen Plan festhalten</button>
+          <div class="plans" id="planList"></div>
+          <p class="hint">👁 = ansehen (Vorschau im Plan) · ↩ = wiederherstellen · ✕ = löschen</p>
+        </div>
+      </details>
+
+      <details class="card">
+        <summary>Anzeige</summary>
+        <div class="cbody">
+          <label class="chk"><input type="checkbox" id="optAnim" checked> Verteilung animieren</label>
+          <input type="checkbox" id="optColors" hidden>
+          <label class="chk"><input type="checkbox" id="optGender"> Geschlecht auf den Tischen anzeigen</label>
+        </div>
+      </details>
+
+      <details class="card">
+        <summary>Drucken</summary>
+        <div class="cbody">
+          <input type="text" id="prTitle" placeholder="Überschrift (leer = „Sitzplan Klassenname“)">
+          <select id="prOrient"><option value="portrait">Hochformat</option><option value="landscape">Querformat</option></select>
+          <select id="prView"><option value="teacher">Lehrersicht (Tafel unten)</option><option value="students">Schülersicht (Tafel oben)</option></select>
+          <label class="chk"><input type="checkbox" id="prDate" checked> Datum drucken</label>
+          <label class="chk"><input type="checkbox" id="prColors" checked> Farben drucken (so wie gerade angezeigt)</label>
+          <label class="chk"><input type="checkbox" id="prGroups" checked> Gruppen drucken</label>
+          <label class="chk"><input type="checkbox" id="prGender"> Geschlecht drucken</label>
+          <button class="primary" id="print">🖨 Sitzplan drucken</button>
+          <div class="sub">Vertretungsblatt</div>
+          <textarea id="subNote" placeholder="Hinweise für die Vertretung (z. B. Material, Aufgaben, Besonderheiten)" style="min-height:70px"></textarea>
+          <button id="printSub">📄 Vertretungsblatt drucken</button>
+          <p class="hint">Enthält den Sitzplan – so groß wie möglich auf die Seite eingepasst – mit den Diensten und darunter deine Hinweise.</p>
+        </div>
+      </details>
+    </aside>
+
+    <main>
+      <div class="topbar">
+        <div class="modes" id="modes">
+          <button data-mode="room">🪑 Raum einrichten</button>
+          <button data-mode="students">👤 Schüler setzen</button>
+        </div>
+        <button id="flip" class="toggle" title="Plan um 180° drehen – Tafel oben">👁 Schülersicht</button>
+        <button id="colorBtn" class="toggle" title="Eigene Farben der Kinder vorübergehend anzeigen">🎨</button>
+        <button id="genderBtn" class="toggle" title="Geschlechter vorübergehend farbig anzeigen (Mädchen rosa, Jungen blau, divers lila)">⚥</button>
+        <span class="spacer"></span>
+        <span class="tgroup"><button id="timerBtn" title="Gruppenarbeits-Timer">⏱ Timer</button><button id="presentBtn" title="Präsentationsmodus – Plan bildschirmfüllend (Esc beendet)">⛶ Präsentieren</button></span>
+      </div>
+      <div class="topbar">
+        <button id="undo" title="Rückgängig (Strg+Z)">↶</button>
+        <button id="redo" title="Wiederholen (Strg+Y)">↷</button>
+        <button id="clear">Plätze leeren</button>
+        <button class="primary" id="shuffle">🎲 Namen verteilen</button>
+        <span class="spacer"></span>
+        <span class="tgroup"><button id="pickBtn2" title="Zufällig ein Kind auswählen">🎯 Wer ist dran?</button><button id="teamsBtn" title="Partner- und Gruppeneinteilung">👥 Partner &amp; Gruppen ▾</button></span>
+      </div>
+      <div class="print-header"><h2 id="phTitle"></h2><span id="phDate"></span></div>
+      <div class="room" id="room">
+        <div class="stage" id="stage"><div class="front">TAFEL</div></div>
+        <div class="itembar" id="itembar"></div>
+        <div id="timerBox" hidden></div>
+        <div class="roombar" id="previewBar" hidden></div>
+        <div class="roombar lastbar" id="lastBar" hidden></div>
+        <div id="pickBanner" hidden></div>
+        <div id="teamsPanel" hidden></div>
+        <div id="dutyBox" hidden></div>
+      </div>
+      <div id="subSheet"></div>
+      <div class="result" id="result"></div>
+      <p class="hint only-students" style="margin-top:6px">Schüler auf einen anderen Platz ziehen = versetzen (sitzt dort jemand, wird getauscht) · Doppelklick (oder anklicken → „Fixieren“) = Schüler fixieren 📌 – fixierte Schüler bleiben beim Neu-Verteilen sitzen.</p>
+    </main>
+  </div>
+</div>
+
+<div id="iconPop"></div>
+
+<div id="presentBar">
+  <button data-p="pick" title="Wer ist dran?">🎯</button>
+  <button data-p="timer" title="Timer">⏱</button>
+  <button data-p="colors" class="toggle" title="Eigene Farben ein/aus">🎨</button>
+  <button data-p="gender" class="toggle" title="Geschlechterfarben ein/aus">⚥</button>
+  <button data-p="teams" class="toggle" title="Partner &amp; Gruppen">👥</button>
+  <button data-p="duties" class="toggle" title="Dienste-Liste ein/aus">🧽</button>
+  <button data-p="flip" class="toggle" title="Schülersicht (Tafel oben)">👁</button>
+  <button data-p="exit" class="primary" title="Präsentation beenden (Esc)">✕ Beenden</button>
+</div>
+
+<div id="teamsMenu" hidden>
+  <div class="tp-title">👥 Partner &amp; Gruppen</div>
+      <label class="chk"><input type="checkbox" id="pmTeamColor"> Gruppenfarben auf den Tischen</label>
+      <label class="chk only-present"><input type="checkbox" id="pmTeamList"> Gruppeneinteilung neben dem Plan anzeigen</label>
+      <div class="row">
+        <select id="pmTeamMode" style="flex:1;min-width:0"><option value="pairs">Paare</option><option value="size">Gruppen mit je … Kindern</option><option value="count">… Gruppen</option></select>
+        <input type="number" id="pmTeamN" min="2" max="30" style="width:58px">
+      </div>
+      <label class="chk"><input type="checkbox" id="pmTeamRules"> Regeln beachten</label>
+      <label class="chk"><input type="checkbox" id="pmTeamMix"> Jungen und Mädchen mischen</label>
+      <button id="pmTeamMake" class="primary">🎲 Gruppen neu bilden</button>
+      <div class="row fill"><button id="pmTeamShow" class="not-present">⛶ Groß anzeigen</button><button id="pmTeamClear" class="danger" title="Gruppeneinteilung verwerfen">✕ Verwerfen</button></div>
+</div>
+
+<div id="timerPop" hidden>
+  <div class="tp-title">⏱ Gruppenarbeits-Timer</div>
+  <div class="tp-presets">
+    <button data-m="1">1 min</button><button data-m="2">2 min</button><button data-m="3">3 min</button><button data-m="5">5 min</button>
+    <button data-m="10">10 min</button><button data-m="15">15 min</button><button data-m="20">20 min</button><button data-m="30">30 min</button>
+  </div>
+  <div class="row"><span class="hint" style="flex:none">eigene Zeit:</span><input type="number" id="tpMin" min="0" max="180" value="7" style="width:60px"> min <input type="number" id="tpSec" min="0" max="59" value="0" style="width:56px"> s <button class="primary" id="tpStart">Start</button></div>
+  <label class="chk"><input type="checkbox" id="tpGong" checked> Gong am Ende</label>
+  <p class="hint">Der Timer erscheint groß über dem Plan und startet erst, wenn du auf die Zeit klickst. Erneuter Klick = Pause/Weiter.</p>
+</div>
+
+<div class="cdlg-back" id="ncDlg" hidden>
+  <div class="cdlg nc">
+    <div class="cdlg-title">Neue Klasse anlegen</div>
+    <div class="nc-body">
+      <label class="nc-name">Name der Klasse<input type="text" id="ncName" placeholder="z. B. 7b"></label>
+      <div class="sub">Aus „<span id="ncFrom"></span>“ übernehmen:</div>
+      <label class="chk"><input type="checkbox" id="ncRoom"> Raum – Tische, Objekte, gesperrte Plätze</label>
+      <label class="chk"><input type="checkbox" id="ncStudents"> Schüler – mit Geschlecht, Farben, Notizen und ⬆</label>
+      <label class="chk ind"><input type="checkbox" id="ncRules"> Regeln „nicht/gerne neben“</label>
+      <label class="chk ind"><input type="checkbox" id="ncSeats"> Sitzordnung – wer wo sitzt (nur mit Raum und Schülern)</label>
+      <p class="hint">Nicht übernommen werden Dienste, Sitzplan-Verlauf und Tischgruppen. Ohne Raum bekommt die neue Klasse die Ausgangs-Anordnung.</p>
+      <div class="row" style="justify-content:flex-end"><button id="ncCancel">Abbrechen</button><button class="primary" id="ncOk">Klasse anlegen</button></div>
+    </div>
+  </div>
+</div>
+
+<div id="notePop" hidden>
+  <div class="np-title" id="noteWho"></div>
+  <textarea id="noteText" placeholder="z. B. Brille – vorne sitzen, Nachteilsausgleich, Allergie …"></textarea>
+  <div class="row"><button class="primary" id="noteSave">Speichern</button><button id="noteCancel">Abbrechen</button><button class="danger" id="noteDel" title="Notiz löschen">🗑</button></div>
+  <p class="hint">Notizen sind nur für dich sichtbar (Tooltip im Plan) und erscheinen auf dem Vertretungsblatt.</p>
+</div>
+
+<div class="cdlg-back" id="teamsDlg" hidden tabindex="-1">
+  <div class="teams-big">
+    <div class="tb-head"><b>Partner &amp; Gruppen</b><span class="hint" style="margin-left:10px">Namen ziehen zum Umsetzen</span><span class="spacer"></span><label class="chk" style="font-size:.9rem"><input type="checkbox" id="teamColor2" checked> im Plan einfärben</label><button id="teamsAgain">🎲 Neu bilden</button><button class="primary" id="teamsClose">Schließen</button></div>
+    <div class="tgrid" id="teamsGrid"></div>
+  </div>
+</div>
+
+<div class="cdlg-back" id="cdDlg" hidden>
+  <div class="cdlg" role="dialog" aria-label="Farben">
+    <div class="cdlg-title">Farben</div>
+    <div class="cdlg-body">
+      <div class="cdlg-left">
+        <div>Farben:</div>
+        <div class="cdlg-pick">
+          <div class="mwrap"><canvas id="cdMatrix" width="240" height="150"></canvas><div id="cdCross"></div></div>
+          <div class="swrap"><canvas id="cdSlider" width="18" height="150"></canvas><div id="cdArrow"></div></div>
+        </div>
+        <div class="cdlg-grid">
+          <label for="cdModel">Farbmodell:</label>
+          <select id="cdModel"><option>RGB</option><option>HSL</option></select>
+          <label for="cd1" id="cdL1">Rot:</label><input type="number" id="cd1" min="0" max="255">
+          <label for="cd2" id="cdL2">Grün:</label><input type="number" id="cd2" min="0" max="255">
+          <label for="cd3" id="cdL3">Blau:</label><input type="number" id="cd3" min="0" max="255">
+          <label for="cdHex">Hex:</label><input type="text" id="cdHex" maxlength="7" spellcheck="false">
+        </div>
+      </div>
+      <div class="cdlg-right">
+        <button class="primary" id="cdOk">OK</button>
+        <button id="cdCancel">Abbrechen</button>
+        <div class="cdlg-prev">
+          <span>Neu</span>
+          <div class="sq"><div id="cdNew"></div><div id="cdOld"></div></div>
+          <span>Aktuell</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   Grunddaten
+   ===================================================================== */
+const SIZES = { desk2: { w: 14, h: 7.5 }, desk1: { w: 7, h: 7.5 }, obj: { w: 14, h: 5 }, round: { w: 8, h: 8 } };
+const SEATS_PER = { desk2: 2, desk1: 1, obj: 0, round: 0 };
+const NEAR = 8.6;   // Abstand (in % der Raumbreite), bis zu dem Plätze an verschiedenen Tischen als „nebeneinander“ gelten
+const COLORS = {
+  red:    { n: 'Rot',        bg: '#fee2e2', fg: '#dc2626' },
+  orange: { n: 'Orange',     bg: '#ffedd5', fg: '#ea580c' },
+  yellow: { n: 'Gelb',       bg: '#fef9c3', fg: '#ca8a04' },
+  lime:   { n: 'Hellgrün',   bg: '#ecfccb', fg: '#65a30d' },
+  green:  { n: 'Grün',       bg: '#dcfce7', fg: '#15803d' },
+  teal:   { n: 'Türkis',     bg: '#ccfbf1', fg: '#0d9488' },
+  cyan:   { n: 'Hellblau',   bg: '#cffafe', fg: '#0891b2' },
+  blue:   { n: 'Blau',       bg: '#dbeafe', fg: '#2563eb' },
+  indigo: { n: 'Dunkelblau', bg: '#e0e7ff', fg: '#3730a3' },
+  purple: { n: 'Lila',       bg: '#f3e8ff', fg: '#9333ea' },
+  pink:   { n: 'Pink',       bg: '#fce7f3', fg: '#db2777' },
+  rose:   { n: 'Rosa',       bg: '#ffe4e6', fg: '#fb7185' },
+  brown:  { n: 'Braun',      bg: '#efe4d6', fg: '#92400e' },
+  gray:   { n: 'Grau',       bg: '#e5e7eb', fg: '#6b7280' },
+  black:  { n: 'Schwarz',    bg: '#e2e3e6', fg: '#111827' }
+};
+const GROUP_COLORS = ['#0ea5e9', '#f97316', '#22c55e', '#a855f7', '#ef4444', '#eab308', '#14b8a6', '#ec4899', '#6366f1', '#84cc16'];
+const GENDER_SIGN = { m: '♂', w: '♀', d: '⚧' };
+
+// Ausgangs-Anordnung nach der Skizze (x, y in %, Drehung in Grad)
+const DEFAULT_LAYOUT = [
+  { x: 18,   y: 53,   r: -12 }, { x: 20.5, y: 64.5,  r: -14 }, { x: 24.3, y: 75.5, r: -17 },
+  { x: 34.5, y: 50,   r: -3  }, { x: 36,   y: 60.5,  r: -3  },
+  { x: 53.7, y: 51.5, r:  4  }, { x: 53.3, y: 61.5,  r:  8  },
+  { x: 74,   y: 55.5, r:  20 }, { x: 71,   y: 65.75, r:  20 }, { x: 67, y: 76.5, r: 22 }
+].map(d => ({ ...d, type: 'desk2' }));
+
+// Farbregeln für Sitzplätze (Farbe kommt über CSS-Variablen, damit auch eigene Farben gehen)
+document.head.insertAdjacentHTML('beforeend', '<style>.seat[data-c]{background:var(--cbg)}.seat[data-c]::after{background:var(--cfg)}' +
+  '</style>');
+
+/* ---------- Farb-Hilfsfunktionen ---------- */
+const TEAM_COLORS = ['#0ea5e9', '#f97316', '#22c55e', '#a855f7', '#ef4444', '#eab308', '#14b8a6', '#ec4899', '#6366f1', '#84cc16', '#92400e', '#64748b'];
+const teamColor = i => TEAM_COLORS[i % TEAM_COLORS.length];
+const teamShort = i => (ui.teams && ui.teams.mode === 'pairs' ? 'P' : 'G') + (i + 1);
+// Farbe eines Platzes: Geschlechter-Ansicht (wenn eingeschaltet) > Partner/Gruppen > eigene Farbe des Kindes
+function seatColor(st, teamIdx) {
+  if (ui.genderView) return st.gender ? colorInfo(GENDER_VIEW[st.gender]) : null;
+  if (teamIdx) return teamIdx.has(st.id) ? colorInfo(teamColor(teamIdx.get(st.id))) : null;
+  return ui.colorsOn === false ? null : colorInfo(st.color);
+}
+const isHex = c => /^#[0-9a-f]{6}$/i.test(c || '');
+const hexToRgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+const rgbToHex = (r, g, b) => '#' + [r, g, b].map(v => clamp(Math.round(v), 0, 255).toString(16).padStart(2, '0')).join('');
+function hslToRgb(h, s, l) {
+  const k = n => (n + h / 30) % 12, a = s * Math.min(l, 1 - l);
+  const f = n => l - a * Math.max(-1, Math.min(k(n) - 3, 9 - k(n), 1));
+  return [f(0), f(8), f(4)].map(v => Math.round(v * 255));
+}
+function rgbToHsl(r, g, b) {
+  r /= 255; g /= 255; b /= 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b), l = (max + min) / 2;
+  let h = 0, s = 0;
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    h = max === r ? (g - b) / d + (g < b ? 6 : 0) : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+    h *= 60;
+  }
+  return [h, s, l];
+}
+// Liefert Name, kräftige Farbe (Streifen) und helle Tönung (Hintergrund) – für Standard- und eigene Farben
+function colorInfo(c) {
+  if (COLORS[c]) return COLORS[c];
+  if (!isHex(c)) return null;
+  const [r, g, b] = hexToRgb(c);
+  return { n: 'Eigene Farbe ' + c.toUpperCase(), fg: c, bg: rgbToHex(r + (255 - r) * .78, g + (255 - g) * .78, b + (255 - b) * .78) };
+}
+
+/* =====================================================================
+   Zustand  (alles in `state` wird gespeichert und ist rückgängig-fähig)
+   ===================================================================== */
+let state;
+const ui = { mode: 'room', flipped: false, selSeat: null, animating: false, _sel: null, multi: new Set(),
+             preview: null, pickedId: null, pickLog: [], teams: null, genderView: false };
+// selectedId = zuletzt gewählter Tisch; beim Setzen wird die Mehrfachauswahl auf genau diesen Tisch zurückgesetzt
+Object.defineProperty(ui, 'selectedId', { get() { return this._sel; }, set(v) { this._sel = v; this.multi = new Set(v ? [v] : []); } });
+const todayStr = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+const fmtDate = s => s ? s.split('-').reverse().join('.') : '';
+const isAbsent = s => !!s && s.absent === todayStr();   // Abwesenheit gilt nur für den heutigen Tag
+let undoStack = [], redoStack = [], dirty = false;
+
+const $ = id => document.getElementById(id);
+const room = $('room'), itembar = $('itembar'), stage = $('stage');
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const normAngle = a => ((a + 540) % 360) - 180;
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const newId = p => p + (++state.seq);
+const cls = () => state.classes.find(c => c.id === state.current) || state.classes[0];
+const isDesk = it => it.type === 'desk2' || it.type === 'desk1';
+const byId = id => cls().items.find(i => i.id === id);
+const stuById = id => cls().students.find(s => s.id === id);
+const studentMode = () => ui.mode === 'students';
+
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+
+function makeItem(d) {
+  const type = SIZES[d.type] ? d.type : 'desk2';
+  const src = d.seats || [];
+  return {
+    id: d.id || newId('i'), type, x: d.x, y: d.y, r: d.r || 0,
+    w: d.w || SIZES[type].w, h: d.h || SIZES[type].h,
+    label: type === 'obj' ? (d.label ?? 'Schrank') : type === 'round' ? (d.label ?? 'Pflanze') : '',
+    groupId: d.groupId || null,
+    seats: Array.from({ length: SEATS_PER[type] }, (_, i) => ({
+      sid: (src[i] && !src[i].blocked && src[i].sid) || null,
+      blocked: !!(src[i] && src[i].blocked),
+      pinned: !!(src[i] && !src[i].blocked && src[i].sid && src[i].pinned)
+    }))
+  };
+}
+
+function makeClass(name, items) {
+  return { id: newId('c'), name, students: [], rules: { apart: [], together: [], mix: false }, groups: [],
+           plans: [], duties: [], dutyCount: {}, picked: [], showDuties: false, subNote: '',
+           items: (items || DEFAULT_LAYOUT).map(d => makeItem({ ...d, id: null, groupId: null, seats: (d.seats || []).map(s => ({ blocked: s.blocked })) })) };
+}
+
+/* ---------- Rückgängig / Wiederholen ---------- */
+const snap = () => JSON.stringify(state);
+function commit(before) {
+  undoStack.push(before);
+  if (undoStack.length > 80) undoStack.shift();
+  redoStack = [];
+  dirty = true;
+  if (typeof renderFileInfo === 'function' && $('fileInfo')) renderFileInfo();
+}
+// Führt eine Änderung aus, legt den vorherigen Stand im Verlauf ab und zeichnet neu
+function change(fn, opts = {}) {
+  const before = snap();
+  fn();
+  pruneGroups();
+  if (snap() !== before) commit(before);
+  renderAll(opts);
+}
+function undo() {
+  if (!undoStack.length || ui.animating) return;
+  redoStack.push(snap());
+  state = JSON.parse(undoStack.pop());
+  ui.selectedId = null; ui.selSeat = null; ui.preview = null; dirty = true;
+  setResult('');
+  renderAll();
+}
+function redo() {
+  if (!redoStack.length || ui.animating) return;
+  undoStack.push(snap());
+  state = JSON.parse(redoStack.pop());
+  ui.selectedId = null; ui.selSeat = null; ui.preview = null; dirty = true;
+  setResult('');
+  renderAll();
+}
+
+/* =====================================================================
+   Namen & Import
+   ===================================================================== */
+function displayNames(list) {
+  const key = s => (s.first || '').toLowerCase();
+  const cnt = {};
+  list.forEach(s => cnt[key(s)] = (cnt[key(s)] || 0) + 1);
+  const m = new Map();
+  list.forEach(s => {
+    let n = s.first || s.last || '?';
+    if (cnt[key(s)] > 1 && s.first && s.last) n = s.first + ' ' + s.last[0] + '.';
+    m.set(s.id, n);
+  });
+  // falls auch die Initiale gleich ist: ganzer Nachname
+  const seen = {};
+  m.forEach(n => seen[n] = (seen[n] || 0) + 1);
+  list.forEach(s => { if (seen[m.get(s.id)] > 1 && s.first && s.last) m.set(s.id, s.first + ' ' + s.last); });
+  return m;
+}
+
+function normGender(v) {
+  v = (v || '').trim().toLowerCase().replace(/\.$/, '');
+  if (!v) return null;
+  if (/^(m|männlich|maennlich|mannlich|junge|j|male|boy)$/.test(v)) return 'm';
+  if (/^(w|weiblich|mädchen|maedchen|madchen|f|female|girl)$/.test(v)) return 'w';
+  if (/^(d|divers|x)$/.test(v)) return 'd';
+  return null;
+}
+
+// Liest eingefügten Text: Excel-Spalten (Tabulator), CSV (Semikolon) oder einfache Liste
+function parseList(text, order) {
+  const lines = text.split(/\r?\n/).filter(l => l.trim());
+  if (!lines.length) return [];
+  const delim = lines.some(l => l.includes('\t')) ? '\t' : lines.some(l => l.includes(';')) ? ';' : null;
+  if (!delim) {
+    return lines.flatMap(l => l.split(',')).map(s => s.trim()).filter(Boolean).map(n => ({ first: n, last: '', gender: '' }));
+  }
+  let rows = lines.map(l => l.split(delim).map(c => c.trim().replace(/^"(.*)"$/, '$1').trim()));
+  const ncol = Math.max(...rows.map(r => r.length));
+  let cFirst = -1, cLast = -1, cFull = -1, cGender = -1;
+  const h = rows[0].map(c => c.toLowerCase());
+  const isHeader = h.some(c => /vorname|nachname|name|geschlecht|gender|m\/w|w\/m/.test(c));
+  if (isHeader) {
+    h.forEach((c, i) => {
+      if (/vorname|rufname|first/.test(c)) cFirst = i;
+      else if (/nachname|familienname|zuname|last|surname/.test(c)) cLast = i;
+      else if (/geschlecht|gender|sex|m\/w|w\/m/.test(c)) cGender = i;
+      else if (/name|schüler|schueler|kind/.test(c) && cFull < 0) cFull = i;
+    });
+    if (cFirst >= 0 && cLast < 0 && cFull >= 0) cLast = cFull;     // „Vorname | Name“
+    if (cFirst < 0) cFirst = cFull;
+    rows = rows.slice(1);
+  } else {
+    for (let i = 0; i < ncol; i++) {
+      const vals = rows.map(r => r[i]).filter(Boolean);
+      if (vals.length && vals.filter(v => normGender(v)).length / vals.length >= 0.6) { cGender = i; break; }
+    }
+    const nameCols = [];
+    for (let i = 0; i < ncol; i++) if (i !== cGender && rows.some(r => r[i])) nameCols.push(i);
+    if (order === 'last-first' && nameCols.length > 1) { cLast = nameCols[0]; cFirst = nameCols[1]; }
+    else { cFirst = nameCols[0] ?? -1; cLast = nameCols[1] ?? -1; }
+  }
+  return rows.map(r => ({
+    first: cFirst >= 0 ? (r[cFirst] || '') : '',
+    last: cLast >= 0 ? (r[cLast] || '') : '',
+    gender: cGender >= 0 ? (normGender(r[cGender]) || '') : ''
+  })).filter(s => s.first || s.last).map(s => s.first ? s : { ...s, first: s.last, last: '' });
+}
+
+function importStudents(text, replace) {
+  const parsed = parseList(text, $('importOrder').value);
+  if (!parsed.length) { setResult('Keine Namen erkannt.', 'warn'); return; }
+  change(() => {
+    const c = cls();
+    const same = (a, b) => a.first.toLowerCase() === b.first.toLowerCase() && (a.last || '').toLowerCase() === (b.last || '').toLowerCase();
+    const result = replace ? [] : c.students.slice();
+    parsed.forEach(p => {
+      const ex = c.students.find(s => same(s, p));
+      if (ex) { if (p.gender) ex.gender = p.gender; if (!result.includes(ex)) result.push(ex); }
+      else result.push({ id: newId('s'), first: p.first, last: p.last, gender: p.gender, color: '', front: false });
+    });
+    c.students = result;
+    cleanupStudents();
+  });
+  $('importText').value = '';
+  const g = parsed.filter(p => p.gender).length;
+  setResult(`${parsed.length} Namen übernommen${g ? `, davon ${g} mit Geschlecht` : ''}.`, 'ok');
+}
+
+// Entfernt Verweise auf gelöschte Schüler (Plätze, Regeln)
+function cleanupStudents() {
+  const c = cls();
+  const ids = new Set(c.students.map(s => s.id));
+  c.items.forEach(it => it.seats.forEach(s => { if (s.sid && !ids.has(s.sid)) { s.sid = null; s.pinned = false; } }));
+  c.rules.apart = c.rules.apart.filter(([a, b]) => ids.has(a) && ids.has(b));
+  c.rules.together = c.rules.together.filter(([a, b]) => ids.has(a) && ids.has(b));
+}
+
+/* =====================================================================
+   Geometrie: Platzmitten (in % des Raums)
+   ===================================================================== */
+function seatList(c) {
+  const out = [];
+  c.items.forEach(it => {
+    if (!isDesk(it)) return;
+    const t = it.r * Math.PI / 180;
+    it.seats.forEach((s, i) => {
+      const lx = it.type === 'desk2' ? (i === 0 ? -it.w / 4 : it.w / 4) : 0;
+      out.push({ it, i, s, cx: it.x + lx * Math.cos(t), cy: it.y + lx * Math.sin(t) });
+    });
+  });
+  return out;
+}
+const dist = (a, b) => Math.hypot(a.cx - b.cx, a.cy - b.cy);
+
+/* =====================================================================
+   Verteilen mit Regeln
+   ===================================================================== */
+function distribute() {
+  if (ui.animating) return;
+  const c = cls();
+  if (!c.students.length) { setResult('Bitte zuerst Schüler eintragen.', 'warn'); return; }
+  const all = seatList(c).filter(x => !x.s.blocked);
+  const n = all.length;
+  if (!n) { setResult('Es gibt keine freien Plätze.', 'warn'); return; }
+  const before = snap();
+
+  const ids = new Set(c.students.map(s => s.id));
+  all.forEach(x => { if (!x.s.pinned || !ids.has(x.s.sid)) { x.s.sid = null; x.s.pinned = false; } });
+  const pinnedIds = new Set(all.filter(x => x.s.pinned).map(x => x.s.sid));
+  const movable = [];
+  all.forEach((x, k) => { if (!x.s.pinned) movable.push(k); });
+  let pool = shuffle(c.students.filter(s => !pinnedIds.has(s.id)).map(s => s.id));
+  const notPlaced = pool.slice(movable.length);
+  pool = pool.slice(0, movable.length);
+
+  // Beziehungen zwischen allen freien Plätzen vorberechnen
+  const same = [], near = [], grp = [];
+  for (let i = 0; i < n; i++) {
+    same[i] = []; near[i] = []; grp[i] = [];
+    for (let j = 0; j < n; j++) {
+      same[i][j] = all[i].it === all[j].it;
+      near[i][j] = !same[i][j] && dist(all[i], all[j]) <= NEAR;
+      grp[i][j] = !!all[i].it.groupId && all[i].it.groupId === all[j].it.groupId;
+    }
+  }
+  // „Vorne“ = das Drittel der Plätze, das der Tafel am nächsten ist (mind. so viele wie Kinder mit ⬆)
+  const frontKids = new Set(c.students.filter(s => s.front).map(s => s.id));
+  const zoneSize = Math.min(n, Math.max(frontKids.size, Math.ceil(n * 0.34)));
+  const inFront = Array(n).fill(false);
+  all.map((x, k) => k).sort((a, b) => all[b].cy - all[a].cy).slice(0, zoneSize).forEach(k => inFront[k] = true);
+  // Zweiertische, bei denen beide Plätze frei sind
+  const pairs = [], byItem = new Map();
+  all.forEach((x, k) => { if (x.it.type === 'desk2') { if (!byItem.has(x.it)) byItem.set(x.it, []); byItem.get(x.it).push(k); } });
+  byItem.forEach(ks => { if (ks.length === 2) pairs.push(ks); });
+  const gender = new Map(c.students.map(s => [s.id, s.gender]));
+  const R = c.rules;
+
+  // Strafpunkte für eine Verteilung – je weniger, desto besser
+  function cost(A) {
+    const pos = {};
+    for (let k = 0; k < n; k++) if (A[k]) pos[A[k]] = k;
+    let sum = 0;
+    for (const [a, b] of R.apart) {
+      const i = pos[a], j = pos[b];
+      if (i == null || j == null) continue;
+      if (same[i][j]) sum += 1000; else if (near[i][j]) sum += 300; else if (grp[i][j]) sum += 150;
+    }
+    for (const [a, b] of R.together) {
+      const i = pos[a], j = pos[b];
+      if (i == null || j == null || same[i][j]) continue;
+      sum += near[i][j] ? 120 : grp[i][j] ? 80 : 500;
+    }
+    frontKids.forEach(id => { const k = pos[id]; if (k != null && !inFront[k]) sum += 400; });
+    for (const [p, q] of pairs) {
+      const x = A[p], y = A[q];
+      if (!!x !== !!y) sum += 60;                         // jemand säße allein am Zweiertisch
+      else if (x && y && R.mix) { const g1 = gender.get(x), g2 = gender.get(y); if (g1 && g1 === g2 && g1 !== 'd') sum += 40; }
+    }
+    return sum;
+  }
+
+  // Zufällig starten und durch Tauschen verbessern (mehrere Durchläufe, der beste gewinnt)
+  const base = all.map(x => x.s.pinned ? x.s.sid : null);
+  let best = null, bestCost = Infinity;
+  for (let run = 0; run < 5 && bestCost > 0; run++) {
+    const A = base.slice();
+    const fill = shuffle(pool.concat(Array(movable.length - pool.length).fill(null)));
+    movable.forEach((k, idx) => A[k] = fill[idx]);
+    let cur = cost(A), T = 60;
+    if (cur < bestCost) { best = A.slice(); bestCost = cur; }
+    for (let step = 0; step < 6000 && movable.length > 1 && bestCost > 0; step++) {
+      const i = movable[Math.random() * movable.length | 0], j = movable[Math.random() * movable.length | 0];
+      if (i === j || (!A[i] && !A[j])) continue;
+      [A[i], A[j]] = [A[j], A[i]];
+      const nc = cost(A);
+      if (nc <= cur || Math.random() < Math.exp((cur - nc) / T)) {
+        cur = nc;
+        if (cur < bestCost) { best = A.slice(); bestCost = cur; }
+      } else [A[i], A[j]] = [A[j], A[i]];
+      T = Math.max(1, T * 0.999);
+    }
+  }
+  all.forEach((x, k) => { x.s.sid = best[k]; });
+
+  // Ergebnis prüfen und melden
+  const dn = displayNames(c.students);
+  const pos = {}; best.forEach((sid, k) => { if (sid) pos[sid] = k; });
+  const issues = [];
+  R.apart.forEach(([a, b]) => { const i = pos[a], j = pos[b]; if (i != null && j != null && (same[i][j] || near[i][j] || grp[i][j])) issues.push(`${dn.get(a)} & ${dn.get(b)} sitzen ${same[i][j] || near[i][j] ? 'nebeneinander' : 'in derselben Gruppe'}`); });
+  R.together.forEach(([a, b]) => { const i = pos[a], j = pos[b]; if (i != null && j != null && !same[i][j] && !near[i][j]) issues.push(`${dn.get(a)} & ${dn.get(b)} sitzen nicht nebeneinander`); });
+  frontKids.forEach(id => { const k = pos[id]; if (k != null && !inFront[k]) issues.push(`${dn.get(id)} sitzt nicht vorne`); });
+  if (notPlaced.length) issues.push(`kein Platz für: ${notPlaced.map(id => dn.get(id)).join(', ')}`);
+  const ruleCount = R.apart.length + R.together.length + frontKids.size;
+  if (issues.length) setResult('⚠ Nicht alles ließ sich erfüllen: ' + issues.join(' · '), 'warn');
+  else setResult(ruleCount ? `✓ Verteilt – alle ${ruleCount} Regeln erfüllt.` : '✓ Verteilt.', 'ok');
+
+  if (snap() !== before) commit(before);
+  ui.selSeat = null; ui.selectedId = null;
+  ui.mode = 'students';
+  renderAll({ animate: true, keepList: true });
+}
+
+/* ---------- Animation: Namen wirbeln, bevor sie landen ---------- */
+function spin() {
+  const names = [...displayNames(cls().students).values()];
+  const els = [...room.querySelectorAll('.seat:not(.blocked):not(.pinned)')];
+  if (!names.length || !els.length) return;
+  ui.animating = true;
+  const list = shuffle(els).map((e, i) => ({
+    e, nm: e.querySelector('.nm'), text: e.querySelector('.nm').textContent,
+    stop: 450 + i * (1100 / els.length) + Math.random() * 120, done: false
+  }));
+  list.forEach(f => f.e.classList.add('spin'));
+  const t0 = performance.now();
+  (function tick() {
+    const t = performance.now() - t0;
+    let running = false;
+    for (const f of list) {
+      if (f.done) continue;
+      if (t >= f.stop) { f.done = true; f.nm.textContent = f.text; f.e.classList.remove('spin'); f.e.classList.add('pop'); }
+      else { running = true; f.nm.textContent = names[Math.random() * names.length | 0]; }
+    }
+    if (running) setTimeout(tick, 70); else ui.animating = false;
+  })();
+}
+
+function togglePin(it, i) {
+  if (!it.seats[i].sid) return;
+  change(() => { it.seats[i].pinned = !it.seats[i].pinned; }, { keepList: true });
+}
+function moveStudent(a, b) {
+  change(() => {
+    const sa = byId(a.id).seats[a.i], sb = byId(b.id).seats[b.i];
+    if (sa === sb || sb.blocked) return;
+    [sa.sid, sb.sid] = [sb.sid, sa.sid];
+    [sa.pinned, sb.pinned] = [sb.pinned, sa.pinned];
+    ui.selSeat = { id: b.id, i: b.i };
+  }, { keepList: true });
+}
+function toggleBlock(it, i) {
+  change(() => { const s = it.seats[i]; s.blocked = !s.blocked; s.sid = null; s.pinned = false; }, { keepList: true });
+}
+
+/* =====================================================================
+   Gruppen
+   ===================================================================== */
+function pruneGroups() {
+  const c = cls();
+  const used = new Set(c.items.map(i => i.groupId).filter(Boolean));
+  c.groups = c.groups.filter(g => used.has(g.id));
+  c.items.forEach(i => { if (i.groupId && !c.groups.some(g => g.id === i.groupId)) i.groupId = null; });
+}
+function newGroup() {
+  const c = cls();
+  let k = 1; while (c.groups.some(g => g.name === 'Gruppe ' + k)) k++;
+  const g = { id: newId('g'), name: 'Gruppe ' + k, color: GROUP_COLORS[(k - 1) % GROUP_COLORS.length] };
+  c.groups.push(g);
+  return g;
+}
+function autoGroups() {
+  let count = 0;
+  change(() => {
+    const c = cls();
+    const desks = c.items.filter(isDesk);
+    const seats = seatList(c);
+    const parent = new Map(desks.map(d => [d, d]));
+    const find = d => { while (parent.get(d) !== d) d = parent.get(d); return d; };
+    for (let i = 0; i < seats.length; i++) for (let j = i + 1; j < seats.length; j++) {
+      if (seats[i].it !== seats[j].it && dist(seats[i], seats[j]) <= NEAR) parent.set(find(seats[i].it), find(seats[j].it));
+    }
+    const clusters = new Map();
+    desks.forEach(d => { const r = find(d); if (!clusters.has(r)) clusters.set(r, []); clusters.get(r).push(d); });
+    c.groups = []; desks.forEach(d => d.groupId = null);
+    [...clusters.values()].filter(cl => cl.length > 1)
+      .sort((a, b) => Math.min(...a.map(d => d.x)) - Math.min(...b.map(d => d.x)))
+      .forEach(cl => { const g = newGroup(); cl.forEach(d => d.groupId = g.id); count++; });
+  }, { keepList: true });
+  setResult(count ? `${count} Gruppen gebildet.` : 'Keine aneinanderstehenden Tische gefunden. Schiebe Tische zusammen oder ordne sie einzeln zu (Tisch anklicken → Gruppe).', count ? 'ok' : 'warn');
+}
+
+/* =====================================================================
+   Darstellung
+   ===================================================================== */
+function renderAll(opts = {}) {
+  document.body.classList.toggle('mode-room', ui.mode === 'room');
+  document.body.classList.toggle('mode-students', ui.mode === 'students');
+  document.querySelectorAll('#modes button').forEach(b => {
+    b.classList.toggle('active', b.dataset.mode === ui.mode);
+    b.disabled = ui.flipped && b.dataset.mode === 'room';
+  });
+  $('flip').classList.toggle('on', ui.flipped);
+  room.classList.toggle('locked', studentMode() || !!ui.preview);
+  room.classList.toggle('flipped', ui.flipped);
+  ui.colorsOn = $('optColors').checked;
+  $('colOn').checked = ui.colorsOn; $('colorBtn').classList.toggle('on', ui.colorsOn);
+  $('undo').disabled = !undoStack.length;
+  $('redo').disabled = !redoStack.length;
+  renderClassSel();
+  if (!opts.keepList) renderStudents(); else renderStuBadge();
+  renderRules();
+  renderGroups();
+  renderGenderColors();
+  renderFileInfo();
+  renderPick();
+  renderTeams();
+  renderPlans();
+  renderDuties();
+  $('subNote').value = cls().subNote || '';
+  renderRoom(opts.animate);
+}
+
+function renderClassSel() {
+  $('classSel').innerHTML = state.classes.map(c => `<option value="${c.id}" ${c.id === state.current ? 'selected' : ''}>${esc(c.name)}</option>`).join('');
+  $('classDel').disabled = state.classes.length < 2;
+}
+
+function renderStudents() {
+  const c = cls();
+  const gOpts = g => ['', 'm', 'w', 'd'].map(v => `<option value="${v}" ${g === v ? 'selected' : ''}>${v || '–'}</option>`).join('');
+  $('slist').innerHTML = !c.students.length ? '' :
+    `<div class="srow head"><span>Farbe</span><span>Vorname</span><span>Nachname</span><span>m/w/d</span><span title="soll nach vorne">⬆</span><span title="heute abwesend">🤒</span><span title="Notiz">📝</span><span></span></div>` +
+    c.students.map(s => `<div class="srow${isAbsent(s) ? ' abs' : ''}" data-id="${s.id}">
+      <button class="sw${colorInfo(s.color) ? '' : ' none'}" data-f="colorbtn" title="Farbmarkierung: ${colorInfo(s.color) ? colorInfo(s.color).n : 'keine'}" style="--sw:${colorInfo(s.color) ? colorInfo(s.color).fg : 'transparent'}"><i></i></button>
+      <input type="text" data-f="first" value="${esc(s.first)}" placeholder="Vorname">
+      <input type="text" data-f="last" value="${esc(s.last)}" placeholder="Nachname">
+      <select data-f="gender" title="Geschlecht">${gOpts(s.gender)}</select>
+      <label class="fr" title="soll nach vorne"><input type="checkbox" data-f="front" ${s.front ? 'checked' : ''}></label>
+      <label class="fr" title="heute abwesend"><input type="checkbox" data-f="absent" ${isAbsent(s) ? 'checked' : ''}></label>
+      <button class="nb${s.note ? ' has' : ''}" data-f="note" title="${s.note ? 'Notiz: ' + esc(s.note) : 'Notiz hinzufügen'}">📝</button>
+      <button class="x" data-f="del" title="Schüler entfernen">✕</button></div>`).join('');
+  renderStuBadge();
+}
+function renderStuBadge() {
+  const c = cls();
+  const g = { m: 0, w: 0, d: 0 };
+  c.students.forEach(s => { if (g[s.gender] != null) g[s.gender]++; });
+  const seats = seatList(c).filter(x => !x.s.blocked).length;
+  const abs = c.students.filter(isAbsent).length;
+  $('stuBadge').textContent = c.students.length
+    ? `${c.students.length}${g.m + g.w + g.d ? ` (${g.m} m · ${g.w} w${g.d ? ' · ' + g.d + ' d' : ''})` : ''} · ${seats} Plätze${abs ? ` · ${abs} abw.` : ''}`
+    : '';
+  $('stuBadge').style.color = c.students.length > seats ? 'var(--danger)' : '';
+}
+
+function renderRules() {
+  const c = cls();
+  const dn = displayNames(c.students);
+  const sorted = c.students.slice().sort((a, b) => dn.get(a.id).localeCompare(dn.get(b.id), 'de'));
+  const opts = '<option value="">– Schüler wählen –</option>' + sorted.map(s => `<option value="${s.id}">${esc(dn.get(s.id))}</option>`).join('');
+  { const v = $('ruleA').value; $('ruleA').innerHTML = opts; $('ruleA').value = c.students.some(s => s.id === v) ? v : ''; }
+  renderRuleB(sorted, dn);
+  const rows = [];
+  c.rules.apart.forEach((r, i) => rows.push(`<div class="rule"><span class="tag apart">nicht neben</span>${esc(dn.get(r[0]))} – ${esc(dn.get(r[1]))}<button data-kind="apart" data-i="${i}" title="Regel löschen">✕</button></div>`));
+  c.rules.together.forEach((r, i) => rows.push(`<div class="rule"><span class="tag together">gerne neben</span>${esc(dn.get(r[0]))} – ${esc(dn.get(r[1]))}<button data-kind="together" data-i="${i}" title="Regel löschen">✕</button></div>`));
+  $('ruleList').innerHTML = rows.join('');
+  $('ruleMix').checked = !!c.rules.mix;
+  const fr = c.students.filter(s => s.front).length;
+  const total = c.rules.apart.length + c.rules.together.length;
+  $('ruleBadge').textContent = total || fr ? `${total} Regeln${fr ? ` · ${fr}× ⬆` : ''}` : '';
+}
+
+function renderGroups() {
+  const c = cls();
+  $('groupList').innerHTML = c.groups.map(g => {
+    const n = c.items.filter(i => i.groupId === g.id).length;
+    return `<div class="grow" data-id="${g.id}"><span class="dot" style="background:${g.color}"></span><input type="text" value="${esc(g.name)}"><span class="hint">${n} Tische</span></div>`;
+  }).join('');
+  $('groupBadge').textContent = c.groups.length || '';
+}
+
+// Ansichts-Koordinaten (Schülersicht = um 180° gedreht)
+const vx = x => ui.flipped ? 100 - x : x;
+const vy = y => ui.flipped ? 100 - y : y;
+
+function renderRoom(animate) {
+  const c = cls();
+  const items = ui.preview ? ui.preview.items : c.items;
+  const groups = ui.preview ? ui.preview.groups : c.groups;
+  const dn = displayNames(c.students);
+  const stu = new Map(c.students.map(s => [s.id, s]));
+  const showG = $('optGender').checked;
+  // Partner/Gruppen im Plan einfärben?
+  const teamIdx = ui.teams && $('teamColor').checked ? new Map(ui.teams.list.flatMap((t, i) => t.map(id => [id, i]))) : null;
+  room.querySelectorAll('.item').forEach(el => el.remove());
+  // Dienste je Kind (für die Symbole auf den Tischen)
+  const dutyOf = new Map();
+  if (c.dutyIcons !== false) (c.duties || []).forEach(d => d.sids.filter(Boolean).forEach(id => { if (!dutyOf.has(id)) dutyOf.set(id, []); dutyOf.get(id).push(d); }));
+
+  let nr = 0;
+  const groupShown = new Set();   // Gruppenname nur am ersten Tisch einer Gruppe anzeigen
+  items.forEach(it => {
+    const el = document.createElement('div');
+    el.className = 'item ' + (isDesk(it) ? 'desk' : 'obj' + (it.type === 'round' ? ' round' : '')) + (ui.multi.has(it.id) && !studentMode() && !ui.preview ? ' selected' : '');
+    el.dataset.id = it.id;
+    applyGeom(el, it);
+    if (isDesk(it)) {
+      const g = it.groupId && groups.find(g => g.id === it.groupId);
+      const showGN = g && !groupShown.has(g.id); if (g) groupShown.add(g.id);
+      el.innerHTML = `<span class="nr">Tisch ${++nr}${showGN ? `<span class="gn"> · ${esc(g.name)}</span>` : ''}</span>`;
+      if (g) { el.classList.add('grouped'); el.style.setProperty('--gc', g.color); }
+      it.seats.forEach((s, i) => {
+        const sd = document.createElement('div');
+        sd.dataset.seat = i;
+        if (s.blocked) { sd.className = 'seat blocked'; sd.innerHTML = '<span class="nm">🔒 gesperrt</span>'; }
+        else {
+          const st = s.sid && stu.get(s.sid);
+          const isSel = ui.selSeat && ui.selSeat.id === it.id && ui.selSeat.i === i;
+          sd.className = 'seat' + (st ? ' named' : ' empty') + (s.pinned && st ? ' pinned' : '') + (isSel ? ' sel' : '') +
+                         (st && isAbsent(st) ? ' absent' : '') + (st && ui.pickedId === st.id ? ' picked' : '');
+          if (st && ui.pickedId === st.id) el.classList.add('pickhost');
+          const ci = st && seatColor(st, teamIdx);
+          if (ci) { sd.dataset.c = '1'; sd.style.setProperty('--cfg', ci.fg); sd.style.setProperty('--cbg', ci.bg); }
+          if (st && teamIdx && teamIdx.has(st.id) && !ui.genderView) {   // Gruppenfarbe kräftiger
+            const [r, g, b] = hexToRgb(ci.fg);
+            sd.style.setProperty('--cbg', rgbToHex(r + (255 - r) * .55, g + (255 - g) * .55, b + (255 - b) * .55));
+            sd.classList.add('team');
+          }
+          sd.innerHTML = `<span class="nm">${st ? esc(dn.get(st.id)) : 'frei'}</span>` +
+            (st && showG && st.gender ? `<span class="g">${GENDER_SIGN[st.gender]}</span>` : '') +
+            (st && st.note ? '<span class="nt">📝</span>' : '') +
+            (st && ui.pickedId === st.id ? '<span class="pk">👇</span>' : '') +
+            (st && dutyOf.has(st.id) ? `<span class="dt">${dutyOf.get(st.id).map(d => esc(dutyIcon(d))).join('')}</span>` : '') +
+            (st && teamIdx && teamIdx.has(st.id) && !ui.genderView ? `<span class="tb">${teamShort(teamIdx.get(st.id))}</span>` : '');
+          if (st) {
+            sd.dataset.sid = st.id;
+            const tip = [];
+            if (isAbsent(st)) tip.push('heute abwesend');
+            if (s.pinned) tip.push('fixiert – bleibt beim Neu-Verteilen sitzen');
+            if (st.note) tip.push('Notiz: ' + st.note);
+            if (dutyOf.has(st.id)) { tip.push('Dienst: ' + dutyOf.get(st.id).map(d => d.name).join(', ')); sd.classList.add('hasduty'); }
+            if (tip.length) sd.title = dn.get(st.id) + '\n' + tip.join('\n');
+          }
+        }
+        el.appendChild(sd);
+      });
+    } else {
+      el.innerHTML = `<span class="lbl">${esc(it.label)}</span><span class="handle size-handle" title="Ziehen zum Größe ändern"></span>`;
+    }
+    el.insertAdjacentHTML('beforeend', '<span class="handle rot-handle" title="Ziehen zum Drehen"></span>');
+    stage.appendChild(el);
+  });
+
+  // Dienste-Kasten im Plan
+  const box = $('dutyBox');
+  const duties = (c.duties || []).filter(d => d.sids.some(Boolean));
+  if ((c.showDuties || ui.printSub) && duties.length) {
+    box.innerHTML = '<b>Dienste</b>' + duties.map(d => `<div><span>${esc(dutyIcon(d))} ${esc(d.name)}:</span> ${d.sids.filter(Boolean).map(id => esc(dn.get(id) || '?')).join(', ')}</div>`).join('');
+    box.hidden = false;
+  } else box.hidden = true;
+
+  // Vorschau-Leiste (Sitzplan-Verlauf)
+  const pv = $('previewBar');
+  if (ui.preview) {
+    pv.innerHTML = `👁 Vorschau: Sitzplan ab ${fmtDate(ui.preview.date)}${ui.preview.note ? ' – ' + esc(ui.preview.note) : ''}
+      <button data-pv="restore">↩ Wiederherstellen</button><button data-pv="close">Schließen</button>`;
+    pv.hidden = false;
+  } else pv.hidden = true;
+
+  room.classList.toggle('has-picked', !!ui.pickedId && !!stage.querySelector('.seat.picked'));
+  renderTeamsPanel(dn);
+  layoutStage();
+  buildItembar();
+  if (animate && $('optAnim').checked) spin();
+  else if (animate) room.querySelectorAll('.seat.named:not(.pinned)').forEach(s => s.classList.add('pop'));
+}
+
+function applyGeom(el, it) {
+  el.style.left = vx(it.x) + '%';
+  el.style.top = vy(it.y) + '%';
+  el.style.width = it.w + '%';
+  el.style.height = it.h + '%';
+  el.style.setProperty('--r', it.r + 'deg');
+}
+
+/* ---------- kleine Werkzeugleiste am gewählten Tisch / Platz ---------- */
+const barItemId = () => studentMode() ? (ui.selSeat && ui.selSeat.id) : ui.selectedId;
+const selItems = () => cls().items.filter(i => ui.multi.has(i.id));
+
+function buildItembar() {
+  itembar.classList.remove('show'); itembar.innerHTML = '';
+  if (ui.preview) return;
+  if (studentMode()) {
+    const it = ui.selSeat && byId(ui.selSeat.id);
+    const s = it && it.seats[ui.selSeat.i];
+    const st = s && s.sid && stuById(s.sid);
+    if (!st) return;
+    const abs = isAbsent(st);
+    itembar.innerHTML =
+      `<button class="${s.pinned ? 'on' : ''}" data-pin="1">${s.pinned ? '📌 Fixierung lösen' : '📌 Fixieren'}</button>
+       <button class="${abs ? 'on' : ''}" data-absent="1">${abs ? '✓ wieder da' : '🤒 abwesend'}</button>
+       <button data-note="1" title="${st.note ? esc(st.note) : 'Notiz hinzufügen'}">📝 Notiz${st.note ? ' ✓' : ''}</button>
+       <button data-unseat="1" title="Schüler von diesem Platz nehmen">Platz räumen</button>` +
+      (st.note ? `<div class="barnote">📝 ${esc(st.note)}</div>` : '');
+  } else if (ui.multi.size > 1) {
+    const sel = selItems();
+    const gs = cls().groups;
+    itembar.innerHTML = `<span class="cnt">${sel.length} ausgewählt</span>
+      <button data-rot="-15" title="Alle 15° nach links drehen">⟲</button>
+      <button data-rot="15" title="Alle 15° nach rechts drehen">⟳</button>
+      <button data-rot="reset" title="Alle gerade ausrichten">0°</button>
+      <select id="deskGroup" title="Gruppe für alle"><option value="">Gruppe …</option><option value="__none">keine Gruppe</option>${gs.map(g => `<option value="${g.id}">${esc(g.name)}</option>`).join('')}<option value="__new">＋ neue Gruppe</option></select>
+      <button class="danger" data-del="1" title="Alle ausgewählten entfernen">✕</button>`;
+  } else {
+    const it = byId(ui.selectedId);
+    if (!it) return;
+    let html = '';
+    if (!isDesk(it)) html += `<input type="text" id="objLabel" value="${esc(it.label)}" placeholder="Beschriftung">`;
+    html += `<button data-rot="-15" title="15° nach links drehen">⟲</button>
+             <button data-rot="15" title="15° nach rechts drehen">⟳</button>
+             <button data-rot="reset" title="Gerade ausrichten">0°</button>`;
+    if (it.type === 'desk2') ['links', 'rechts'].forEach((side, i) => {
+      const b = it.seats[i].blocked;
+      html += `<button class="${b ? 'on' : ''}" data-block="${i}">${b ? '🔓' : '🔒'} ${side}</button>`;
+    });
+    else if (it.type === 'desk1') { const b = it.seats[0].blocked; html += `<button class="${b ? 'on' : ''}" data-block="0">${b ? '🔓 freigeben' : '🔒 sperren'}</button>`; }
+    if (isDesk(it)) {
+      const gs = cls().groups;
+      html += `<select id="deskGroup" title="Gruppe"><option value="__none">keine Gruppe</option>${gs.map(g => `<option value="${g.id}" ${it.groupId === g.id ? 'selected' : ''}>${esc(g.name)}</option>`).join('')}<option value="__new">＋ neue Gruppe</option></select>`;
+    }
+    html += `<button class="danger" data-del="1" title="Entfernen">✕</button>`;
+    itembar.innerHTML = html;
+  }
+  itembar.classList.add('show');
+  positionItembar();
+}
+
+function positionItembar() {
+  if (!itembar.classList.contains('show')) return;
+  const ids = studentMode() ? [barItemId()] : [...ui.multi];
+  const els = ids.map(id => room.querySelector(`.item[data-id="${id}"]`)).filter(Boolean);
+  if (!els.length) return;
+  const rr = room.getBoundingClientRect();
+  let l = Infinity, t = Infinity, r = -Infinity, b = -Infinity;
+  els.forEach(el => { const d = el.getBoundingClientRect(); l = Math.min(l, d.left); t = Math.min(t, d.top); r = Math.max(r, d.right); b = Math.max(b, d.bottom); });
+  const half = itembar.offsetWidth / 2 + 6;
+  itembar.style.left = clamp((l + r) / 2 - rr.left, half, rr.width - half) + 'px';
+  const below = b - rr.top + 12;
+  if (below + itembar.offsetHeight + 6 < rr.height) { itembar.style.top = below + 'px'; itembar.style.transform = 'translate(-50%, 0)'; }
+  else { itembar.style.top = Math.max(4, t - rr.top - 34) + 'px'; itembar.style.transform = 'translate(-50%, -100%)'; }
+}
+
+function selectItem(id) {
+  ui.selectedId = id;
+  markSelection();
+}
+function markSelection() {
+  room.querySelectorAll('.item').forEach(x => x.classList.toggle('selected', ui.multi.has(x.dataset.id)));
+  room.classList.toggle('multi', ui.multi.size > 1);
+  buildItembar();
+}
+
+function setResult(text, kind) {
+  const r = $('result');
+  r.textContent = text;
+  r.className = 'result' + (kind ? ' ' + kind : '');
+}
+
+/* =====================================================================
+   Maus / Touch im Raum
+   ===================================================================== */
+let drag = null, sdrag = null, lastTap = null, marquee = null;
+const seatAt = (x, y) => document.elementsFromPoint(x, y).find(el => el.classList && el.classList.contains('seat'));
+const seatRef = el => ({ id: el.closest('.item').dataset.id, i: +el.dataset.seat });
+
+function roomPoint(e) {
+  const rect = room.getBoundingClientRect();
+  return { x: (e.clientX - rect.left) / rect.width * 100, y: (e.clientY - rect.top) / rect.height * 100, rect };
+}
+
+room.addEventListener('pointerdown', e => {
+  if (e.target.closest('.itembar, .roombar, #pickBanner, #dutyBox, #timerBox, #teamsPanel') || ui.animating || ui.preview) return;
+  if (studentMode()) {
+    const seatEl = seatAt(e.clientX, e.clientY);
+    const ref = seatEl && seatRef(seatEl);
+    const s = ref && byId(ref.id).seats[ref.i];
+    if (!s || !s.sid) { if (ui.selSeat) { ui.selSeat = null; renderRoom(); } return; }
+    sdrag = { from: ref, el: seatEl, name: seatEl.querySelector('.nm').textContent, x0: e.clientX, y0: e.clientY, ghost: null, over: null };
+    room.setPointerCapture(e.pointerId);
+    e.preventDefault();
+    return;
+  }
+  const add = e.shiftKey || e.ctrlKey || e.metaKey;
+  const p = roomPoint(e);
+  const el = e.target.closest('.item');
+  if (!el) {   // leere Fläche: Auswahlrahmen aufziehen
+    if (!add) { ui.selectedId = null; markSelection(); }
+    marquee = { x0: p.x, y0: p.y, add, base: new Set(ui.multi), el: document.createElement('div') };
+    marquee.el.className = 'marquee';
+    room.appendChild(marquee.el);
+    room.setPointerCapture(e.pointerId);
+    e.preventDefault();
+    return;
+  }
+  const it = byId(el.dataset.id);
+  if (add) {   // Shift/Strg + Klick: zur Auswahl hinzufügen bzw. herausnehmen
+    if (ui.multi.has(it.id)) { ui.multi.delete(it.id); ui._sel = [...ui.multi].pop() || null; markSelection(); return; }
+    ui.multi.add(it.id); ui._sel = it.id; markSelection();
+  } else if (!ui.multi.has(it.id)) selectItem(it.id);
+  const before = snap();
+  if (ui.multi.size === 1 && e.target.classList.contains('rot-handle')) drag = { mode: 'rotate', it, el, before };
+  else if (ui.multi.size === 1 && e.target.classList.contains('size-handle')) drag = { mode: 'resize', it, el, before };
+  else {
+    const sel = selItems();
+    drag = { mode: 'move', it, el, before, p0: p, moved: false, clickedInMulti: !add && ui.multi.size > 1,
+             starts: sel.map(s => ({ s, x: s.x, y: s.y, el: room.querySelector(`.item[data-id="${s.id}"]`) })) };
+    drag.starts.forEach(o => o.el && o.el.classList.add('dragging'));
+  }
+  room.setPointerCapture(e.pointerId);
+  e.preventDefault();
+});
+
+room.addEventListener('pointermove', e => {
+  if (sdrag) {
+    if (!sdrag.ghost) {
+      if (Math.hypot(e.clientX - sdrag.x0, e.clientY - sdrag.y0) < 6) return;
+      sdrag.ghost = document.createElement('div');
+      sdrag.ghost.className = 'ghost';
+      sdrag.ghost.textContent = sdrag.name;
+      document.body.appendChild(sdrag.ghost);
+      sdrag.el.classList.add('dragsrc');
+      itembar.classList.remove('show');
+    }
+    sdrag.ghost.style.left = e.clientX + 'px';
+    sdrag.ghost.style.top = e.clientY + 'px';
+    const over = seatAt(e.clientX, e.clientY);
+    const ok = over && over !== sdrag.el && !over.classList.contains('blocked') ? over : null;
+    if (sdrag.over !== ok) {
+      if (sdrag.over) sdrag.over.classList.remove('drop');
+      if (ok) ok.classList.add('drop');
+      sdrag.over = ok;
+    }
+    return;
+  }
+  if (marquee) {
+    const p = roomPoint(e);
+    const x0 = Math.min(p.x, marquee.x0), x1 = Math.max(p.x, marquee.x0), y0 = Math.min(p.y, marquee.y0), y1 = Math.max(p.y, marquee.y0);
+    Object.assign(marquee.el.style, { left: x0 + '%', top: y0 + '%', width: (x1 - x0) + '%', height: (y1 - y0) + '%' });
+    const inside = cls().items.filter(i => vx(i.x) >= x0 && vx(i.x) <= x1 && vy(i.y) >= y0 && vy(i.y) <= y1).map(i => i.id);
+    ui.multi = new Set([...(marquee.add ? marquee.base : []), ...inside]);
+    ui._sel = inside[inside.length - 1] || [...ui.multi].pop() || null;
+    room.querySelectorAll('.item').forEach(x => x.classList.toggle('selected', ui.multi.has(x.dataset.id)));
+    return;
+  }
+  if (!drag) return;
+  const p = roomPoint(e), it = drag.it;
+  const W = p.rect.width, H = p.rect.height;
+  const dxp = (p.x - it.x) / 100 * W, dyp = (p.y - it.y) / 100 * H;
+  if (drag.mode === 'move') {
+    const dx = p.x - drag.p0.x, dy = p.y - drag.p0.y;
+    if (Math.abs(dx) + Math.abs(dy) > 0.3) drag.moved = true;
+    drag.starts.forEach(o => {
+      o.s.x = clamp(o.x + dx, 2, 98); o.s.y = clamp(o.y + dy, 3, 97);
+      if (o.el) applyGeom(o.el, o.s);
+    });
+  } else if (drag.mode === 'rotate') {
+    let a = Math.atan2(dxp, -dyp) * 180 / Math.PI;
+    if (!e.shiftKey) a = Math.round(a / 5) * 5;   // 5°-Schritte, mit Shift stufenlos
+    it.r = Math.round(a);
+    applyGeom(drag.el, it);
+  } else {
+    const t = -it.r * Math.PI / 180;
+    const lx = dxp * Math.cos(t) - dyp * Math.sin(t), ly = dxp * Math.sin(t) + dyp * Math.cos(t);
+    it.w = clamp(Math.abs(lx) * 2 / W * 100, 2, 95);
+    it.h = clamp(Math.abs(ly) * 2 / H * 100, 2, 95);
+    applyGeom(drag.el, it);
+  }
+  positionItembar();
+});
+
+function endDrag() {
+  if (sdrag) {
+    const d = sdrag; sdrag = null;
+    if (d.ghost) d.ghost.remove();
+    if (!d.ghost) {   // nur angeklickt → Platz wählen; zweimal schnell → fixieren
+      const now = Date.now();
+      const dbl = lastTap && lastTap.id === d.from.id && lastTap.i === d.from.i && now - lastTap.t < 400;
+      lastTap = dbl ? null : { ...d.from, t: now };
+      ui.selSeat = d.from;
+      if (dbl) togglePin(byId(d.from.id), d.from.i); else renderRoom();
+    } else if (d.over) moveStudent(d.from, seatRef(d.over));
+    else renderRoom();
+    return;
+  }
+  if (marquee) { marquee.el.remove(); marquee = null; markSelection(); return; }
+  if (!drag) return;
+  const d = drag; drag = null;
+  room.querySelectorAll('.item.dragging').forEach(x => x.classList.remove('dragging'));
+  if (d.mode === 'move' && !d.moved && d.clickedInMulti) { selectItem(d.it.id); return; }
+  if (snap() !== d.before) {
+    commit(d.before);
+    $('undo').disabled = false; $('redo').disabled = true;
+  }
+}
+room.addEventListener('pointerup', endDrag);
+room.addEventListener('pointercancel', endDrag);
+
+// Doppelklick im Modus „Raum einrichten“ = Platz sperren / freigeben
+room.addEventListener('dblclick', e => {
+  if (studentMode() || ui.preview) return;
+  const seatEl = seatAt(e.clientX, e.clientY);
+  if (seatEl) toggleBlock(byId(seatEl.closest('.item').dataset.id), +seatEl.dataset.seat);
+});
+
+/* ---------- Werkzeugleiste am Element ---------- */
+itembar.addEventListener('click', e => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  if (studentMode()) {
+    if (!ui.selSeat) return;
+    const it = byId(ui.selSeat.id), i = ui.selSeat.i, sid = it.seats[i].sid;
+    if (btn.dataset.pin) togglePin(it, i);
+    if (btn.dataset.absent) toggleAbsent(sid);
+    if (btn.dataset.note) openNote(sid, btn);
+    if (btn.dataset.unseat) change(() => { it.seats[i].sid = null; it.seats[i].pinned = false; ui.selSeat = null; }, { keepList: true });
+    return;
+  }
+  const sel = selItems();
+  if (!sel.length) return;
+  if (btn.dataset.del) return removeSelected();
+  if (btn.dataset.block !== undefined) return toggleBlock(sel[0], +btn.dataset.block);
+  if (btn.dataset.rot) change(() => { sel.forEach(it => { it.r = btn.dataset.rot === 'reset' ? 0 : normAngle(it.r + Number(btn.dataset.rot)); }); }, { keepList: true });
+});
+itembar.addEventListener('input', e => {
+  if (e.target.id !== 'objLabel') return;
+  const lbl = room.querySelector(`.item[data-id="${ui.selectedId}"] .lbl`);
+  if (lbl) lbl.textContent = e.target.value;
+});
+itembar.addEventListener('change', e => {
+  const sel = selItems();
+  if (!sel.length) return;
+  if (e.target.id === 'objLabel') change(() => { sel[0].label = e.target.value; }, { keepList: true });
+  if (e.target.id === 'deskGroup') {
+    const v = e.target.value; if (!v) return;
+    change(() => {
+      const gid = v === '__new' ? newGroup().id : v === '__none' ? null : v;
+      sel.filter(isDesk).forEach(it => it.groupId = gid);
+    }, { keepList: true });
+  }
+});
+
+function removeSelected() {
+  const sel = selItems();
+  if (!sel.length) return;
+  const dn = displayNames(cls().students);
+  const who = sel.flatMap(it => it.seats.map(s => s.sid && dn.get(s.sid))).filter(Boolean);
+  if (who.length && !window.confirm(`Dort sitzen: ${who.join(', ')}.\n${sel.length > 1 ? sel.length + ' Elemente' : 'Tisch'} trotzdem entfernen?`)) return;
+  change(() => { const ids = new Set(sel.map(s => s.id)); cls().items = cls().items.filter(x => !ids.has(x.id)); ui.selectedId = null; }, { keepList: true });
+}
+
+/* ---------- Tastatur ---------- */
+document.addEventListener('keydown', e => {
+  const typing = e.target.matches('input[type=text], input[type=date], input[type=number], textarea');
+  if (!$('cdDlg').hidden || !$('teamsDlg').hidden || !$('notePop').hidden || !$('ncDlg').hidden) return;
+  if ((e.ctrlKey || e.metaKey) && !typing) {
+    const k = e.key.toLowerCase();
+    if (k === 'z' && !e.shiftKey) { e.preventDefault(); undo(); return; }
+    if (k === 'y' || (k === 'z' && e.shiftKey)) { e.preventDefault(); redo(); return; }
+    if (k === 'a' && ui.mode === 'room' && !ui.preview) { e.preventDefault(); ui.multi = new Set(cls().items.map(i => i.id)); ui._sel = [...ui.multi].pop() || null; markSelection(); return; }
+  }
+  if (typing || e.target.matches('select, input')) return;
+  if (e.key === 'Escape' && ui.pickedId) { ui.pickedId = null; $('pickBanner').hidden = true; renderRoom(); return; }
+  if (studentMode()) {
+    if (!ui.selSeat) return;
+    if (e.key === 'Escape') { ui.selSeat = null; renderRoom(); }
+    else if (e.key === 'f' || e.key === 'F') togglePin(byId(ui.selSeat.id), ui.selSeat.i);
+    return;
+  }
+  const sel = selItems();
+  if (!sel.length || ui.preview) return;
+  const step = e.shiftKey ? 2 : 0.5;
+  if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); removeSelected(); return; }
+  if (e.key === 'Escape') { selectItem(null); return; }
+  const moves = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] };
+  if (moves[e.key]) { e.preventDefault(); change(() => { sel.forEach(it => { it.x = clamp(it.x + moves[e.key][0], 1, 99); it.y = clamp(it.y + moves[e.key][1], 1, 99); }); }, { keepList: true }); }
+  else if (e.key === 'r' || e.key === 'R') change(() => { sel.forEach(it => { it.r = normAngle(it.r + (e.shiftKey ? -15 : 15)); }); }, { keepList: true });
+});
+
+/* =====================================================================
+   Seitenleiste
+   ===================================================================== */
+// Klassen
+$('classSel').addEventListener('change', e => { state.current = e.target.value; ui.selectedId = null; ui.selSeat = null; ui.preview = null; ui.teams = null; ui.pickLog = []; ui.pickedId = null; $('pickBanner').hidden = true; setResult(''); renderAll(); });
+// Neue Klasse: Name + Auswahl, was aus der aktuellen Klasse übernommen wird
+$('classNew').addEventListener('click', () => {
+  $('ncFrom').textContent = cls().name;
+  $('ncName').value = '';
+  ['ncRoom', 'ncStudents'].forEach(id => $(id).checked = false);
+  ['ncRules', 'ncSeats'].forEach(id => { $(id).checked = false; });
+  ncSync();
+  $('ncDlg').hidden = false;
+  $('ncName').focus();
+});
+function ncSync() {   // Regeln nur mit Schülern, Sitzordnung nur mit Schülern UND Raum
+  const st = $('ncStudents').checked, rm = $('ncRoom').checked;
+  $('ncRules').disabled = !st; if (!st) $('ncRules').checked = false;
+  $('ncSeats').disabled = !(st && rm); if (!(st && rm)) $('ncSeats').checked = false;
+  $('ncRules').closest('label').classList.toggle('off', !st);
+  $('ncSeats').closest('label').classList.toggle('off', !(st && rm));
+}
+['ncRoom', 'ncStudents'].forEach(id => $(id).addEventListener('change', ncSync));
+$('ncCancel').addEventListener('click', () => { $('ncDlg').hidden = true; });
+$('ncDlg').addEventListener('keydown', e => { if (e.key === 'Escape') $('ncDlg').hidden = true; if (e.key === 'Enter') $('ncOk').click(); });
+$('ncOk').addEventListener('click', () => {
+  const name = $('ncName').value.trim();
+  if (!name) { $('ncName').focus(); return; }
+  const src = cls(), room = $('ncRoom').checked, stu = $('ncStudents').checked, rules = $('ncRules').checked, seats = $('ncSeats').checked;
+  const copy = o => JSON.parse(JSON.stringify(o));
+  $('ncDlg').hidden = true;
+  change(() => {
+    const c = makeClass(name, room ? src.items : null);
+    if (stu) c.students = copy(src.students).map(s => ({ ...s, absent: '' }));
+    if (rules) c.rules = copy(src.rules);
+    if (seats) {   // Sitzordnung: gleiche Tische, gleiche Kinder auf denselben Plätzen
+      c.items = copy(src.items).map(it => ({ ...it, groupId: null }));
+    }
+    state.classes.push(c);
+    state.current = c.id;
+    ui.selectedId = null; ui.selSeat = null; ui.mode = stu ? 'students' : 'room';
+  });
+  const what = [room && 'Raum', stu && 'Schüler', rules && 'Regeln', seats && 'Sitzordnung'].filter(Boolean);
+  setResult(`Klasse „${name}“ angelegt` + (what.length ? ` – übernommen: ${what.join(', ')}.` : ' – jetzt Schüler eintragen.'), 'ok');
+});
+$('classRename').addEventListener('click', () => {
+  const name = window.prompt('Neuer Name der Klasse:', cls().name);
+  if (name && name.trim()) change(() => { cls().name = name.trim(); }, { keepList: true });
+});
+$('classDel').addEventListener('click', () => {
+  if (state.classes.length < 2) return;
+  if (!window.confirm(`Klasse „${cls().name}“ mit allen Schülern und Sitzplänen löschen?\n(Mit ↶ Rückgängig wiederherstellbar.)`)) return;
+  change(() => { state.classes = state.classes.filter(c => c.id !== state.current); state.current = state.classes[0].id; ui.selectedId = null; ui.selSeat = null; });
+});
+
+// Schüler
+$('importAdd').addEventListener('click', () => importStudents($('importText').value, false));
+$('importReplace').addEventListener('click', () => {
+  if (!$('importText').value.trim()) { setResult('Bitte zuerst Namen in das Feld einfügen.', 'warn'); return; }
+  if (cls().students.length && !window.confirm('Die bisherige Schülerliste dieser Klasse ersetzen?\n(Gleichnamige Schüler behalten ihre Einstellungen.)')) return;
+  importStudents($('importText').value, true);
+});
+$('importFile').addEventListener('click', () => $('csvInput').click());
+$('csvInput').addEventListener('change', async e => {
+  const f = e.target.files[0]; if (!f) return;
+  let text = await f.text();
+  if (text.includes('�')) text = new TextDecoder('windows-1252').decode(await f.arrayBuffer());   // ältere Excel-CSV
+  $('importText').value = text;
+  e.target.value = '';
+  setResult('CSV geladen – prüfe den Text und klicke auf „Hinzufügen“ oder „Liste ersetzen“.', 'ok');
+});
+$('stuAdd').addEventListener('click', () => {
+  change(() => { cls().students.push({ id: newId('s'), first: '', last: '', gender: '', color: '', front: false }); });
+  const inputs = $('slist').querySelectorAll('input[data-f="first"]');
+  $('slist').scrollTop = 1e6;
+  if (inputs.length) inputs[inputs.length - 1].focus();
+});
+$('slist').addEventListener('change', e => {
+  const row = e.target.closest('.srow'); if (!row || !row.dataset.id) return;
+  const f = e.target.dataset.f;
+  change(() => {
+    const s = stuById(row.dataset.id); if (!s) return;
+    if (f === 'front') s.front = e.target.checked;
+    else if (f === 'absent') s.absent = e.target.checked ? todayStr() : '';
+    else if (f === 'first' || f === 'last') s[f] = e.target.value.trim();
+    else s[f] = e.target.value;
+  }, { keepList: f !== 'absent' });
+});
+// Farbauswahl (Palette) für einen Schüler
+let paletteFor = null;
+let palCb = null;
+// öffnet die Farbpalette an einem Knopf; onPick bekommt den Farbwert ('' = keine Farbe)
+function openPalette(btn, cur, onPick, key) {
+  cur = cur || '';
+  palCb = onPick;
+  const pal = $('palette');
+  const custom = [...new Set(state.classes.flatMap(c => c.students.map(s => s.color)).filter(isHex).map(c => c.toLowerCase()))].slice(0, 10);
+  pal.innerHTML = `<button class="none ${cur ? '' : 'cur'}" data-c="" title="keine Farbe"></button>` +
+    Object.entries(COLORS).map(([k, v]) => `<button data-c="${k}" class="${cur === k ? 'cur' : ''}" title="${v.n}" style="--sw:${v.fg}"></button>`).join('') +
+    (custom.length ? `<div class="sep">Eigene Farben</div>` + custom.map(c => `<button data-c="${c}" class="${cur.toLowerCase() === c ? 'cur' : ''}" title="${colorInfo(c).n}" style="--sw:${c}"></button>`).join('') : '') +
+    `<button class="more" data-more="1" title="Beliebige Farbe aus einer Farbmatrix wählen">Weitere Farben …</button>` +
+    `<div class="pn">${colorInfo(cur) ? colorInfo(cur).n : 'keine Farbe'}</div>`;
+  paletteFor = key;
+  pal.classList.add('show');
+  const r = btn.getBoundingClientRect();
+  const w = pal.offsetWidth, h = pal.offsetHeight;
+  pal.style.left = clamp(r.left, 8, window.innerWidth - w - 8) + 'px';
+  pal.style.top = (r.bottom + h + 8 < window.innerHeight ? r.bottom + 4 : r.top - h - 4) + 'px';
+}
+function closePalette() { $('palette').classList.remove('show'); paletteFor = null; }
+$('palette').addEventListener('mouseover', e => { const b = e.target.closest('button'); if (b) $('palette').querySelector('.pn').textContent = b.title; });
+$('palette').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b || !paletteFor) return;
+  const cb = palCb, cur = $('palette').querySelector('.cur'); closePalette();
+  if (b.dataset.more) { const ci = cur && colorInfo(cur.dataset.c); openColorDialog(ci ? ci.fg : '#2563eb', hex => cb(hex)); return; }
+  cb(b.dataset.c);
+});
+document.addEventListener('pointerdown', e => { if (paletteFor && !e.target.closest('#palette, .sw')) closePalette(); });
+
+/* ---------- Dialog „Weitere Farben“: Farbmatrix + Helligkeitsregler + RGB/HSL/Hex ---------- */
+const cd = { h: 0, s: 1, l: .5, onOk: null };
+function cdRgb() { return hslToRgb(cd.h, cd.s, cd.l); }
+function drawMatrix() {
+  const cv = $('cdMatrix'), ctx = cv.getContext('2d'), W = cv.width, H = cv.height;
+  for (let x = 0; x < W; x++) {
+    const h = x / W * 360, g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, `hsl(${h},100%,50%)`); g.addColorStop(1, `hsl(${h},0%,50%)`);
+    ctx.fillStyle = g; ctx.fillRect(x, 0, 1, H);
+  }
+}
+function drawSlider() {
+  const cv = $('cdSlider'), ctx = cv.getContext('2d'), H = cv.height;
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, '#fff'); g.addColorStop(.5, `hsl(${cd.h},${cd.s * 100}%,50%)`); g.addColorStop(1, '#000');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, cv.width, H);
+}
+function cdUpdate(skip) {
+  const [r, g, b] = cdRgb(), hex = rgbToHex(r, g, b);
+  $('cdCross').style.left = (cd.h / 360 * 240) + 'px';
+  $('cdCross').style.top = ((1 - cd.s) * 150) + 'px';
+  $('cdArrow').style.top = ((1 - cd.l) * 150) + 'px';
+  drawSlider();
+  const rgbMode = $('cdModel').value === 'RGB';
+  const vals = rgbMode ? [r, g, b] : [Math.round(cd.h) % 360, Math.round(cd.s * 100), Math.round(cd.l * 100)];
+  ['cd1', 'cd2', 'cd3'].forEach((id, i) => { if (skip !== id) $(id).value = vals[i]; });
+  if (skip !== 'cdHex') $('cdHex').value = hex.toUpperCase();
+  $('cdNew').style.background = hex;
+}
+function cdModelLabels() {
+  const rgb = $('cdModel').value === 'RGB';
+  [['Rot:', 'Farbton:'], ['Grün:', 'Sättigung (%):'], ['Blau:', 'Helligkeit (%):']].forEach((t, i) => {
+    $('cdL' + (i + 1)).textContent = t[rgb ? 0 : 1];
+    $('cd' + (i + 1)).max = rgb ? 255 : (i === 0 ? 359 : 100);
+  });
+}
+function openColorDialog(startHex, onOk) {
+  const [h, s, l] = rgbToHsl(...hexToRgb(startHex));
+  Object.assign(cd, { h, s, l, onOk });
+  $('cdOld').style.background = startHex;
+  $('cdDlg').hidden = false;
+  if (!cd.drawn) { drawMatrix(); cd.drawn = true; }
+  cdModelLabels(); cdUpdate();
+  $('cdOk').focus();
+}
+function closeColorDialog(ok) {
+  $('cdDlg').hidden = true;
+  if (ok && cd.onOk) { const [r, g, b] = cdRgb(); cd.onOk(rgbToHex(r, g, b)); }
+  cd.onOk = null;
+}
+function dragOn(el, fn) {
+  el.addEventListener('pointerdown', e => {
+    el.setPointerCapture(e.pointerId); fn(e);
+    const mv = ev => fn(ev), up = () => { el.removeEventListener('pointermove', mv); el.removeEventListener('pointerup', up); };
+    el.addEventListener('pointermove', mv); el.addEventListener('pointerup', up);
+  });
+}
+dragOn($('cdMatrix').parentElement, e => {
+  const r = $('cdMatrix').getBoundingClientRect();
+  cd.h = clamp((e.clientX - r.left) / r.width, 0, 0.9999) * 360;
+  cd.s = 1 - clamp((e.clientY - r.top) / r.height, 0, 1);
+  if (cd.l < .08 || cd.l > .92) cd.l = .5;     // aus Schwarz/Weiß heraus sonst unsichtbar
+  cdUpdate();
+});
+dragOn($('cdSlider').parentElement, e => {
+  const r = $('cdSlider').getBoundingClientRect();
+  cd.l = 1 - clamp((e.clientY - r.top) / r.height, 0, 1);
+  cdUpdate();
+});
+['cd1', 'cd2', 'cd3'].forEach(id => $(id).addEventListener('input', () => {
+  const v = ['cd1', 'cd2', 'cd3'].map(i => Number($(i).value) || 0);
+  if ($('cdModel').value === 'RGB') {
+    const [h, s, l] = rgbToHsl(...v.map(x => clamp(x, 0, 255)));
+    if (s > 0) cd.h = h;            // Farbton behalten, wenn Grau gewählt wird
+    cd.s = s; cd.l = l;
+  } else { cd.h = clamp(v[0], 0, 359); cd.s = clamp(v[1], 0, 100) / 100; cd.l = clamp(v[2], 0, 100) / 100; }
+  cdUpdate(id);
+}));
+$('cdHex').addEventListener('input', () => {
+  let v = $('cdHex').value.trim(); if (!v.startsWith('#')) v = '#' + v;
+  if (/^#[0-9a-f]{3}$/i.test(v)) v = '#' + [...v.slice(1)].map(c => c + c).join('');
+  if (!isHex(v)) return;
+  const [h, s, l] = rgbToHsl(...hexToRgb(v));
+  if (s > 0) cd.h = h; cd.s = s; cd.l = l;
+  cdUpdate('cdHex');
+});
+$('cdModel').addEventListener('change', () => { cdModelLabels(); cdUpdate(); });
+$('cdOk').addEventListener('click', () => closeColorDialog(true));
+$('cdCancel').addEventListener('click', () => closeColorDialog(false));
+$('cdDlg').addEventListener('pointerdown', e => { if (e.target === $('cdDlg')) closeColorDialog(false); });
+$('cdDlg').addEventListener('keydown', e => {
+  if (e.key === 'Escape') { e.stopPropagation(); closeColorDialog(false); }
+  if (e.key === 'Enter' && e.target.tagName !== 'BUTTON') { e.preventDefault(); closeColorDialog(true); }
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && paletteFor) closePalette(); });
+$('slist').addEventListener('scroll', closePalette);
+
+$('slist').addEventListener('click', e => {
+  const sw = e.target.closest('button[data-f="colorbtn"]');
+  if (sw) {
+    const sid = sw.closest('.srow').dataset.id;
+    if (paletteFor === sid) closePalette();
+    else openPalette(sw, stuById(sid).color, c => change(() => { const s = stuById(sid); if (s) s.color = c; }), sid);
+    return;
+  }
+  const nb = e.target.closest('button[data-f="note"]');
+  if (nb) { openNote(nb.closest('.srow').dataset.id, nb); return; }
+  const b = e.target.closest('button[data-f="del"]'); if (!b) return;
+  const id = b.closest('.srow').dataset.id;
+  change(() => { cls().students = cls().students.filter(s => s.id !== id); cleanupStudents(); });
+});
+
+// Regeln
+// Mehrfachauswahl für das dritte Feld: einem Kind mehrere Kinder auf einmal zuordnen
+ui.ruleB = new Set();
+function renderRuleB(sorted, dn) {
+  const a = $('ruleA').value;
+  [...ui.ruleB].forEach(id => { if (id === a || !sorted.some(s => s.id === id)) ui.ruleB.delete(id); });
+  $('ruleBList').innerHTML = !sorted.length ? '<p class="hint">Noch keine Schüler.</p>' :
+    `<div class="msel-tools"><button type="button" data-all="1">alle</button><button type="button" data-all="0">keine</button></div>` +
+    sorted.filter(s => s.id !== a).map(s => `<label><input type="checkbox" value="${s.id}" ${ui.ruleB.has(s.id) ? 'checked' : ''}> ${esc(dn.get(s.id))}</label>`).join('');
+  const names = [...ui.ruleB].map(id => dn.get(id)).filter(Boolean);
+  $('ruleBBtn').textContent = !names.length ? '– Schüler wählen (mehrere möglich) –' :
+    names.length <= 3 ? names.join(', ') : `${names.length} ausgewählt: ${names.slice(0, 3).join(', ')} …`;
+  $('ruleBBtn').classList.toggle('has', names.length > 0);
+}
+function refreshRuleB() { const c = cls(), dn = displayNames(c.students); renderRuleB(c.students.slice().sort((x, y) => dn.get(x.id).localeCompare(dn.get(y.id), 'de')), dn); }
+$('ruleBBtn').addEventListener('click', () => { $('ruleBList').hidden = !$('ruleBList').hidden; });
+$('ruleBList').addEventListener('change', e => { if (e.target.checked) ui.ruleB.add(e.target.value); else ui.ruleB.delete(e.target.value); refreshRuleB(); });
+$('ruleBList').addEventListener('click', e => {
+  const b = e.target.closest('button[data-all]'); if (!b) return;
+  const a = $('ruleA').value;
+  ui.ruleB = b.dataset.all === '1' ? new Set(cls().students.map(s => s.id).filter(id => id !== a)) : new Set();
+  refreshRuleB();
+});
+$('ruleA').addEventListener('change', refreshRuleB);
+document.addEventListener('pointerdown', e => { if (!$('ruleBList').hidden && !e.target.closest('#ruleBBox, #ruleAdd')) $('ruleBList').hidden = true; });
+
+$('ruleAdd').addEventListener('click', () => {
+  const a = $('ruleA').value, kind = $('ruleType').value, bs = [...ui.ruleB].filter(b => b !== a);
+  if (!a || !bs.length) { setResult('Bitte ein Kind im ersten Feld und mindestens ein Kind im dritten Feld auswählen.', 'warn'); return; }
+  const R = cls().rules, dn = displayNames(cls().students);
+  const has = (list, b) => list.some(([x, y]) => (x === a && y === b) || (x === b && y === a));
+  const fresh = bs.filter(b => !has(R.apart, b) && !has(R.together, b));
+  const skipped = bs.filter(b => !fresh.includes(b));
+  if (!fresh.length) { setResult('Für diese Kinder gibt es schon Regeln.', 'warn'); return; }
+  change(() => { fresh.forEach(b => R[kind].push([a, b])); }, { keepList: true });
+  ui.ruleB = new Set(); refreshRuleB(); $('ruleBList').hidden = true;
+  setResult(`${fresh.length} Regel${fresh.length > 1 ? 'n' : ''} hinzugefügt` + (skipped.length ? ` – übersprungen (gibt es schon): ${skipped.map(id => dn.get(id)).join(', ')}` : '') + '.', skipped.length ? 'warn' : 'ok');
+});
+$('ruleList').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  change(() => { cls().rules[b.dataset.kind].splice(+b.dataset.i, 1); }, { keepList: true });
+});
+$('ruleMix').addEventListener('change', e => change(() => { cls().rules.mix = e.target.checked; }, { keepList: true }));
+
+// Raum
+function addItem(type) {
+  ui.flipped = false;
+  const off = (cls().items.length % 5) * 3;
+  change(() => {
+    const it = makeItem({ type, x: 40 + off, y: 18 + off, r: 0 });
+    cls().items.push(it);
+    ui.mode = 'room'; ui.selectedId = it.id; ui.selSeat = null;
+  }, { keepList: true });
+}
+$('addDesk2').addEventListener('click', () => addItem('desk2'));
+$('addDesk1').addEventListener('click', () => addItem('desk1'));
+$('addObj').addEventListener('click', () => addItem('obj'));
+$('addRound').addEventListener('click', () => addItem('round'));
+
+// Gruppen
+$('groupAuto').addEventListener('click', autoGroups);
+$('groupClear').addEventListener('click', () => change(() => { cls().groups = []; cls().items.forEach(i => i.groupId = null); }, { keepList: true }));
+$('groupList').addEventListener('change', e => {
+  const row = e.target.closest('.grow'); if (!row) return;
+  change(() => { const g = cls().groups.find(g => g.id === row.dataset.id); if (g) g.name = e.target.value.trim() || g.name; }, { keepList: true });
+});
+
+// Anzeige
+['optGender', 'optColors'].forEach(id => $(id).addEventListener('change', () => renderAll({ keepList: true })));
+
+// Werkzeugleiste oben
+$('modes').addEventListener('click', e => {
+  const b = e.target.closest('button');
+  if (!b || b.disabled || b.dataset.mode === ui.mode) return;
+  ui.mode = b.dataset.mode; ui.selectedId = null; ui.selSeat = null;
+  renderAll({ keepList: true });
+});
+$('flip').addEventListener('click', () => {
+  ui.flipped = !ui.flipped;
+  if (ui.flipped) ui.mode = 'students';
+  ui.selectedId = null; ui.selSeat = null;
+  renderAll({ keepList: true });
+});
+$('undo').addEventListener('click', undo);
+$('redo').addEventListener('click', redo);
+$('shuffle').addEventListener('click', distribute);
+$('clear').addEventListener('click', () => {
+  const hasPinned = cls().items.some(it => it.seats.some(s => s.pinned));
+  const all = !hasPinned || window.confirm('Auch die fixierten Schüler 📌 von ihren Plätzen nehmen?\n\nOK = alle Plätze leeren · Abbrechen = fixierte bleiben sitzen');
+  change(() => { cls().items.forEach(it => it.seats.forEach(s => { if (all || !s.pinned) { s.sid = null; s.pinned = false; } })); ui.selSeat = null; }, { keepList: true });
+  setResult('');
+});
+
+/* =====================================================================
+   Abwesenheit & Notizen
+   ===================================================================== */
+function toggleAbsent(sid) {
+  change(() => { const s = stuById(sid); if (s) s.absent = isAbsent(s) ? '' : todayStr(); }, { keepList: false });
+}
+$('allPresent').addEventListener('click', () => change(() => { cls().students.forEach(s => s.absent = ''); }));
+
+let noteFor = null;
+function openNote(sid, anchor) {
+  const s = stuById(sid); if (!s) return;
+  noteFor = sid;
+  const dn = displayNames(cls().students);
+  $('noteWho').textContent = 'Notiz zu ' + dn.get(sid);
+  $('noteText').value = s.note || '';
+  const pop = $('notePop');
+  pop.hidden = false;
+  const r = anchor.getBoundingClientRect();
+  pop.style.left = clamp(r.left, 8, window.innerWidth - pop.offsetWidth - 8) + 'px';
+  pop.style.top = (r.bottom + pop.offsetHeight + 8 < window.innerHeight ? r.bottom + 4 : Math.max(8, r.top - pop.offsetHeight - 4)) + 'px';
+  $('noteText').focus();
+}
+function closeNote(save) {
+  if (save && noteFor) { const sid = noteFor, v = $('noteText').value.trim(); change(() => { const s = stuById(sid); if (s) s.note = v; }); }
+  noteFor = null; $('notePop').hidden = true;
+}
+$('noteSave').addEventListener('click', () => closeNote(true));
+$('noteCancel').addEventListener('click', () => closeNote(false));
+$('noteDel').addEventListener('click', () => { $('noteText').value = ''; closeNote(true); });
+$('notePop').addEventListener('keydown', e => {
+  if (e.key === 'Escape') { e.stopPropagation(); closeNote(false); }
+  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) closeNote(true);
+});
+
+/* =====================================================================
+   Wer ist dran?
+   ===================================================================== */
+const present = () => cls().students.filter(s => !isAbsent(s));
+function renderPick() {
+  const c = cls(), pres = present();
+  const left = pres.filter(s => !(c.picked || []).includes(s.id)).length;
+  $('pickInfo').textContent = !pres.length ? 'Noch keine Schüler eingetragen.' :
+    $('pickFair').checked ? `Noch ${left} von ${pres.length} anwesenden Kindern in dieser Runde.` : `${pres.length} anwesende Kinder.`;
+  const dn = displayNames(c.students);
+  $('pickLog').innerHTML = ui.pickLog.slice(-6).reverse().map(id => `<span>${esc(dn.get(id) || '?')}</span>`).join('');
+}
+function pickSomeone() {
+  if (ui.animating) return;
+  const c = cls(); c.picked = c.picked || [];
+  const pres = present();
+  if (!pres.length) { setResult('Keine anwesenden Schüler.', 'warn'); return; }
+  let pool = $('pickFair').checked ? pres.filter(s => !c.picked.includes(s.id)) : pres;
+  if (!pool.length) { c.picked = []; pool = pres; setResult('Alle waren einmal dran – neue Runde beginnt.', 'ok'); }
+  const winner = pool[Math.random() * pool.length | 0];
+  const dn = displayNames(c.students);
+  ui.pickedId = null; ui.selSeat = null;
+  if (ui.preview) { ui.preview = null; }
+  renderRoom();
+  const seats = [...room.querySelectorAll('.seat[data-sid]')].filter(el => pool.some(s => s.id === el.dataset.sid));
+  const banner = $('pickBanner');
+  if (ui.present) {   // Präsentationsmodus: Kasten einmal mit dem längsten Namen einpassen, damit nichts springt
+    const longest = pool.map(s => dn.get(s.id)).sort((a, b) => b.length - a.length)[0];
+    banner.innerHTML = `<span class="pn">🎯 ${esc(longest)}</span><button>✕</button>`; banner.hidden = false;
+    layoutStage();
+  }
+  ui.animating = true;
+  let step = 0; const steps = 16;
+  (function tick() {
+    room.querySelectorAll('.seat.picking').forEach(x => x.classList.remove('picking'));
+    if (step < steps) {
+      const r = pool[Math.random() * pool.length | 0];
+      banner.innerHTML = `<span class="pn">${esc(dn.get(r.id))}</span>`; banner.hidden = false; banner.classList.add('rolling');
+      if (seats.length) seats[Math.random() * seats.length | 0].classList.add('picking');
+      step++; setTimeout(tick, 45 + step * step * 0.9);
+      return;
+    }
+    ui.animating = false;
+    if ($('pickFair').checked) c.picked.push(winner.id);
+    ui.pickLog.push(winner.id);
+    ui.pickedId = winner.id;
+    dirty = true;
+    renderRoom();
+    banner.classList.remove('rolling');
+    banner.innerHTML = `<span class="pn">🎯 ${esc(dn.get(winner.id))}</span><button title="Schließen">✕</button>`;
+    banner.hidden = false;
+    if (ui.present) layoutStage();
+    renderPick();
+  })();
+}
+$('pickBtn').addEventListener('click', pickSomeone);
+$('pickBtn2').addEventListener('click', pickSomeone);
+$('pickReset').addEventListener('click', () => { cls().picked = []; ui.pickLog = []; renderPick(); setResult('Neue Runde: alle können wieder drankommen.', 'ok'); });
+$('pickFair').addEventListener('change', renderPick);
+$('pickBanner').addEventListener('click', () => { ui.pickedId = null; $('pickBanner').hidden = true; renderRoom(); });
+
+/* =====================================================================
+   Partner- und Gruppengenerator
+   ===================================================================== */
+function makeTeams() {
+  const c = cls();
+  const pres = shuffle(present().map(s => s.id));
+  const n = pres.length;
+  if (n < 2) { setResult('Es werden mindestens zwei anwesende Kinder gebraucht.', 'warn'); return; }
+  const mode = $('teamMode').value, N = clamp(parseInt($('teamN').value, 10) || 2, 2, 30);
+  let k;
+  if (mode === 'pairs') k = Math.floor(n / 2);
+  else if (mode === 'size') k = Math.max(1, Math.floor(n / N));
+  else k = clamp(N, 1, n);
+  // Größen möglichst gleich verteilen
+  const sizes = Array(k).fill(Math.floor(n / k));
+  for (let i = 0; i < n % k; i++) sizes[i]++;
+  const useRules = $('teamRules').checked, mix = $('teamMix').checked;
+  const gender = new Map(c.students.map(s => [s.id, s.gender]));
+  const groupOf = A => { const g = {}; A.forEach((t, gi) => t.forEach(id => g[id] = gi)); return g; };
+  const cost = A => {
+    let sum = 0;
+    if (useRules) {
+      const g = groupOf(A);
+      c.rules.apart.forEach(([a, b]) => { if (g[a] != null && g[a] === g[b]) sum += 100; });
+      c.rules.together.forEach(([a, b]) => { if (g[a] != null && g[b] != null && g[a] !== g[b]) sum += 30; });
+    }
+    if (mix) A.forEach(t => { let m = 0, w = 0; t.forEach(id => { if (gender.get(id) === 'm') m++; else if (gender.get(id) === 'w') w++; }); sum += Math.max(0, Math.abs(m - w) - 1) * 10; });
+    return sum;
+  };
+  let A = [], pos = 0;
+  sizes.forEach(sz => { A.push(pres.slice(pos, pos + sz)); pos += sz; });
+  let cur = cost(A);
+  for (let it = 0; it < 4000 && cur > 0 && k > 1; it++) {
+    const g1 = Math.random() * k | 0, g2 = Math.random() * k | 0;
+    if (g1 === g2) continue;
+    const i1 = Math.random() * A[g1].length | 0, i2 = Math.random() * A[g2].length | 0;
+    [A[g1][i1], A[g2][i2]] = [A[g2][i2], A[g1][i1]];
+    const nc = cost(A);
+    if (nc <= cur) cur = nc; else [A[g1][i1], A[g2][i2]] = [A[g2][i2], A[g1][i1]];
+  }
+  ui.teams = { mode, list: A, issues: cur };
+  renderTeams(); renderRoom();
+  setResult(cur && useRules ? '⚠ Nicht alle Regeln ließen sich bei den Gruppen erfüllen.' : `✓ ${k} ${mode === 'pairs' ? 'Paare' : 'Gruppen'} gebildet.`, cur && useRules ? 'warn' : 'ok');
+}
+function teamTitle(i) { return (ui.teams.mode === 'pairs' ? 'Paar ' : 'Gruppe ') + (i + 1); }
+function renderTeams() {
+  $('teamN').disabled = $('teamMode').value === 'pairs';
+  const dn = displayNames(cls().students);
+  if (!ui.teams) { $('teamList').innerHTML = ''; $('teamShow').disabled = true; $('teamClear').disabled = true; return; }
+  $('teamClear').disabled = false;
+  $('teamShow').disabled = false;
+  const tm = (id, i, k) => `<span class="tm" data-t="${i}" data-k="${k}">${esc(dn.get(id) || '?')}</span>`;
+  $('teamList').innerHTML = ui.teams.list.map((t, i) =>
+    `<div class="team" data-t="${i}" style="--tc:${teamColor(i)}"><b>${teamTitle(i)}</b>${t.map((id, k) => tm(id, i, k)).join('') || '<i class="hint">leer</i>'}</div>`).join('');
+  $('teamsGrid').innerHTML = ui.teams.list.map((t, i) =>
+    `<div class="tcard" data-t="${i}" style="--tc:${teamColor(i)}"><h3>${teamTitle(i)} <small>(${t.length})</small></h3>${t.map((id, k) => tm(id, i, k)).join('') || '<i class="hint">leer</i>'}</div>`).join('');
+  $('teamColor2').checked = $('teamColor').checked;
+}
+$('teamMode').addEventListener('change', renderTeams);
+['teamColor', 'teamColor2'].forEach(id => $(id).addEventListener('change', e => {
+  $('teamColor').checked = $('teamColor2').checked = e.target.checked;
+  renderRoom();
+}));
+
+// Gruppenmitglieder per Ziehen verschieben (auf einen Namen = tauschen, auf eine Gruppe = dorthin verschieben)
+let tdrag = null;
+document.addEventListener('pointerdown', e => {
+  const el = e.target.closest('.tm'); if (!el || !ui.teams) return;
+  tdrag = { t: +el.dataset.t, k: +el.dataset.k, el, x0: e.clientX, y0: e.clientY, ghost: null, over: null };
+  el.setPointerCapture(e.pointerId);
+  e.preventDefault();
+});
+document.addEventListener('pointermove', e => {
+  if (!tdrag) return;
+  if (!tdrag.ghost) {
+    if (Math.hypot(e.clientX - tdrag.x0, e.clientY - tdrag.y0) < 5) return;
+    tdrag.ghost = document.createElement('div');
+    tdrag.ghost.className = 'ghost';
+    tdrag.ghost.textContent = tdrag.el.textContent;
+    document.body.appendChild(tdrag.ghost);
+    tdrag.el.classList.add('dragsrc');
+  }
+  tdrag.ghost.style.left = e.clientX + 'px'; tdrag.ghost.style.top = e.clientY + 'px';
+  const under = document.elementsFromPoint(e.clientX, e.clientY);
+  const over = under.find(x => x.classList && x.classList.contains('tm') && x !== tdrag.el) ||
+               under.find(x => x.classList && (x.classList.contains('team') || x.classList.contains('tcard')));
+  if (tdrag.over !== over) {
+    if (tdrag.over) tdrag.over.classList.remove('tdrop');
+    if (over) over.classList.add('tdrop');
+    tdrag.over = over;
+  }
+});
+document.addEventListener('pointerup', () => {
+  if (!tdrag) return;
+  const d = tdrag; tdrag = null;
+  if (d.ghost) d.ghost.remove();
+  d.el.classList.remove('dragsrc');
+  if (!d.over) return;
+  const L = ui.teams.list, id = L[d.t][d.k];
+  if (d.over.classList.contains('tm')) {          // auf einen Namen: die beiden tauschen
+    const t2 = +d.over.dataset.t, k2 = +d.over.dataset.k;
+    [L[d.t][d.k], L[t2][k2]] = [L[t2][k2], L[d.t][d.k]];
+  } else {                                        // auf eine Gruppe: dorthin verschieben
+    const t2 = +d.over.dataset.t; if (t2 === d.t) return;
+    L[d.t].splice(d.k, 1); L[t2].push(id);
+  }
+  renderTeams(); renderRoom();
+});
+$('teamMake').addEventListener('click', makeTeams);
+$('teamClear').addEventListener('click', () => { ui.teams = null; renderTeams(); renderRoom(); setResult(''); });
+$('teamShow').addEventListener('click', () => { $('teamsDlg').hidden = false; });
+$('teamsClose').addEventListener('click', () => { $('teamsDlg').hidden = true; });
+$('teamsAgain').addEventListener('click', () => { makeTeams(); });
+$('teamsDlg').addEventListener('keydown', e => { if (e.key === 'Escape') $('teamsDlg').hidden = true; });
+
+/* =====================================================================
+   Sitzplan-Verlauf
+   ===================================================================== */
+function renderPlans() {
+  const c = cls();
+  const plans = (c.plans || []).slice().sort((a, b) => b.date.localeCompare(a.date) || b.saved - a.saved);
+  $('planList').innerHTML = plans.map(p => {
+    const n = p.items.reduce((s, it) => s + it.seats.filter(x => x.sid).length, 0);
+    return `<div class="plan${ui.preview && ui.preview.id === p.id ? ' on' : ''}" data-id="${p.id}">
+      <div><b>ab ${fmtDate(p.date)}</b>${p.note ? ' – ' + esc(p.note) : ''}<div class="hint">${n} Kinder gesetzt</div></div>
+      <button data-a="view" title="Ansehen">👁</button><button data-a="restore" title="Als aktuellen Plan übernehmen">↩</button><button data-a="del" title="Löschen">✕</button></div>`;
+  }).join('') || '<p class="hint">Noch keine Pläne festgehalten.</p>';
+  $('planBadge').textContent = (c.plans || []).length || '';
+}
+$('planSave').addEventListener('click', () => {
+  const date = $('planDate').value || todayStr();
+  const note = $('planNote').value.trim();
+  change(() => {
+    const c = cls();
+    c.plans = c.plans || [];
+    c.plans.push({ id: newId('p'), date, note, saved: Date.now(), items: JSON.parse(JSON.stringify(c.items)), groups: JSON.parse(JSON.stringify(c.groups)) });
+  }, { keepList: true });
+  $('planNote').value = '';
+  setResult(`Sitzplan „ab ${fmtDate(date)}“ im Verlauf festgehalten.`, 'ok');
+});
+function restorePlan(p) {
+  if (!window.confirm(`Den Sitzplan „ab ${fmtDate(p.date)}“ wiederherstellen?\nDer aktuelle Plan wird ersetzt (mit ↶ rückgängig zu machen).`)) return;
+  ui.preview = null;
+  change(() => {
+    const c = cls();
+    c.items = JSON.parse(JSON.stringify(p.items));
+    c.groups = JSON.parse(JSON.stringify(p.groups || []));
+    cleanupStudents();
+    ui.selectedId = null; ui.selSeat = null;
+  }, { keepList: true });
+  setResult(`Sitzplan „ab ${fmtDate(p.date)}“ wiederhergestellt.`, 'ok');
+}
+$('planList').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const id = b.closest('.plan').dataset.id;
+  const p = (cls().plans || []).find(x => x.id === id); if (!p) return;
+  if (b.dataset.a === 'view') { ui.preview = ui.preview && ui.preview.id === id ? null : p; ui.selectedId = null; ui.selSeat = null; renderAll({ keepList: true }); }
+  if (b.dataset.a === 'restore') restorePlan(p);
+  if (b.dataset.a === 'del' && window.confirm(`Plan „ab ${fmtDate(p.date)}“ aus dem Verlauf löschen?`)) {
+    if (ui.preview && ui.preview.id === id) ui.preview = null;
+    change(() => { cls().plans = cls().plans.filter(x => x.id !== id); }, { keepList: true });
+  }
+});
+$('previewBar').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.pv === 'restore' && ui.preview) restorePlan(ui.preview);
+  else { ui.preview = null; renderAll({ keepList: true }); }
+});
+
+/* =====================================================================
+   Dienste und Ämter
+   ===================================================================== */
+// Dienst-Symbole: Vorschlag nach dem Namen, sonst frei wählbar
+const DUTY_ICONS = ['🧽', '📘', '🧹', '🌱', '📄', '💡', '🗑️', '🪟', '🎤', '📅', '🚪', '🧾', '🍎', '🥛', '⚽', '🩹', '📢', '🧑‍🏫', '🖍️', '📚', '💻', '🔔', '🧺', '🪴', '🐟', '🎒', '✏️', '🔑', '🧃', '⭐', '🏅', '❤️'];
+function guessDutyIcon(name) {
+  const n = name.toLowerCase();
+  const map = [[/tafel/, '🧽'], [/klassenbuch|buch/, '📘'], [/ordnung|feg|kehr|aufr/, '🧹'], [/blume|pflanz|gieß/, '🌱'], [/austeil|blätter|kopie/, '📄'], [/licht|lampe/, '💡'],
+               [/müll|abfall/, '🗑️'], [/fenster|lüft/, '🪟'], [/sprecher/, '🎤'], [/kalender|datum/, '📅'], [/tür/, '🚪'], [/milch/, '🥛'], [/obst|apfel|frühstück/, '🍎'],
+               [/sanit|erste hilfe/, '🩹'], [/pause|ball|spiel/, '⚽'], [/computer|tablet|pc/, '💻'], [/bücherei|bibliothek/, '📚'], [/glocke|klingel/, '🔔'], [/schlüssel/, '🔑']];
+  const hit = map.find(([re]) => re.test(n));
+  return hit ? hit[1] : '⭐';
+}
+const dutyIcon = d => d.icon || guessDutyIcon(d.name);
+let iconFor = null;
+function openIconPop(btn, did) {
+  const d = cls().duties.find(x => x.id === did); if (!d) return;
+  iconFor = did;
+  const pop = $('iconPop'), cur = dutyIcon(d);
+  pop.innerHTML = DUTY_ICONS.map(i => `<button data-i="${i}" class="${i === cur ? 'cur' : ''}">${i}</button>`).join('') +
+    `<input type="text" id="iconOwn" maxlength="4" placeholder="oder eigenes Emoji eintippen (Win + .)">`;
+  pop.classList.add('show');
+  const r = btn.getBoundingClientRect();
+  pop.style.left = clamp(r.left, 8, window.innerWidth - pop.offsetWidth - 8) + 'px';
+  pop.style.top = (r.bottom + pop.offsetHeight + 8 < window.innerHeight ? r.bottom + 4 : r.top - pop.offsetHeight - 4) + 'px';
+}
+function closeIconPop() { $('iconPop').classList.remove('show'); iconFor = null; }
+function setDutyIcon(icon) {
+  const did = iconFor; closeIconPop();
+  if (did && icon) change(() => { const d = cls().duties.find(x => x.id === did); if (d) d.icon = icon; }, { keepList: true });
+}
+$('iconPop').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setDutyIcon(b.dataset.i); });
+$('iconPop').addEventListener('change', e => { if (e.target.id === 'iconOwn' && e.target.value.trim()) setDutyIcon(e.target.value.trim()); });
+document.addEventListener('pointerdown', e => { if (iconFor && !e.target.closest('#iconPop, .ico')) closeIconPop(); });
+
+function renderDuties() {
+  const c = cls();
+  const dn = displayNames(c.students);
+  const sorted = c.students.slice().sort((a, b) => dn.get(a.id).localeCompare(dn.get(b.id), 'de'));
+  const opts = sel => '<option value="">–</option>' + sorted.map(s => `<option value="${s.id}" ${sel === s.id ? 'selected' : ''}>${esc(dn.get(s.id))}</option>`).join('');
+  $('dutyList').innerHTML = (c.duties || []).map(d => `<div class="duty${d.fixed ? ' fixed' : ''}" data-id="${d.id}">
+      <div class="row"><button class="ico" data-f="icon" title="Symbol wählen">${dutyIcon(d)}</button><input type="text" data-f="name" value="${esc(d.name)}"><select data-f="n" title="Anzahl Kinder">${[1, 2, 3, 4].map(k => `<option ${d.n === k ? 'selected' : ''}>${k}</option>`).join('')}</select>
+        <button class="pin${d.fixed ? ' on' : ''}" data-f="fix" title="${d.fixed ? 'Fixierung lösen' : 'Fixieren – wird beim Neu-Vergeben nicht geändert'}">📌</button><button class="x" data-f="del" title="Dienst löschen">✕</button></div>
+      <div class="row wrap">${Array.from({ length: d.n }, (_, i) => `<select data-f="slot" data-i="${i}">${opts(d.sids[i])}</select>`).join('')}</div>
+      ${d.fixed ? `<label class="chk small"><input type="checkbox" data-f="shared" ${d.shared !== false ? 'checked' : ''}> bekommt trotzdem weitere Dienste</label>` : ''}</div>`).join('');
+  $('dutyShow').checked = !!c.showDuties;
+  $('dutyIcons').checked = c.dutyIcons !== false;
+  $('dutyBadge').textContent = (c.duties || []).length || '';
+}
+$('dutyAdd').addEventListener('click', () => {
+  const name = $('dutyName').value.trim(); if (!name) { $('dutyName').focus(); return; }
+  change(() => { const c = cls(); c.duties = c.duties || []; c.duties.push({ id: newId('d'), name, n: 1, sids: [], icon: guessDutyIcon(name) }); }, { keepList: true });
+  $('dutyName').value = '';
+});
+$('dutyName').addEventListener('keydown', e => { if (e.key === 'Enter') $('dutyAdd').click(); });
+$('dutyList').addEventListener('change', e => {
+  const row = e.target.closest('.duty'); if (!row) return;
+  const f = e.target.dataset.f;
+  change(() => {
+    const d = cls().duties.find(x => x.id === row.dataset.id); if (!d) return;
+    if (f === 'name') d.name = e.target.value.trim() || d.name;
+    if (f === 'n') { d.n = +e.target.value; d.sids = d.sids.slice(0, d.n); }
+    if (f === 'slot') d.sids[+e.target.dataset.i] = e.target.value || null;
+    if (f === 'shared') d.shared = e.target.checked;
+  }, { keepList: true });
+});
+$('dutyList').addEventListener('click', e => {
+  const ib = e.target.closest('button[data-f="icon"]');
+  if (ib) { const id = ib.closest('.duty').dataset.id; if (iconFor === id) closeIconPop(); else openIconPop(ib, id); return; }
+  const fx = e.target.closest('button[data-f="fix"]');
+  if (fx) { const id = fx.closest('.duty').dataset.id; change(() => { const d = cls().duties.find(x => x.id === id); d.fixed = !d.fixed; if (d.fixed && d.shared == null) d.shared = true; }, { keepList: true }); return; }
+  const b = e.target.closest('button[data-f="del"]'); if (!b) return;
+  const id = b.closest('.duty').dataset.id;
+  change(() => { cls().duties = cls().duties.filter(d => d.id !== id); }, { keepList: true });
+});
+// Gerecht verteilen: wer bisher am wenigsten Dienste hatte, kommt zuerst dran
+$('dutyDeal').addEventListener('click', () => {
+  const c = cls();
+  if (!(c.duties || []).length) { setResult('Bitte zuerst Dienste anlegen.', 'warn'); return; }
+  change(() => {
+    c.dutyCount = c.dutyCount || {};
+    const open = c.duties.filter(d => !d.fixed);
+    // Kinder mit einem festen Dienst, der „exklusiv“ ist, bekommen keine weiteren Dienste
+    const busy = new Set(c.duties.filter(d => d.fixed && d.shared === false).flatMap(d => d.sids).filter(Boolean));
+    const prev = new Set(open.flatMap(d => d.sids).filter(Boolean));
+    const order = shuffle(present().filter(s => !busy.has(s.id))).sort((a, b) => ((c.dutyCount[a.id] || 0) + (prev.has(a.id) ? .5 : 0)) - ((c.dutyCount[b.id] || 0) + (prev.has(b.id) ? .5 : 0)));
+    let k = 0;
+    open.forEach(d => {
+      d.sids = [];
+      for (let i = 0; i < d.n; i++) { const s = order[k++ % Math.max(1, order.length)]; if (s && !d.sids.includes(s.id)) { d.sids.push(s.id); c.dutyCount[s.id] = (c.dutyCount[s.id] || 0) + 1; } }
+    });
+  }, { keepList: true });
+  setResult('Dienste neu vergeben – wer bisher selten dran war, kam zuerst.', 'ok');
+});
+$('dutyResetCount').addEventListener('click', () => change(() => { cls().dutyCount = {}; }, { keepList: true }));
+$('dutyIcons').addEventListener('change', e => change(() => { cls().dutyIcons = e.target.checked; }, { keepList: true }));
+$('dutyShow').addEventListener('change', e => change(() => { cls().showDuties = e.target.checked; }, { keepList: true }));
+
+/* =====================================================================
+   Raumvorlagen
+   ===================================================================== */
+function templateDesks(type, n) {
+  const out = [];
+  const D = (x, y, r = 0, t = 'desk2', g = null) => out.push({ type: t, x, y, r, g });
+  if (type === 'rows') {
+    const cols = n <= 4 ? 2 : n <= 12 ? 3 : 4, rows = Math.ceil(n / cols);
+    for (let r = 0, k = 0; r < rows; r++) {
+      const inRow = Math.min(cols, n - k);
+      for (let c = 0; c < inRow; c++, k++) D(50 + (c - (inRow - 1) / 2) * 23, 80 - r * 13);
+    }
+  } else if (type === 'single') {
+    const cols = n <= 12 ? 4 : n <= 25 ? 5 : 6, rows = Math.ceil(n / cols);
+    for (let r = 0, k = 0; r < rows; r++) {
+      const inRow = Math.min(cols, n - k);
+      for (let c = 0; c < inRow; c++, k++) D(50 + (c - (inRow - 1) / 2) * 15, 82 - r * 12.5, 0, 'desk1');
+    }
+  } else if (type === 'u') {
+    const back = clamp(Math.round(n / 3), 2, 5);
+    const side = Math.min(4, Math.floor((n - back) / 2)), right = Math.min(4, n - back - side);
+    for (let i = 0; i < back; i++) D(50 + (i - (back - 1) / 2) * 14.2, 16);
+    for (let i = 0; i < side; i++) D(14, 28 + i * 14.2, -90);
+    for (let i = 0; i < right; i++) D(86, 28 + i * 14.2, 90);
+    const rest = n - back - side - right;   // was nicht in das U passt, kommt als Reihe in die Mitte
+    for (let i = 0; i < rest; i++) { const cols = Math.min(3, rest), r = Math.floor(i / 3), c = i % 3, inRow = Math.min(cols, rest - r * 3); D(50 + (c - (inRow - 1) / 2) * 17, 45 + r * 12); }
+  } else if (type === 'g4' || type === 'g6') {
+    const per = type === 'g4' ? 2 : 3, cl = Math.ceil(n / per);
+    const cols = cl <= 4 ? 2 : 3, rows = Math.ceil(cl / cols);
+    const dy = type === 'g4' ? 22 : 29;
+    for (let g = 0, k = 0; g < cl; g++) {
+      const r = Math.floor(g / cols), c = g % cols, inRow = Math.min(cols, cl - r * cols);
+      const cx = 50 + (c - (inRow - 1) / 2) * 30, cy = 80 - (per - 1) * 7.5 - r * dy;
+      for (let j = 0; j < per && k < n; j++, k++) D(cx, cy + j * 7.5, 0, 'desk2', g);
+    }
+  } else {
+    DEFAULT_LAYOUT.forEach(d => D(d.x, d.y, d.r));
+  }
+  return out;
+}
+$('tplType').addEventListener('change', () => {
+  const t = $('tplType').value;
+  $('tplCount').disabled = t === 'arc';
+  $('tplCountLbl').textContent = t === 'single' ? 'Einzeltische:' : 'Zweiertische:';
+  if (t === 'single' && +$('tplCount').value < 12) $('tplCount').value = 24;
+});
+$('tplApply').addEventListener('click', () => {
+  const t = $('tplType').value, n = clamp(parseInt($('tplCount').value, 10) || 10, 1, t === 'single' ? 36 : 24);
+  if (!window.confirm('Alle Tische dieses Raums durch die Vorlage ersetzen?\nObjekte (Schränke usw.) bleiben stehen, die Schüler werden von ihren Plätzen genommen.\n(Mit ↶ rückgängig zu machen.)')) return;
+  change(() => {
+    const c = cls();
+    const desks = templateDesks(t, n);
+    c.items = c.items.filter(i => !isDesk(i));
+    c.groups = [];
+    const gmap = {};
+    desks.forEach(d => {
+      const it = makeItem(d);
+      if (d.g != null) { if (!gmap[d.g]) gmap[d.g] = newGroup().id; it.groupId = gmap[d.g]; }
+      c.items.push(it);
+    });
+    ui.selectedId = null; ui.selSeat = null; ui.mode = 'room'; ui.flipped = false;
+  }, { keepList: true });
+  setResult('Vorlage angewendet – du kannst die Tische jetzt noch verschieben.', 'ok');
+});
+
+// Geschlechterfarben: nur vorübergehende Ansicht (wird nicht gespeichert, ändert keine Farben)
+const GENDER_VIEW = { w: '#fb7185', m: '#2563eb', d: '#9333ea' };
+function renderGenderColors() {
+  $('gcOn').checked = ui.genderView;
+  $('genderBtn').classList.toggle('on', ui.genderView);
+}
+function setGenderView(on) { ui.genderView = on; renderGenderColors(); renderRoom(); syncPresentBar(); }
+$('gcOn').addEventListener('change', e => setGenderView(e.target.checked));
+$('genderBtn').addEventListener('click', () => setGenderView(!ui.genderView));
+
+$('subNote').addEventListener('change', e => change(() => { cls().subNote = e.target.value; }, { keepList: true }));
+
+/* =====================================================================
+   Farben ein/aus (eigene Farben der Kinder)
+   ===================================================================== */
+function setColors(on) { $('optColors').checked = on; renderAll({ keepList: true }); syncPresentBar(); }
+$('colorBtn').addEventListener('click', () => setColors(!$('optColors').checked));
+$('colOn').addEventListener('change', e => setColors(e.target.checked));
+$('optColors').addEventListener('change', () => syncPresentBar());
+
+/* =====================================================================
+   Präsentationsmodus
+   ===================================================================== */
+ui.present = false;
+// Plan so vergrößern, dass möglichst wenig leere Fläche bleibt.
+// Timer und Dienste-Liste kommen in den freien Rand (rechts oder oben – je nachdem, wo der Plan größer bleibt).
+function layoutStage() {
+  const panels = ui.fit ? [$('dutyBox')] : [$('timerBox'), $('pickBanner'), $('teamsPanel'), $('dutyBox')];
+  const front = stage.querySelector('.front');
+  panels.forEach(p => { p.classList.remove('side'); p.style.left = p.style.top = p.style.right = p.style.transform = p.style.width = ''; });
+  front.style.top = front.style.bottom = '';
+  if (!ui.present && !ui.fit) { Object.assign(stage.style, { left: '0', top: '0', width: '100%', height: '100%' }); fitNames(0); return; }
+  const items = ui.preview ? ui.preview.items : cls().items;
+  let x0 = 100, y0 = 100, x1 = 0, y1 = 0;
+  const add = (x, y) => { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); };
+  items.forEach(d => {
+    const t = d.r * Math.PI / 180;
+    [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(([sx, sy]) => {
+      const lx = sx * d.w / 2, ly = sy * d.h / 2;
+      add(vx(d.x + lx * Math.cos(t) - ly * Math.sin(t)), vy(d.y + lx * Math.sin(t) + ly * Math.cos(t)));
+    });
+    add(vx(d.x), vy(d.y) - d.h / 2 - 3);   // Platz für die Beschriftung „Tisch …“
+  });
+  if (!items.length) { x0 = 20; y0 = 20; x1 = 80; y1 = 80; }
+  // Tafel direkt an den Plan heranrücken statt an den Raumrand
+  const tafelH = 5;
+  if (ui.flipped) { front.style.top = (y0 - tafelH) + '%'; y0 -= tafelH + 1; }
+  else { front.style.bottom = 'auto'; front.style.top = (y1 + 1.5) + '%'; y1 += tafelH + 1.5; }
+  add(Math.min(x0, 30), y0); add(Math.max(x1, 70), y1);
+  const m = 1.5; x0 -= m; y0 -= m; x1 += m; y1 += m;
+  const bw = x1 - x0, bh = y1 - y0;
+  const R = room.getBoundingClientRect(), W = R.width, H = R.height;
+  const vis = panels.filter(p => !p.hidden);
+  vis.forEach(p => { p.style.left = '-9999px'; p.style.top = '0'; });
+  // alle Kästen am Rand bekommen dieselbe Breite (die des breitesten)
+  if (vis.length) { const w = Math.min(Math.max(...vis.map(p => p.offsetWidth)), W - 28); vis.forEach(p => p.style.width = w + 'px'); }
+  const gap = 14;
+  const pw = vis.length ? vis[0].offsetWidth : 0;
+  const colW = vis.length ? pw + 2 * gap : 0;
+  const colH = vis.reduce((h, p) => h + p.offsetHeight + gap, 0) + gap;
+  // oben: so viele Kästen nebeneinander, wie in die Breite passen – sonst in mehreren Reihen
+  const perRow = Math.max(1, Math.min(vis.length, Math.floor((W - gap) / (pw + gap))));
+  const rows = [];
+  for (let i = 0; i < vis.length; i += perRow) rows.push(vis.slice(i, i + perRow));
+  const rowH = vis.length ? rows.reduce((h, r) => h + Math.max(...r.map(p => p.offsetHeight)) + gap, 0) + gap : 0;
+  const sSide = Math.min((W - colW) / bw, H / bh), sTop = Math.min(W / bw, (H - rowH) / bh);
+  const side = !vis.length || sSide >= sTop;
+  const S = (side ? sSide : sTop) * 100;   // Seitenlänge des Raum-Quadrats in px
+  const usedW = bw * S / 100, usedH = bh * S / 100;
+  const availW = W - (side ? colW : 0), availH = H - (side ? 0 : rowH);
+  const offX = (availW - usedW) / 2, offY = (side ? 0 : rowH) + (availH - usedH) / 2;
+  // Vertretungsblatt: überflüssige Höhe abschneiden, damit die Hinweise direkt darunter folgen
+  if (ui.fit && !layoutStage.again) {
+    const needH = side ? Math.max(usedH, vis.length ? colH : 0) : rowH + usedH;
+    if (needH < H - 4) { document.body.style.setProperty('--rh', Math.ceil(needH + 4) + 'px'); layoutStage.again = true; layoutStage(); layoutStage.again = false; return; }
+  }
+  Object.assign(stage.style, { width: S + 'px', height: S + 'px', left: (offX - x0 * S / 100) + 'px', top: (offY - y0 * S / 100) + 'px' });
+  fitNames(S);
+  if (!vis.length) return;
+  if (side) {   // rechts neben dem Plan, untereinander, senkrecht zentriert
+    let y = Math.max(gap, (H - colH) / 2 + gap);
+    const left = Math.min(offX + usedW + gap, W - colW + gap);
+    vis.forEach(p => { p.style.left = left + 'px'; p.style.top = y + 'px'; y += p.offsetHeight + gap; });
+  } else {      // über dem Plan, nebeneinander (ggf. in mehreren Reihen), waagerecht zentriert
+    let y = gap;
+    rows.forEach(r => {
+      let x = Math.max(gap, (W - (r.length * (pw + gap) - gap)) / 2);
+      r.forEach(p => { p.style.left = x + 'px'; p.style.top = y + 'px'; x += pw + gap; });
+      y += Math.max(...r.map(p => p.offsetHeight)) + gap;
+    });
+  }
+}
+// Präsentationsmodus: Namen so groß wie möglich – jeder Name wird an seinen Platz angepasst
+function fitNames(S) {
+  stage.querySelectorAll('.seat .nm').forEach(nm => {
+    const seat = nm.parentElement;
+    nm.style.fontSize = '';
+    if (!ui.present && !ui.fit) return;
+    let size = S * (ui.fit ? 0.019 : 0.021);                       // Startgröße (deutlich größer als normal, für alle gleich)
+    if (seat.classList.contains('empty') || seat.classList.contains('blocked')) size *= 0.5;   // „frei“/„gesperrt“ kleiner
+    nm.style.fontSize = size + 'px';
+    const cs = getComputedStyle(seat);
+    const availW = seat.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight) - 2;
+    const availH = seat.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - 2;
+    for (let i = 0; i < 6; i++) {
+      const w = nm.scrollWidth, h = nm.scrollHeight;
+      if (w <= availW && h <= availH) break;
+      size *= Math.min(availW / w, availH / h, 0.95);
+      nm.style.fontSize = size + 'px';
+    }
+  });
+}
+// Gruppeneinteilung als Kasten neben dem Plan (Präsentationsmodus)
+function renderTeamsPanel(dn) {
+  const p = $('teamsPanel');
+  if (!ui.present || !ui.showTeamList) { p.hidden = true; return; }
+  p.hidden = false;
+  if (!ui.teams) { p.innerHTML = '<b>Partner &amp; Gruppen</b><div class="empty-hint">Noch keine Gruppen gebildet – über 👥 → „Gruppen neu bilden“.</div>'; return; }
+  const L = ui.teams.list, cols = L.length > 6 ? 2 : 1;
+  p.innerHTML = `<b>${ui.teams.mode === 'pairs' ? 'Partner' : 'Gruppen'}</b><div class="tgrid2" style="grid-template-columns:repeat(${cols}, auto)">` +
+    L.map((t, i) => `<div class="team" data-t="${i}" style="--tc:${teamColor(i)}"><b>${teamShort(i)}</b>${t.map((id, k) => `<span class="tm" data-t="${i}" data-k="${k}">${esc(dn.get(id) || '?')}</span>`).join('') || '<i class="empty-hint">leer</i>'}</div>`).join('') + '</div>';
+}
+function syncPresentBar() {
+  const set = (k, on) => { const b = document.querySelector(`#presentBar [data-p="${k}"]`); if (b) b.classList.toggle('on', on); };
+  set('colors', $('optColors').checked); set('gender', !!ui.genderView); set('teams', !!((ui.teams && $('teamColor').checked) || ui.showTeamList));
+  set('duties', !!cls().showDuties); set('flip', ui.flipped);
+}
+function setPresent(on) {
+  ui.present = on;
+  document.body.classList.toggle('present', on);
+  if (on) { ui.mode = 'students'; ui.selectedId = null; ui.selSeat = null; if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {}); }
+  else if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  renderAll({ keepList: true });
+  syncPresentBar();
+}
+$('presentBtn').addEventListener('click', () => setPresent(true));
+document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && ui.present) setPresent(false); });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && !$('teamsMenu').hidden) { $('teamsMenu').hidden = true; return; }
+  if (e.key === 'Escape' && ui.present && $('timerPop').hidden) setPresent(false);
+});
+$('presentBar').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const k = b.dataset.p;
+  if (k === 'exit') setPresent(false);
+  if (k === 'pick') pickSomeone();
+  if (k === 'timer') openTimerPop(b);
+  if (k === 'colors') setColors(!$('optColors').checked);
+  if (k === 'gender') setGenderView(!ui.genderView);
+  if (k === 'teams') { openTeamsMenu(b); return; }
+  if (k === 'duties') change(() => { cls().showDuties = !cls().showDuties; }, { keepList: true });
+  if (k === 'flip') { ui.flipped = !ui.flipped; renderAll({ keepList: true }); }
+  syncPresentBar();
+});
+window.addEventListener('resize', () => { if (ui.present) layoutStage(); });
+// Schnellmenü Partner & Gruppen (Werkzeugleiste und Präsentationsmodus)
+function openTeamsMenu(anchor) {
+  const m = $('teamsMenu');
+  if (!m.hidden && m.anchor === anchor) { m.hidden = true; return; }
+  $('pmTeamColor').checked = $('teamColor').checked; $('pmTeamList').checked = !!ui.showTeamList;
+  $('pmTeamMode').value = $('teamMode').value; $('pmTeamN').value = $('teamN').value; $('pmTeamN').disabled = $('teamMode').value === 'pairs';
+  $('pmTeamRules').checked = $('teamRules').checked; $('pmTeamMix').checked = $('teamMix').checked;
+  $('pmTeamShow').disabled = $('pmTeamClear').disabled = !ui.teams;
+  m.hidden = false; m.anchor = anchor;
+  const r = anchor.getBoundingClientRect(), h = m.offsetHeight, w = m.offsetWidth;
+  m.style.left = clamp(r.right - w, 8, window.innerWidth - w - 8) + 'px';
+  m.style.top = (r.bottom + 6 + h < window.innerHeight ? r.bottom + 6 : Math.max(8, r.top - h - 6)) + 'px';
+}
+$('teamsBtn').addEventListener('click', e => openTeamsMenu(e.currentTarget));
+$('pmTeamShow').addEventListener('click', () => { $('teamsMenu').hidden = true; if (ui.teams) $('teamsDlg').hidden = false; });
+$('pmTeamClear').addEventListener('click', () => {
+  ui.teams = null; ui.showTeamList = false; $('teamsMenu').hidden = true;
+  renderTeams(); renderRoom(); syncPresentBar(); setResult('Gruppeneinteilung verworfen.', 'ok');
+});
+$('pmTeamColor').addEventListener('change', e => { $('teamColor').checked = $('teamColor2').checked = e.target.checked; renderRoom(); syncPresentBar(); });
+$('pmTeamList').addEventListener('change', e => { ui.showTeamList = e.target.checked; renderRoom(); syncPresentBar(); });
+// Einstellungen im Präsentations-Menü = dieselben wie in der Seitenleiste
+$('pmTeamMode').addEventListener('change', e => { $('teamMode').value = e.target.value; $('pmTeamN').disabled = e.target.value === 'pairs'; renderTeams(); });
+$('pmTeamN').addEventListener('change', e => { $('teamN').value = e.target.value; });
+$('pmTeamRules').addEventListener('change', e => { $('teamRules').checked = e.target.checked; });
+$('pmTeamMix').addEventListener('change', e => { $('teamMix').checked = e.target.checked; });
+$('pmTeamMake').addEventListener('click', () => {
+  makeTeams();
+  if (ui.present) { ui.showTeamList = true; $('pmTeamList').checked = true; }
+  $('pmTeamShow').disabled = $('pmTeamClear').disabled = !ui.teams;
+  renderRoom(); syncPresentBar();
+});
+document.addEventListener('pointerdown', e => { if (!$('teamsMenu').hidden && !e.target.closest('#teamsMenu, #teamsBtn, [data-p="teams"]')) $('teamsMenu').hidden = true; });
+
+/* =====================================================================
+   Gruppenarbeits-Timer
+   ===================================================================== */
+const timer = { total: 0, left: 0, end: 0, running: false, id: null };
+function openTimerPop(anchor) {
+  const pop = $('timerPop');
+  if (!pop.hidden) { pop.hidden = true; return; }
+  pop.hidden = false;
+  const r = anchor.getBoundingClientRect();
+  pop.style.left = clamp(r.right - pop.offsetWidth, 8, window.innerWidth - pop.offsetWidth - 8) + 'px';
+  const h = pop.offsetHeight;
+  pop.style.top = (r.bottom + 6 + h < window.innerHeight ? r.bottom + 6 : Math.max(8, r.top - h - 6)) + 'px';
+}
+$('timerBtn').addEventListener('click', e => openTimerPop(e.currentTarget));
+document.addEventListener('pointerdown', e => { if (!$('timerPop').hidden && !e.target.closest('#timerPop, #timerBtn, [data-p="timer"]')) $('timerPop').hidden = true; });
+$('timerPop').addEventListener('click', e => { const b = e.target.closest('button[data-m]'); if (b) startTimer(+b.dataset.m * 60); });
+$('tpStart').addEventListener('click', () => startTimer((+$('tpMin').value || 0) * 60 + (+$('tpSec').value || 0)));
+const fmtT = s => { s = Math.max(0, Math.ceil(s)); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60; return (h ? h + ':' + String(m).padStart(2, '0') : m) + ':' + String(x).padStart(2, '0'); };
+function startTimer(sec) {
+  if (!sec) return;
+  $('timerPop').hidden = true;
+  // Timer wird nur vorbereitet – er startet erst mit einem Klick auf die Zeit
+  Object.assign(timer, { total: sec, left: sec, end: 0, running: false, ready: true });
+  clearInterval(timer.id);
+  tickTimer();
+  if (ui.present) layoutStage();
+}
+function tickTimer() {
+  if (timer.running) timer.left = (timer.end - Date.now()) / 1000;
+  const box = $('timerBox');
+  box.hidden = false;
+  const done = timer.left <= 0;
+  box.className = (done ? 'done' : timer.ready ? 'ready' : timer.left <= 60 ? 'warn' : '') + (timer.running || timer.ready ? '' : ' paused');
+  box.innerHTML = `<div class="tt">${done ? '0:00' : fmtT(timer.left)}</div>
+    <div class="tbar"><i style="width:${Math.max(0, timer.left / timer.total * 100)}%"></i></div>
+    <div class="tl"><span>${done ? 'Zeit ist um!' : timer.running ? 'läuft – Klick = Pause' : timer.ready ? '▶ Klick auf die Zeit startet' : 'Pause – Klick = weiter'}</span><span><button data-t="restart" title="Zurücksetzen">↺</button><button data-t="close" title="Timer schließen">✕</button></span></div>`;
+  if (done && timer.running) { timer.running = false; clearInterval(timer.id); box.className = 'done'; if ($('tpGong').checked) gong(); }
+}
+$('timerBox').addEventListener('click', e => {
+  const b = e.target.closest('button');
+  if (b && b.dataset.t === 'close') { clearInterval(timer.id); timer.running = false; $('timerBox').hidden = true; if (ui.present) layoutStage(); return; }
+  if (b && b.dataset.t === 'restart') { startTimer(timer.total); return; }
+  if (timer.left <= 0) return;
+  timer.running = !timer.running;           // Klick auf die Zeit = Start / Pause / Weiter
+  timer.ready = false;
+  if (timer.running) { timer.end = Date.now() + timer.left * 1000; clearInterval(timer.id); timer.id = setInterval(tickTimer, 250); }
+  else clearInterval(timer.id);
+  tickTimer();
+});
+$('timerBox').addEventListener('pointerdown', e => e.stopPropagation());
+// sanfter Gong, ohne Sounddatei erzeugt
+function gong() {
+  try {
+    const ac = new (window.AudioContext || window.webkitAudioContext)();
+    [0, 1.1].forEach(delay => [523.25, 659.25, 783.99].forEach((f, i) => {
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.type = 'sine'; o.frequency.value = f;
+      const t = ac.currentTime + delay + i * 0.12;
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.25, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 2.2);
+      o.connect(g).connect(ac.destination); o.start(t); o.stop(t + 2.3);
+    }));
+  } catch {}
+}
+
+/* ---------- Drucken (gilt auch für Strg+P) ---------- */
+let printPrev = null;
+function beforePrint() {
+  if (printPrev) return;
+  printPrev = { flipped: ui.flipped, sel: ui.selectedId, seat: ui.selSeat, g: $('optGender').checked, c: $('optColors').checked };
+  const land = $('prOrient').value === 'landscape';
+  $('pageStyle').textContent = `@page { size: A4 ${land ? 'landscape' : 'portrait'}; margin: 10mm; }`;
+  document.body.classList.toggle('pr-land', land);
+  document.body.classList.toggle('pr-nocolor', !$('prColors').checked);
+  document.body.classList.toggle('pr-nogroups', !$('prGroups').checked);
+  document.body.classList.toggle('print-sub', !!ui.printSub);
+  if (ui.printSub) buildSubSheet();
+  // Papiermaß (A4 abzüglich Rand, Überschrift und ggf. Hinweise); der Plan wird wie im Präsentationsmodus eingepasst
+  const hasNote = ui.printSub && !!(cls().subNote || '').trim();
+  const rw = land ? 277 : 190, rh = land ? (hasNote ? 140 : 172) : (hasNote ? 205 : 255);
+  document.body.style.setProperty('--rw', rw + 'mm'); document.body.style.setProperty('--rh', rh + 'mm');
+  document.body.classList.add('print-fit');
+  ui.fit = true;
+  $('phTitle').textContent = ui.printSub ? 'Vertretung – Sitzplan ' + cls().name : ($('prTitle').value.trim() || 'Sitzplan ' + cls().name);
+  $('phDate').textContent = $('prDate').checked ? new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '';
+  $('optGender').checked = $('prGender').checked;
+  ui.flipped = $('prView').value === 'students';
+  ui.selectedId = null; ui.selSeat = null;
+  renderAll({ keepList: true });
+}
+function afterPrint() {
+  if (!printPrev) return;
+  const p = printPrev; printPrev = null;
+  ui.flipped = p.flipped; ui.selectedId = p.sel; ui.selSeat = p.seat;
+  ui.printSub = false; ui.fit = false; document.body.classList.remove('print-sub', 'print-fit');
+  $('optGender').checked = p.g; $('optColors').checked = p.c;
+  renderAll({ keepList: true });
+}
+window.addEventListener('beforeprint', beforePrint);
+window.addEventListener('afterprint', afterPrint);
+$('print').addEventListener('click', () => { ui.printSub = false; beforePrint(); window.print(); });
+$('printSub').addEventListener('click', () => { ui.printSub = true; beforePrint(); window.print(); });
+
+// Vertretungsblatt: Sitzplan (mit Diensten) + Hinweise
+function buildSubSheet() {
+  const note = (cls().subNote || '').trim();
+  $('subSheet').innerHTML = note ? `<h3>Hinweise</h3><p class="pre">${esc(note)}</p>` : '';
+}
+
+/* ---------- Datei: Öffnen, Speichern, Speichern unter, zuletzt verwendet ----------
+   In Chrome und Edge wird direkt in die geöffnete Datei geschrieben (File System Access API).
+   Andere Browser (z. B. Firefox, Safari) können das nicht – dort wird beim Speichern eine Datei heruntergeladen. */
+const FS = 'showSaveFilePicker' in window && 'showOpenFilePicker' in window;
+const FILE_TYPES = [{ description: 'Sitzplan', accept: { 'application/json': ['.json'] } }];
+let fileHandle = null, fileName = '';
+
+function fileData() {
+  return JSON.stringify({ version: 3, saved: new Date().toISOString(), ...JSON.parse(snap()) }, null, 1);
+}
+function renderFileInfo() {
+  $('fileInfo').innerHTML = (fileName ? `📄 <b>${esc(fileName)}</b>` : '📄 <i>noch nicht gespeichert</i>') +
+    (dirty ? ' <span class="unsaved">• ungespeicherte Änderungen</span>' : (fileName ? ' <span class="saved">✓ gespeichert</span>' : ''));
+  document.title = (dirty ? '• ' : '') + (fileName ? fileName.replace(/\.json$/i, '') + ' – ' : '') + 'Sitzplan';
+}
+
+// --- „Zuletzt verwendet“: nur die Datei-Verweise (keine Inhalte) werden im Browser gemerkt ---
+function idb() {
+  return new Promise((res, rej) => {
+    const r = indexedDB.open('sitzplan-tool', 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('kv');
+    r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+  });
+}
+async function idbGet(key) {
+  try { const db = await idb(); return await new Promise(res => { const q = db.transaction('kv').objectStore('kv').get(key); q.onsuccess = () => res(q.result); q.onerror = () => res(undefined); }); }
+  catch { return undefined; }
+}
+async function idbSet(key, val) {
+  try { const db = await idb(); await new Promise(res => { const t = db.transaction('kv', 'readwrite'); t.objectStore('kv').put(val, key); t.oncomplete = res; t.onerror = res; }); } catch {}
+}
+async function addRecent(handle) {
+  if (!handle) return;
+  let list = (await idbGet('recent')) || [];
+  const keep = [];
+  for (const r of list) { try { if (!(await r.handle.isSameEntry(handle))) keep.push(r); } catch {} }
+  list = [{ name: handle.name, handle, time: Date.now() }, ...keep].slice(0, 3);
+  await idbSet('recent', list);
+  renderRecent();
+}
+async function renderRecent() {
+  const box = $('recentList');
+  if (!FS) { box.innerHTML = '<p class="hint">„Zuletzt verwendet“ und das direkte Überschreiben funktionieren in Chrome und Edge. In diesem Browser wird beim Speichern eine Datei heruntergeladen.</p>'; return; }
+  const list = (await idbGet('recent')) || [];
+  box.innerHTML = list.length ? list.map((r, i) =>
+    `<button class="recent" data-i="${i}" title="${esc(r.name)} öffnen"><span>📄 ${esc(r.name)}</span><small>${new Date(r.time).toLocaleDateString('de-DE')} ${new Date(r.time).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}</small></button>`).join('')
+    : '<p class="hint">Noch keine Dateien geöffnet oder gespeichert.</p>';
+}
+$('recentList').addEventListener('click', async e => {
+  const b = e.target.closest('button.recent'); if (!b) return;
+  const list = (await idbGet('recent')) || [];
+  const r = list[+b.dataset.i]; if (!r) return;
+  if (dirty && !window.confirm('Es gibt ungespeicherte Änderungen. Trotzdem „' + r.name + '“ öffnen?')) return;
+  try {
+    if ((await r.handle.queryPermission({ mode: 'readwrite' })) !== 'granted' &&
+        (await r.handle.requestPermission({ mode: 'readwrite' })) !== 'granted') return;
+    const f = await r.handle.getFile();
+    loadData(await f.text(), f.name, r.handle);
+  } catch {
+    window.alert(`„${r.name}“ konnte nicht geöffnet werden – vielleicht wurde sie verschoben oder gelöscht.`);
+    await idbSet('recent', list.filter(x => x !== r)); renderRecent();
+  }
+});
+
+// Daten aus einer Datei übernehmen
+/* ---------- Web-App (PWA): Offline-Betrieb, Installation, letzte Datei beim Start ----------
+   Nur wenn das Tool über eine Webadresse (https) läuft – als lokale Datei (file://) bleibt alles wie bisher. */
+const IS_WEB = location.protocol === 'https:' || location.hostname === 'localhost';
+if (IS_WEB && 'serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+let installEvt = null;
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; $('installBtn').hidden = false; });
+$('installBtn').addEventListener('click', async () => { if (!installEvt) return; installEvt.prompt(); await installEvt.userChoice; installEvt = null; $('installBtn').hidden = true; });
+window.addEventListener('appinstalled', () => { $('installBtn').hidden = true; setResult('Sitzplan wurde als App installiert.', 'ok'); });
+
+// Beim Start die zuletzt verwendete Datei öffnen. Hat der Browser die Erlaubnis gespeichert
+// (installierte App bzw. „Bei jedem Besuch erlauben“), geschieht das ohne Klick – sonst per Knopf über dem Plan.
+async function autoOpenLast() {
+  if (!IS_WEB || !FS) return;
+  const list = (await idbGet('recent')) || [];
+  const r = list[0];
+  if (!r) return;
+  const bar = $('lastBar');
+  const open = async ask => {
+    let perm = await r.handle.queryPermission({ mode: 'readwrite' });
+    if (perm !== 'granted' && ask) perm = await r.handle.requestPermission({ mode: 'readwrite' });
+    if (perm !== 'granted') return false;
+    const f = await r.handle.getFile();
+    if (!loadData(await f.text(), f.name, r.handle)) return false;
+    undoStack = []; redoStack = []; dirty = false;
+    renderAll();
+    bar.hidden = true;
+    return true;
+  };
+  try { if (await open(false)) return; } catch { return; }
+  const when = new Date(r.time).toLocaleDateString('de-DE') + ' ' + new Date(r.time).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+  bar.innerHTML = `📄 Zuletzt verwendet: <b>${esc(r.name)}</b> <span class="lb-t">(${when})</span><button data-l="open">Öffnen</button><button data-l="close" title="Mit leerem Plan beginnen">✕</button>`;
+  bar.hidden = false;
+  bar.onclick = async e => {
+    const b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.l === 'close') { bar.hidden = true; return; }
+    try { if (!(await open(true))) setResult('Der Browser hat den Zugriff auf die Datei nicht erlaubt.', 'warn'); }
+    catch { bar.hidden = true; window.alert(`„${r.name}“ konnte nicht geöffnet werden – vielleicht wurde sie verschoben oder gelöscht.`); }
+  };
+}
+
+function loadData(text, name, handle) {
+  $('lastBar').hidden = true;
+  const before = snap(), old = state;
+  try {
+    state = migrate(JSON.parse(text));
+    commit(before);
+    dirty = false;
+    fileHandle = handle || null; fileName = name || '';
+    ui.selectedId = null; ui.selSeat = null; ui.preview = null; ui.teams = null; ui.pickedId = null;
+    renderAll();
+    setResult(`„${name}“ geöffnet.`, 'ok');
+    if (handle) addRecent(handle);
+    return true;
+  } catch {
+    state = old;
+    window.alert('Die Datei konnte nicht gelesen werden.');
+    return false;
+  }
+}
+
+async function openFile() {
+  if (dirty && !window.confirm('Es gibt ungespeicherte Änderungen. Trotzdem eine andere Datei öffnen?')) return;
+  if (!FS) { $('fileInput').click(); return; }
+  try {
+    const [h] = await window.showOpenFilePicker({ types: FILE_TYPES, multiple: false });
+    const f = await h.getFile();
+    loadData(await f.text(), f.name, h);
+  } catch (e) { if (e.name !== 'AbortError') window.alert('Die Datei konnte nicht geöffnet werden.'); }
+}
+
+async function saveFile(saveAs) {
+  if (!FS) {   // Fallback: Herunterladen
+    const name = saveAs || !fileName ? (window.prompt('Dateiname:', fileName || 'sitzplan.json') || '') : fileName;
+    if (!name) return;
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([fileData()], { type: 'application/json' }));
+    a.download = /\.json$/i.test(name) ? name : name + '.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    fileName = a.download; dirty = false; renderFileInfo();
+    setResult(`„${fileName}“ in den Download-Ordner gespeichert.`, 'ok');
+    return;
+  }
+  try {
+    let h = fileHandle;
+    if (saveAs || !h) h = await window.showSaveFilePicker({ suggestedName: fileName || 'sitzplan.json', types: FILE_TYPES });
+    if ((await h.queryPermission({ mode: 'readwrite' })) !== 'granted' &&
+        (await h.requestPermission({ mode: 'readwrite' })) !== 'granted') return;
+    const w = await h.createWritable();
+    await w.write(fileData());
+    await w.close();
+    fileHandle = h; fileName = h.name; dirty = false;
+    renderFileInfo();
+    setResult(`Gespeichert in „${fileName}“.`, 'ok');
+    addRecent(h);
+  } catch (e) { if (e.name !== 'AbortError') window.alert('Speichern hat nicht geklappt: ' + e.message); }
+}
+
+// Neu: leerer Plan mit einer Klasse und der Ausgangs-Anordnung (mit ↶ rückgängig zu machen)
+function newFile() {
+  $('lastBar').hidden = true;
+  if (dirty && !window.confirm('Es gibt ungespeicherte Änderungen.\nTrotzdem einen neuen, leeren Plan beginnen?\n(Mit ↶ Rückgängig kommst du zurück.)')) return;
+  const before = snap();
+  state = { classes: [], current: null, seq: 0 };
+  const c = makeClass('Meine Klasse');
+  state.classes.push(c); state.current = c.id;
+  undoStack.push(before); redoStack = [];
+  fileHandle = null; fileName = ''; dirty = false;
+  Object.assign(ui, { selSeat: null, preview: null, teams: null, pickedId: null, pickLog: [], showTeamList: false, mode: 'room', flipped: false });
+  ui.selectedId = null;
+  $('pickBanner').hidden = true; $('importText').value = '';
+  renderAll();
+  setResult('Neuer, leerer Plan – trage Schüler ein oder richte den Raum ein.', 'ok');
+}
+$('newFile').addEventListener('click', newFile);
+$('saveFile').addEventListener('click', () => saveFile(false));
+$('saveAs').addEventListener('click', () => saveFile(true));
+$('loadFile').addEventListener('click', openFile);
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); saveFile(e.shiftKey); }
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'o') { e.preventDefault(); openFile(); }
+});
+
+// liest auch ältere Dateien (Version 1 und 2) ein
+function migrate(data) {
+  const fill = c => Object.assign({ plans: [], duties: [], dutyCount: {}, picked: [], showDuties: false, subNote: '', groups: [] }, c);
+  if (Array.isArray(data.classes) && data.classes.length) return { classes: data.classes.map(fill), current: data.current || data.classes[0].id, seq: data.seq || 10000 };
+  const fresh = { classes: [], current: null, seq: 0 };
+  state = fresh;   // damit newId() fortlaufend zählt
+  const c = makeClass('Klasse 1', []);
+  const byName = new Map();
+  const getStu = name => {
+    if (!byName.has(name)) { const s = { id: newId('s'), first: name, last: '', gender: '', color: '', front: false }; byName.set(name, s); c.students.push(s); }
+    return byName.get(name).id;
+  };
+  (data.names || []).forEach(getStu);
+  let list = data.items;
+  if (!list && Array.isArray(data.desks)) list = data.desks.map(d => ({ ...d, type: 'desk2', y: d.y * 0.5 + 43, seats: (d.names || []).map(n => ({ name: n })) }));
+  if (!list) throw new Error('unbekanntes Format');
+  c.items = list.map(d => makeItem({ ...d, id: null, seats: (d.seats || []).map(s => ({ blocked: s.blocked, pinned: s.pinned, sid: s.name && !s.blocked ? getStu(s.name) : null })) }));
+  fresh.classes.push(c); fresh.current = c.id;
+  return fresh;
+}
+
+// Fallback-Öffnen (Browser ohne File System Access API)
+$('fileInput').addEventListener('change', async () => {
+  const file = $('fileInput').files[0];
+  if (file) loadData(await file.text(), file.name, null);
+  $('fileInput').value = '';
+});
+
+window.addEventListener('beforeunload', e => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
+window.addEventListener('resize', positionItembar);
+
+/* ---------- Start ---------- */
+state = { classes: [], current: null, seq: 0 };
+const firstClass = makeClass('Meine Klasse');
+state.classes.push(firstClass);
+state.current = firstClass.id;
+$('planDate').value = todayStr();
+renderAll();
+renderRecent();
+autoOpenLast();
+</script>
+</body>
+</html>
