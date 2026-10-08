@@ -284,7 +284,16 @@
   .tt-subs { display: flex; flex-direction: column; gap: 5px; }
   .tt-tile { display: flex; justify-content: space-between; align-items: center; padding: 7px 10px; border-radius: 8px; background: color-mix(in srgb, var(--sc) 22%, #fff); border-left: 6px solid var(--sc); font-weight: 700; cursor: grab; user-select: none; touch-action: none; }
   .tt-tile small { color: var(--muted); font-weight: 600; }
-  .tt-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+  .tt-main { flex: 1; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 12px; align-items: start; }
+  .tt-main .agenda { position: sticky; top: 8px; max-height: calc(100vh - 140px); overflow: auto; }
+  .tt-main .ag-it { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 2px 8px; align-items: center; } .tt-main .ag-it .s { overflow: hidden; text-overflow: ellipsis; } .tt-main .ag-it .t { grid-column: 1 / -1; } .tt-main .ag-it .m { grid-row: 1; grid-column: 3; }
+  @media (max-width: 1100px) { .tt-main { grid-template-columns: minmax(0, 1fr); } .tt-main .agenda { position: static; max-height: none; } }
+  .tt td.tt-time small { font-size: .68rem; line-height: 1.15; display: block; }
+  .tt th.off { color: #9aa0a6; } .tt th .fr { display: block; margin: 3px auto 0; width: fit-content; max-width: 100%; font-size: .68rem; background: #e5e7eb; color: #4b5563; border-radius: 999px; padding: 1px 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tt td.tt-cell.off { background: repeating-linear-gradient(135deg, #f1f1ef 0 6px, #e9e9e6 6px 12px); border-color: #e2e2df; }
+  .tt td.tt-cell.off .tt-part { filter: grayscale(1); opacity: .45; }
+  .ag-done { margin-top: 10px; } .ag-done summary { cursor: pointer; color: var(--muted); font-weight: 700; font-size: .85rem; } .ag-done .ag-it { opacity: .7; }
+  .heft-done { margin-top: 6px; } .heft-done > summary { cursor: pointer; color: var(--muted); font-weight: 700; padding: 8px 4px; } .heft-done .hw { opacity: .85; }
   .tt-wrap.nopal .tt-pal { display: none; }
   .tt-grid { overflow: auto; background: var(--panel); border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
   table.tt { border-collapse: separate; border-spacing: 4px; width: 100%; table-layout: fixed; }
@@ -301,7 +310,7 @@
   .ag-it .k { font-size: .75rem; font-weight: 800; padding: 1px 8px; border-radius: 999px; white-space: nowrap; }
   .ag-it.hw .k { background: var(--accent-soft); color: var(--accent); } .ag-it.ex .k { background: #f9e3e4; color: var(--red); }
   .ag-it .s { font-weight: 700; white-space: nowrap; } .ag-it .t { flex: 1; } .ag-it .m { color: var(--muted); font-size: .8rem; white-space: nowrap; }
-  .tt td.tt-time { width: 92px; text-align: center; cursor: pointer; color: var(--muted); font-size: .8rem; border-radius: 6px; }
+  .tt td.tt-time { width: 54px; text-align: center; cursor: pointer; color: var(--muted); font-size: .8rem; border-radius: 6px; }
   .tt td.tt-time b { display: block; color: var(--ink); font-size: .95rem; }
   .tt td.tt-time:hover { background: var(--accent-soft); }
   .tt td.tt-time.now { background: #fef3c7; }
@@ -572,7 +581,7 @@
           <div class="sub">Zuletzt verwendet</div>
           <div class="recents" id="recentList"></div>
           <p class="hint">Eine Datei enthält alle Klassen mit Schülern, Regeln, Räumen, Verlauf und Diensten. Für „Zuletzt verwendet“ merkt sich der Browser nur die Verweise auf die Dateien, nicht deren Inhalt.</p>
-          <p class="hint" style="margin:0">Version 2026-10-08</p>
+          <p class="hint" style="margin:0">Version 2026-10-09</p>
         </div>
       </details>
 
@@ -1173,6 +1182,7 @@ const ui = { mode: 'room', flipped: false, selSeat: null, animating: false, _sel
              preview: null, pickedId: null, pickLog: [], teams: null, genderView: false };
 // selectedId = zuletzt gewählter Tisch; beim Setzen wird die Mehrfachauswahl auf genau diesen Tisch zurückgesetzt
 Object.defineProperty(ui, 'selectedId', { get() { return this._sel; }, set(v) { this._sel = v; this.multi = new Set(v ? [v] : []); } });
+const stillCurrent = date => !!date && Date.now() < new Date(date + 'T13:00').getTime();   // am Abgabe-/Probentag bis 13 Uhr aktuell
 const todayStr = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
 const fmtDate = s => s ? s.split('-').reverse().join('.') : '';
 const isAbsent = s => !!s && s.absent === todayStr();   // Abwesenheit gilt nur für den heutigen Tag
@@ -3186,8 +3196,9 @@ $('mxWrap').addEventListener('click', e => {
 function renderHeft() {
   if (!$('qhGiven').value) $('qhGiven').value = todayStr();
   const studs = listStudents();
-  const hws = visibleChecks().filter(k => k.kind === 'hw');
-  $('heftList').innerHTML = !hws.length ? '<p class="hint" style="padding:8px">Noch keine Hausaufgaben für diese Auswahl.</p>' : hws.map(k => {
+  const all = visibleChecks().filter(k => k.kind === 'hw');
+  const hws = all.filter(k => !k.due || stillCurrent(k.due)), doneHw = all.filter(k => k.due && !stillCurrent(k.due)).sort((a, b) => b.due.localeCompare(a.due));
+  const card = k => {
     const n = chkCounts(k, studs);
     const by = v => studs.filter(s => (k.status[s.id] || '') === v);
     const chip = (s, v) => { const nt = k.notes && k.notes[s.id]; return `<button class="chip s-${v || 'e'}" data-cid="${k.id}" data-sid="${s.id}" title="${nt ? '📝 ' + esc(nt) + '\n' : ''}Klick: ${v === '' ? '✓ erledigt' : v === 'ok' ? '✗ vergessen' : 'wieder offen'} · Rechtsklick: Bemerkung">${esc(displayNames(cls().students).get(s.id))}${nt ? ' 📝' : ''}${isAbsent(s) ? ' 🤒' : ''}</button>`; };
@@ -3208,7 +3219,10 @@ function renderHeft() {
       ${n.ok ? `<details class="hw-g"><summary>Erledigt (${n.ok})</summary>${by('ok').map(s => chip(s, 'ok')).join('')}</details>` : ''}
       ${notes.length ? `<div class="hw-notes">${notes.map(([id, t]) => `<div><b>${esc(displayNames(cls().students).get(id))}:</b> ${esc(t)}</div>`).join('')}</div>` : ''}
     </div>`;
-  }).join('');
+  };
+  $('heftList').innerHTML = (hws.length ? hws.map(card).join('') : `<p class="hint" style="padding:8px">${all.length ? 'Keine offenen Hausaufgaben – die vergangenen stehen unter „Erledigt“.' : 'Noch keine Hausaufgaben für diese Auswahl.'}</p>`)
+    + (doneHw.length ? `<details class="heft-done"${ui.heftDone ? ' open' : ''}><summary>Erledigt – Abgabetag vorbei (${doneHw.length})</summary>${doneHw.map(card).join('')}</details>` : '');
+  const hd = $('heftList').querySelector('.heft-done'); if (hd) hd.addEventListener('toggle', () => { ui.heftDone = hd.open; });
 }
 $('heftList').addEventListener('click', e => {
   const ch = e.target.closest('.chip');
@@ -3421,13 +3435,37 @@ function abGroup1(tt, key, monday) { const a = tt.ab && tt.ab[key], ids = cellAr
 const cellHas = (v, id) => Array.isArray(v) ? v.includes(id) : v === id;
 const weekdayIdx = d => (d.getDay() + 6) % 7;   // Montag = 0
 
+/* ---------- Bayern: Schulferien (Kultusministerium) und gesetzliche Feiertage ---------- */
+const FERIEN_BY = [
+  ['2026-08-03', '2026-09-14', 'Sommerferien'], ['2026-11-02', '2026-11-06', 'Herbstferien'], ['2026-11-18', '2026-11-18', 'Buß- und Bettag'],
+  ['2026-12-24', '2027-01-08', 'Weihnachtsferien'], ['2027-02-08', '2027-02-12', 'Frühjahrsferien'], ['2027-03-22', '2027-04-02', 'Osterferien'],
+  ['2027-05-18', '2027-05-28', 'Pfingstferien'], ['2027-08-02', '2027-09-13', 'Sommerferien']];
+const _feiertage = {};
+function feiertageBY(y) {
+  if (_feiertage[y]) return _feiertage[y];
+  const a = y % 19, b = Math.floor(y / 100), c = y % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3),
+    h = (19 * a + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451),
+    mon = Math.floor((h + l - 7 * m + 114) / 31), day = ((h + l - 7 * m + 114) % 31) + 1;
+  const os = y + '-' + String(mon).padStart(2, '0') + '-' + String(day).padStart(2, '0'), o = n => addDays(os, n);
+  return (_feiertage[y] = {
+    [y + '-01-01']: 'Neujahr', [y + '-01-06']: 'Heilige Drei Könige', [o(-2)]: 'Karfreitag', [o(1)]: 'Ostermontag', [y + '-05-01']: 'Tag der Arbeit',
+    [o(39)]: 'Christi Himmelfahrt', [o(50)]: 'Pfingstmontag', [o(60)]: 'Fronleichnam', [y + '-08-15']: 'Mariä Himmelfahrt',
+    [y + '-10-03']: 'Tag der Deutschen Einheit', [y + '-11-01']: 'Allerheiligen', [y + '-12-25']: '1. Weihnachtstag', [y + '-12-26']: '2. Weihnachtstag'
+  });
+}
+// Name des unterrichtsfreien Tags (Feiertag oder Ferien) – sonst ''
+function freeDay(ds) {
+  const f = feiertageBY(+ds.slice(0, 4))[ds]; if (f) return f;
+  const fe = FERIEN_BY.find(([a, b]) => ds >= a && ds <= b); return fe ? fe[2] : '';
+}
+
 // nächster Tag (ab morgen), an dem das Fach laut Stundenplan stattfindet
 function nextLessonDate(subjectName) {
   const c = cls(); if (!c.tt || !subjectName) return '';
   const subj = c.tt.subjects.find(s => s.name.toLowerCase() === subjectName.trim().toLowerCase()); if (!subj) return '';
-  for (let n = 1; n <= 21; n++) {
+  for (let n = 1; n <= 60; n++) {
     const ds = addDays(todayStr(), n), wd = weekdayIdx(new Date(ds + 'T00:00'));
-    if (!ttDays(c.tt).includes(wd)) continue;
+    if (!ttDays(c.tt).includes(wd) || freeDay(ds)) continue;
     if (c.tt.slots.some(sl => !sl.pause && cellHas(c.tt.cells[wd + '|' + sl.id], subj.id))) return ds;
   }
   return '';
@@ -3448,17 +3486,17 @@ function renderTimetable() {
   { const m = new Date(monday + 'T00:00'), th = new Date(m); th.setDate(m.getDate() + 3); const y1 = new Date(th.getFullYear(), 0, 4); const kw = 1 + Math.round(((th - y1) / 864e5 - 3 + (y1.getDay() + 6) % 7) / 7);
     $('ttThis').textContent = `KW ${kw} · ${fmtD(monday)}–${fmtD(addDays(monday, days[days.length - 1]))}`; $('ttThis').classList.toggle('off', !thisWeek); $('ttThis').title = thisWeek ? 'Aktuelle Woche' : 'Zurück zur aktuellen Woche'; }
   const exams = cls().exams || [];
-  const head = `<tr><th class="tt-time"></th>${days.map(d => { const ds = addDays(monday, d); return `<th class="${thisWeek && d === today ? 'today' : ''}">${DAY_NAMES[d]}<span class="dt">${fmtD(ds)}</span>${exams.filter(x => x.date === ds).map(x => `<span class="exm" data-id="${x.id}" title="${esc(x.title)}">📝 ${esc(x.subject || x.title)}</span>`).join('')}</th>`; }).join('')}</tr>`;
+  const head = `<tr><th class="tt-time"></th>${days.map(d => { const ds = addDays(monday, d); const fr = freeDay(ds); return `<th class="${thisWeek && d === today ? 'today' : ''}${fr ? ' off' : ''}">${DAY_NAMES[d]}<span class="dt">${fmtD(ds)}</span>${fr ? `<span class="fr" title="unterrichtsfrei">${esc(fr)}</span>` : ''}${exams.filter(x => x.date === ds).map(x => `<span class="exm" data-id="${x.id}" title="${esc(x.title)}">📝 ${esc(x.subject || x.title)}</span>`).join('')}</th>`; }).join('')}</tr>`;
   const body = tt.slots.map(sl => {
     const cur = thisWeek && sl.start && sl.end && hm >= sl.start && hm < sl.end;
-    const tcell = `<td class="tt-time${cur ? ' now' : ''}" data-slot="${sl.id}" title="Klick = Stundenraster bearbeiten"><b>${esc(sl.label)}</b><small>${esc(sl.start || '')}${sl.end ? '–' + esc(sl.end) : ''}</small></td>`;
+    const tcell = `<td class="tt-time${cur ? ' now' : ''}" data-slot="${sl.id}" title="Klick = Stundenraster bearbeiten"><b>${esc(sl.label)}</b><small>${esc(sl.start || '')}${sl.end ? '–<br>' + esc(sl.end) : ''}</small></td>`;
     if (sl.pause) return `<tr class="tt-pause">${tcell}<td colspan="${days.length}">${esc(sl.label)}</td></tr>`;
     return `<tr>${tcell}${days.map(d => {
       const ss = cellArr(tt, d + '|' + sl.id).map(id => ttSubj(tt, id)).filter(Boolean), td = thisWeek && d === today;
-      const key = d + '|' + sl.id, g1 = ss.length > 1 ? abGroup1(tt, key, monday) : null;
+      const key = d + '|' + sl.id, g1 = ss.length > 1 ? abGroup1(tt, key, monday) : null, off = !!freeDay(addDays(monday, d));
       const parts = ss.map((s, i) => `<div class="tt-part" data-i="${i}" style="--sc:${s.color}" title="${esc(s.name)}">${g1 ? `<em class="grp">Gr. ${s.id === g1 ? 1 : 2}</em>` : ''}<span>${esc(s.name)}</span><button class="tt-x" title="Fach entfernen">✕</button></div>`).join('');
       const abBtn = ss.length > 1 ? `<button class="tt-ab${g1 ? ' on' : ''}" title="${g1 ? '14-täglicher Wechsel – Klick = ändern' : 'Klick = 14-täglichen Wechsel einstellen'}">⇄${g1 ? ' 14-tägig' : ''}</button>` : '';
-      return `<td class="tt-cell${ss.length ? ' full' : ''}${g1 ? ' ab' : ''}${td ? ' today' : ''}${td && cur ? ' now' : ''}" data-key="${key}">${ss.length ? `<div class="tt-parts${ss.length > 1 ? ' two' : ''}">${parts}</div>` : ''}${abBtn}${ss.length === 1 ? '<div class="tt-add">＋ 2. Gruppe</div>' : ''}</td>`;
+      return `<td class="tt-cell${ss.length ? ' full' : ''}${g1 ? ' ab' : ''}${off ? ' off' : ''}${td ? ' today' : ''}${td && cur && !off ? ' now' : ''}" data-key="${key}">${ss.length ? `<div class="tt-parts${ss.length > 1 ? ' two' : ''}">${parts}</div>` : ''}${abBtn}${ss.length === 1 ? '<div class="tt-add">＋ 2. Gruppe</div>' : ''}</td>`;
     }).join('')}</tr>`;
   }).join('');
   $('ttGrid').innerHTML = `<table class="tt">${head}${body}</table>`;
@@ -3721,7 +3759,6 @@ $('exDel').addEventListener('click', () => {
 });
 
 /* ---------- Anstehend: Hausaufgaben und Proben (verschwinden am Fälligkeitstag um 13 Uhr) ---------- */
-const stillCurrent = date => !!date && Date.now() < new Date(date + 'T13:00').getTime();
 function renderAgenda() {
   const c = cls(), tt = timetable();
   const color = name => { const s = tt.subjects.find(x => x.name === name); return s ? s.color : ''; };
@@ -3739,7 +3776,11 @@ function renderAgenda() {
       <span class="k">${it.kind === 'ex' ? '📝 Probe' : '📚 HA'}</span><span class="s">${esc(it.subject || '')}</span><span class="t">${esc(it.title)}</span><span class="m">${it.meta}</span></div>`;
   });
   if (last) html += '</div>';
+  const lim = addDays(todayStr(), -14), done = (c.checks || []).filter(k => k.kind === 'hw' && k.due && !stillCurrent(k.due) && k.due >= lim).sort((a, b) => b.due.localeCompare(a.due));
+  if (done.length) html += `<details class="ag-done"${ui.agDone ? ' open' : ''}><summary>Erledigt – letzte 14 Tage (${done.length})</summary>${done.map(k => { const n = chkCounts(k, c.students);
+    return `<div class="ag-it hw" data-k="hw" data-id="${k.id}" style="--sc:${color(k.subject) || 'var(--accent)'}"><span class="k">${fmtD(k.due)}</span><span class="s">${esc(k.subject || '')}</span><span class="t">${esc(k.title || '')}</span><span class="m">${n.open + n.no ? `${n.ok}/${c.students.length} ✓` : 'alle ✓'}</span></div>`; }).join('')}</details>`;
   $('ttAgenda').innerHTML = html;
+  const dd = $('ttAgenda').querySelector('.ag-done'); if (dd) dd.addEventListener('toggle', () => { ui.agDone = dd.open; });
 }
 $('ttAgenda').addEventListener('click', e => { const it = e.target.closest('.ag-it'); if (!it) return; if (it.dataset.k === 'ex') openExam(it.dataset.id); else openChk(it.dataset.id); });
 $('ttGrid').addEventListener('click', e => { const x = e.target.closest('.exm'); if (x) { e.stopPropagation(); openExam(x.dataset.id); } }, true);
