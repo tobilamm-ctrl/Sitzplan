@@ -304,7 +304,7 @@
   .agenda { background: var(--panel); border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.08); padding: 12px 14px; }
   .agenda h3 { margin: 0 0 8px; font-size: .95rem; color: var(--red); }
   .ag-day { margin-top: 8px; } .ag-day > b { display: block; font-size: .82rem; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 4px; }
-  .ag-day.today > b { color: var(--accent); }
+  .ag-day.today > b { color: var(--accent); } .ag-day.over > b { color: var(--red); }
   .ag-it { display: flex; gap: 10px; align-items: baseline; padding: 6px 10px; border-radius: 8px; cursor: pointer; background: #fafaf8; margin-bottom: 4px; border-left: 5px solid var(--sc, var(--grey)); }
   .ag-it:hover { background: var(--accent-soft); }
   .ag-it .k { font-size: .75rem; font-weight: 800; padding: 1px 8px; border-radius: 999px; white-space: nowrap; }
@@ -384,14 +384,18 @@
   .qh { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; background: var(--panel); padding: 10px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.08); margin-bottom: 10px; }
   .qh input[type=date] { font: inherit; font-size: .85rem; padding: 4px 6px; border: 1px solid #d1d5db; border-radius: 6px; }
   .heft { display: flex; flex-direction: column; gap: 10px; }
-  .hw { background: var(--panel); border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.08); padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; border-left: 5px solid var(--accent); }
+  .hw { background: var(--panel); border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.08); padding: 8px 12px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 4px 18px; border-left: 5px solid var(--accent); }
+  .hw-l, .hw-r { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .hw-r { border-left: 1px solid var(--line); padding-left: 14px; justify-content: center; }
+  .hw-r:empty { display: none; }
+  @media (max-width: 800px) { .hw { grid-template-columns: minmax(0, 1fr); } .hw-r { border-left: none; padding-left: 0; } }
   .hw.late { border-left-color: #f59e0b; }
   .hw-h { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   .hw-h .spacer { flex: 1; } .hw-h button { padding: 2px 8px; }
   .hw .subj { background: var(--accent-soft); color: var(--accent); font-weight: 700; font-size: .8rem; padding: 2px 9px; border-radius: 999px; }
   .hw .due { font-size: .9rem; } .hw.late .due { color: #b45309; }
-  .hw-t { font-size: 1.05rem; font-weight: 600; white-space: pre-wrap; }
-  .hw-bar { height: 6px; background: #fee2e2; border-radius: 99px; overflow: hidden; } .hw-bar i { display: block; height: 100%; background: #22c55e; }
+  .hw-t { font-size: 1rem; font-weight: 600; white-space: pre-wrap; }
+  .hw-bar { height: 5px; max-width: 260px; background: #fee2e2; border-radius: 99px; overflow: hidden; } .hw-bar i { display: block; height: 100%; background: #22c55e; }
   .hw-s { font-size: .85rem; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
   .hw-s button { margin-left: 4px; }
   button.small { padding: 3px 9px; font-size: .8rem; }
@@ -581,7 +585,7 @@
           <div class="sub">Zuletzt verwendet</div>
           <div class="recents" id="recentList"></div>
           <p class="hint">Eine Datei enthält alle Klassen mit Schülern, Regeln, Räumen, Verlauf und Diensten. Für „Zuletzt verwendet“ merkt sich der Browser nur die Verweise auf die Dateien, nicht deren Inhalt.</p>
-          <p class="hint" style="margin:0">Version 2026-10-09</p>
+          <p class="hint" style="margin:0">Version 2026-10-10</p>
         </div>
       </details>
 
@@ -1027,7 +1031,7 @@
       <div class="hint" id="qrInfo"></div>
       <div id="qrBox"></div>
       <div class="row qr-nav" id="qrNav" hidden><button id="qrPrev">◀</button><span id="qrPartTxt" class="hint"></span><button id="qrNext">▶</button></div>
-      <div class="hint">Die Schüler tippen in der App <b>„Schulplaner“</b> auf <b>„📷 Empfangen“</b> und halten das iPad auf den Code. Bei mehreren Codes einfach weiter draufhalten, bis alle empfangen sind.</div>
+      <div class="hint">Die Schüler tippen in der App <b>„Hausaufgabenheft“</b> auf <b>„📷 Empfangen“</b> und halten das iPad auf den Code. Bei mehreren Codes einfach weiter draufhalten, bis alle empfangen sind.</div>
       <div class="row" style="justify-content:flex-end"><button id="qrBig">⛶ Groß anzeigen</button><button class="primary" id="qrClose">Schließen</button></div>
     </div>
   </div>
@@ -1182,6 +1186,8 @@ const ui = { mode: 'room', flipped: false, selSeat: null, animating: false, _sel
              preview: null, pickedId: null, pickLog: [], teams: null, genderView: false };
 // selectedId = zuletzt gewählter Tisch; beim Setzen wird die Mehrfachauswahl auf genau diesen Tisch zurückgesetzt
 Object.defineProperty(ui, 'selectedId', { get() { return this._sel; }, set(v) { this._sel = v; this.multi = new Set(v ? [v] : []); } });
+// Hausaufgabe gilt beim Lehrer als erledigt: alle Schüler ✓ oder aktiv archiviert
+const hwFinished = k => !!k.archived || (cls().students.length > 0 && cls().students.every(s => k.status[s.id] === 'ok'));
 const stillCurrent = date => !!date && Date.now() < new Date(date + 'T13:00').getTime();   // am Abgabe-/Probentag bis 13 Uhr aktuell
 const todayStr = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
 const fmtDate = s => s ? s.split('-').reverse().join('.') : '';
@@ -3197,7 +3203,7 @@ function renderHeft() {
   if (!$('qhGiven').value) $('qhGiven').value = todayStr();
   const studs = listStudents();
   const all = visibleChecks().filter(k => k.kind === 'hw');
-  const hws = all.filter(k => !k.due || stillCurrent(k.due)), doneHw = all.filter(k => k.due && !stillCurrent(k.due)).sort((a, b) => b.due.localeCompare(a.due));
+  const hws = all.filter(k => !hwFinished(k)), doneHw = all.filter(hwFinished).sort((a, b) => (b.due || b.given || '').localeCompare(a.due || a.given || ''));
   const card = k => {
     const n = chkCounts(k, studs);
     const by = v => studs.filter(s => (k.status[s.id] || '') === v);
@@ -3205,23 +3211,29 @@ function renderHeft() {
     const notes = Object.entries(k.notes || {}).filter(([id, t]) => t && cls().students.some(s => s.id === id));
     const pct = studs.length ? Math.round(n.ok / studs.length * 100) : 0;
     const dueTxt = !k.due ? '' : k.due === todayStr() ? 'heute fällig' : k.due === addDays(todayStr(), 1) ? 'morgen fällig' : (isLate(k) ? 'fällig war ' : 'fällig ') + fmtDW(k.due);
-    return `<div class="hw${isLate(k) && n.open ? ' late' : ''}">
-      <div class="hw-h">${k.subject ? `<span class="subj">${esc(k.subject)}</span>` : ''}<b class="due">${dueTxt}</b>
-        <span class="hint">${k.given ? 'gestellt ' + fmtDW(k.given) : ''}</span><span class="spacer"></span>
-        <button data-edit="${k.id}" title="Bearbeiten">✎</button></div>
-      <div class="hw-t">${esc(k.title || '')}</div>
-      ${k.note ? `<div class="hint">${esc(k.note)}</div>` : ''}
-      <div class="hw-bar"><i style="width:${pct}%"></i></div>
-      <div class="hw-s"><span class="ok">✓ ${n.ok} erledigt</span> · <span class="no">✗ ${n.no} vergessen</span> · <span class="op">○ ${n.open} noch nicht vorgezeigt</span>
-        ${n.open ? `<button data-allok="${k.id}" class="small">Alle übrigen ✓</button><button data-restno="${k.id}" class="small">Übrige ✗</button>` : ''}</div>
-      ${n.open ? `<div class="hw-g"><span class="lbl">Noch nicht vorgezeigt:</span>${by('').map(s => chip(s, '')).join('')}</div>` : ''}
-      ${n.no ? `<div class="hw-g"><span class="lbl">Vergessen:</span>${by('no').map(s => chip(s, 'no')).join('')}</div>` : ''}
-      ${n.ok ? `<details class="hw-g"><summary>Erledigt (${n.ok})</summary>${by('ok').map(s => chip(s, 'ok')).join('')}</details>` : ''}
-      ${notes.length ? `<div class="hw-notes">${notes.map(([id, t]) => `<div><b>${esc(displayNames(cls().students).get(id))}:</b> ${esc(t)}</div>`).join('')}</div>` : ''}
+    const fin = hwFinished(k);
+    return `<div class="hw${isLate(k) && (n.open || n.no) && !fin ? ' late' : ''}">
+      <div class="hw-l">
+        <div class="hw-h">${k.subject ? `<span class="subj">${esc(k.subject)}</span>` : ''}<b class="due">${dueTxt}</b>
+          <span class="hint">${k.given ? 'gestellt ' + fmtDW(k.given) : ''}</span><span class="spacer"></span>
+          ${k.archived ? `<button data-unarch="${k.id}" title="Wieder zu den offenen Hausaufgaben">↩</button>` : fin ? '' : `<button data-arch="${k.id}" title="Archivieren: unter „Erledigt“ ablegen, auch wenn noch nicht alle ✓ haben">📦</button>`}
+          <button data-edit="${k.id}" title="Bearbeiten">✎</button></div>
+        <div class="hw-t">${esc(k.title || '')}</div>
+        ${k.note ? `<div class="hint">${esc(k.note)}</div>` : ''}
+        <div class="hw-bar"><i style="width:${pct}%"></i></div>
+        <div class="hw-s"><span class="ok">✓ ${n.ok}</span> · <span class="no">✗ ${n.no}</span> · <span class="op">○ ${n.open}</span>
+          ${n.open ? `<button data-allok="${k.id}" class="small">Übrige ✓</button><button data-restno="${k.id}" class="small">Übrige ✗</button>` : ''}</div>
+        ${notes.length ? `<div class="hw-notes">${notes.map(([id, t]) => `<div><b>${esc(displayNames(cls().students).get(id))}:</b> ${esc(t)}</div>`).join('')}</div>` : ''}
+      </div>
+      <div class="hw-r">
+        ${n.open ? `<div class="hw-g"><span class="lbl">Offen:</span>${by('').map(s => chip(s, '')).join('')}</div>` : ''}
+        ${n.no ? `<div class="hw-g"><span class="lbl">Vergessen:</span>${by('no').map(s => chip(s, 'no')).join('')}</div>` : ''}
+        ${n.ok ? `<details class="hw-g"${!n.open && !n.no ? ' open' : ''}><summary>✓ Erledigt (${n.ok})</summary>${by('ok').map(s => chip(s, 'ok')).join('')}</details>` : ''}
+      </div>
     </div>`;
   };
-  $('heftList').innerHTML = (hws.length ? hws.map(card).join('') : `<p class="hint" style="padding:8px">${all.length ? 'Keine offenen Hausaufgaben – die vergangenen stehen unter „Erledigt“.' : 'Noch keine Hausaufgaben für diese Auswahl.'}</p>`)
-    + (doneHw.length ? `<details class="heft-done"${ui.heftDone ? ' open' : ''}><summary>Erledigt – Abgabetag vorbei (${doneHw.length})</summary>${doneHw.map(card).join('')}</details>` : '');
+  $('heftList').innerHTML = (hws.length ? hws.map(card).join('') : `<p class="hint" style="padding:8px">${all.length ? 'Keine offenen Hausaufgaben – die übrigen stehen unter „Erledigt“.' : 'Noch keine Hausaufgaben für diese Auswahl.'}</p>`)
+    + (doneHw.length ? `<details class="heft-done"${ui.heftDone ? ' open' : ''}><summary>Erledigt – alle ✓ oder archiviert (${doneHw.length})</summary>${doneHw.map(card).join('')}</details>` : '');
   const hd = $('heftList').querySelector('.heft-done'); if (hd) hd.addEventListener('toggle', () => { ui.heftDone = hd.open; });
 }
 $('heftList').addEventListener('click', e => {
@@ -3237,6 +3249,7 @@ $('heftList').addEventListener('click', e => {
   }
   const b = e.target.closest('button'); if (!b) return;
   if (b.dataset.edit) openChk(b.dataset.edit);
+  if (b.dataset.arch || b.dataset.unarch) { const id = b.dataset.arch || b.dataset.unarch; change(() => { const k = cls().checks.find(x => x.id === id); if (k) k.archived = !!b.dataset.arch; }, { keepList: true }); setResult(b.dataset.arch ? 'Unter „Erledigt“ abgelegt.' : 'Wieder bei den offenen Hausaufgaben.', 'ok'); }
   if (b.dataset.allok || b.dataset.restno) {
     const id = b.dataset.allok || b.dataset.restno, v = b.dataset.allok ? 'ok' : 'no';
     change(() => { const k = cls().checks.find(x => x.id === id); cls().students.forEach(s => { if (!k.status[s.id]) k.status[s.id] = v; }); }, { keepList: true });
@@ -3763,22 +3776,22 @@ function renderAgenda() {
   const c = cls(), tt = timetable();
   const color = name => { const s = tt.subjects.find(x => x.name === name); return s ? s.color : ''; };
   const items = [
-    ...(c.checks || []).filter(k => k.kind === 'hw' && stillCurrent(k.due)).map(k => ({ date: k.due, kind: 'hw', id: k.id, subject: k.subject, title: k.title, meta: (() => { const n = chkCounts(k, c.students); return n.open + n.no ? `${n.ok}/${c.students.length} ✓` : 'alle ✓'; })() })),
+    ...(c.checks || []).filter(k => k.kind === 'hw' && k.due && !hwFinished(k)).map(k => ({ date: stillCurrent(k.due) ? k.due : '0000', past: k.due, kind: 'hw', id: k.id, subject: k.subject, title: k.title, meta: (() => { const n = chkCounts(k, c.students); return n.open + n.no ? `${n.ok}/${c.students.length} ✓` : 'alle ✓'; })() })),
     ...(c.exams || []).filter(x => stillCurrent(x.date)).map(x => ({ date: x.date, kind: 'ex', id: x.id, subject: x.subject, title: x.title + (x.note ? ' – ' + x.note : ''), meta: '' }))
   ].sort((a, b) => a.date.localeCompare(b.date) || (a.kind === 'ex' ? -1 : 1));
-  const dayLbl = d => d === todayStr() ? 'Heute (bis 13 Uhr)' : d === addDays(todayStr(), 1) ? 'Morgen, ' + fmtDW(d) : fmtDW(d);
+  const dayLbl = d => d === '0000' ? 'Noch nicht von allen erledigt' : d === todayStr() ? 'Heute (bis 13 Uhr)' : d === addDays(todayStr(), 1) ? 'Morgen, ' + fmtDW(d) : fmtDW(d);
   let html = '<h3>Anstehende Hausaufgaben und Proben</h3>';
   if (!items.length) html += '<p class="hint">Nichts anstehend. Hausaufgaben trägst du in der Klassenliste ein, Proben hier mit „＋ Probe“.</p>';
   let last = '';
   items.forEach(it => {
-    if (it.date !== last) { if (last) html += '</div>'; html += `<div class="ag-day${it.date === todayStr() ? ' today' : ''}"><b>${dayLbl(it.date)}</b>`; last = it.date; }
+    if (it.date !== last) { if (last) html += '</div>'; html += `<div class="ag-day${it.date === todayStr() ? ' today' : ''}${it.date === '0000' ? ' over' : ''}"><b>${dayLbl(it.date)}</b>`; last = it.date; }
     html += `<div class="ag-it ${it.kind}" data-k="${it.kind}" data-id="${it.id}" style="--sc:${color(it.subject) || (it.kind === 'ex' ? 'var(--red)' : 'var(--accent)')}">
-      <span class="k">${it.kind === 'ex' ? '📝 Probe' : '📚 HA'}</span><span class="s">${esc(it.subject || '')}</span><span class="t">${esc(it.title)}</span><span class="m">${it.meta}</span></div>`;
+      <span class="k">${it.kind === 'ex' ? '📝 Probe' : it.date === '0000' ? '📚 ' + fmtD(it.past) : '📚 HA'}</span><span class="s">${esc(it.subject || '')}</span><span class="t">${esc(it.title)}</span><span class="m">${it.meta}</span></div>`;
   });
   if (last) html += '</div>';
-  const lim = addDays(todayStr(), -14), done = (c.checks || []).filter(k => k.kind === 'hw' && k.due && !stillCurrent(k.due) && k.due >= lim).sort((a, b) => b.due.localeCompare(a.due));
-  if (done.length) html += `<details class="ag-done"${ui.agDone ? ' open' : ''}><summary>Erledigt – letzte 14 Tage (${done.length})</summary>${done.map(k => { const n = chkCounts(k, c.students);
-    return `<div class="ag-it hw" data-k="hw" data-id="${k.id}" style="--sc:${color(k.subject) || 'var(--accent)'}"><span class="k">${fmtD(k.due)}</span><span class="s">${esc(k.subject || '')}</span><span class="t">${esc(k.title || '')}</span><span class="m">${n.open + n.no ? `${n.ok}/${c.students.length} ✓` : 'alle ✓'}</span></div>`; }).join('')}</details>`;
+  const lim = addDays(todayStr(), -14), done = (c.checks || []).filter(k => k.kind === 'hw' && hwFinished(k) && (k.due || k.given || '9') >= lim).sort((a, b) => (b.due || '').localeCompare(a.due || ''));
+  if (done.length) html += `<details class="ag-done"${ui.agDone ? ' open' : ''}><summary>Erledigt – alle ✓ oder archiviert (${done.length})</summary>${done.map(k => { const n = chkCounts(k, c.students);
+    return `<div class="ag-it hw" data-k="hw" data-id="${k.id}" style="--sc:${color(k.subject) || 'var(--accent)'}"><span class="k">${k.due ? fmtD(k.due) : '–'}</span><span class="s">${esc(k.subject || '')}</span><span class="t">${esc(k.title || '')}</span><span class="m">${n.open + n.no ? `${n.ok}/${c.students.length} ✓` : 'alle ✓'}</span></div>`; }).join('')}</details>`;
   $('ttAgenda').innerHTML = html;
   const dd = $('ttAgenda').querySelector('.ag-done'); if (dd) dd.addEventListener('toggle', () => { ui.agDone = dd.open; });
 }
