@@ -1,0 +1,73 @@
+KLASSENMANAGER ALS WEB-APP (PWA) – ANLEITUNG
+=======================================
+
+Inhalt dieses Ordners
+---------------------
+index.html            der Klassenmanager
+manifest.webmanifest  Name, Symbol und Farben der App
+sw.js                 sorgt dafür, dass die App offline funktioniert
+icons/                App-Symbole
+
+Wichtig zum Datenschutz: Hochgeladen wird NUR das leere Programm. Deine Klassen,
+Schülernamen und Sitzpläne werden nie hochgeladen – sie bleiben in deinen
+Sitzplan-Dateien (.json) auf deinem Computer.
+
+
+1. Einmalig: den Ordner ins Internet stellen (GitHub Pages, kostenlos)
+-----------------------------------------------------------------------
+1. Auf https://github.com ein kostenloses Konto anlegen.
+2. Oben rechts auf „+“ → „New repository“.
+   Name z. B. „sitzplan“, Sichtbarkeit „Public“, auf „Create repository“ klicken.
+3. Im neuen Repository auf „uploading an existing file“ (bzw. „Add file“ → „Upload files“) klicken.
+4. Den INHALT dieses Ordners hineinziehen: index.html, manifest.webmanifest,
+   sw.js und den Ordner icons. (ANLEITUNG.txt ist nicht nötig.)
+   Unten auf „Commit changes“ klicken.
+5. Im Repository auf „Settings“ → links „Pages“.
+   Bei „Branch“ „main“ und „/ (root)“ wählen → „Save“.
+6. Nach ca. 1–2 Minuten steht dort die Adresse, z. B.
+   https://DEINNAME.github.io/sitzplan/
+
+(Alternative ohne GitHub: den Ordner bei einem Anbieter wie Netlify per
+ Drag & Drop hochladen. Wichtig ist nur, dass die Adresse mit https:// beginnt.)
+
+
+2. App installieren
+-------------------
+PC/Laptop (Chrome oder Edge):
+  Die Adresse öffnen → in der Adressleiste auf das Installieren-Symbol klicken
+  oder im Tool unter „Datei“ auf „⬇ Als App installieren“.
+  Danach startet „Klassenmanager“ wie ein normales Programm (Startmenü/Taskleiste).
+
+Android-Tablet (Chrome):  Menü ⋮ → „App installieren“ bzw. „Zum Startbildschirm hinzufügen“.
+iPad/iPhone (Safari):     Teilen-Knopf → „Zum Home-Bildschirm“.
+
+
+3. Letzte Datei beim Start
+--------------------------
+Die App öffnet beim Start automatisch die zuletzt gespeicherte oder geöffnete Datei.
+- Beim ersten Mal fragt der Browser, ob die App die Datei bearbeiten darf
+  → „Zulassen“ bzw. „Bei jedem Besuch erlauben“ wählen.
+- In der installierten App merkt sich Chrome/Edge diese Erlaubnis dauerhaft.
+- Falls doch einmal eine Bestätigung nötig ist, erscheint über dem Plan
+  „Zuletzt verwendet: … [Öffnen]“ – ein Klick genügt.
+Das automatische Öffnen und das direkte Überschreiben beim Speichern gibt es nur in
+Chrome und Edge am PC. Auf Tablets wird beim Speichern eine Datei heruntergeladen.
+
+
+4. Aktualisieren
+-------------
+Neue index.html bei GitHub hochladen (gleicher Name). Nach 1–2 Minuten ist sie
+online (GitHub → Reiter „Actions“: grüner Haken = fertig).
+Ab dieser Version lädt die App beim Start immer die neueste Fassung, sobald
+Internet da ist. Die Versionsnummer steht unter „Datei“.
+Falls doch noch die alte Version erscheint: App ganz schließen (vom unteren
+Rand nach oben wischen, App nach oben wegschieben) und neu öffnen.
+
+
+
+5. Schüler-iPads (App „Schulplaner“)
+------------------------------------
+Mit „📲 An Schüler“ (Stundenplan oder Klassenliste) zeigt der Klassenmanager
+einen QR-Code mit Stundenplan, offenen Hausaufgaben und anstehenden Proben –
+ohne Schülernamen. Die Schüler scannen ihn in der App „Schulplaner“
+(eigener Ordner „schulplaner-app“, eigene Anleitung).
