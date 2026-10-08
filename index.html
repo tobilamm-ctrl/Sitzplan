@@ -582,10 +582,14 @@
           </div>
           <input type="file" id="fileInput" accept=".json,application/json" hidden>
           <button id="installBtn" hidden>⬇ Als App installieren</button>
-          <div class="sub">Zuletzt verwendet</div>
+          <div class="sub" id="recentHead">Zuletzt verwendet</div>
           <div class="recents" id="recentList"></div>
+          <div id="devBox" hidden>
+            <label class="chk"><input type="checkbox" id="devOn"> 📱 Auf diesem Gerät automatisch speichern</label>
+            <p class="hint" style="margin:2px 0 0">Jede Änderung wird sofort im Speicher dieser App auf dem iPad abgelegt und beim nächsten Start wieder geladen – ohne Datei. Die Daten verlassen das Gerät nicht. Mit „📤 Als Datei sichern“ machst du eine Sicherung (z. B. für den PC). Ausschalten löscht den Speicher der App auf diesem Gerät.</p>
+          </div>
           <p class="hint">Eine Datei enthält alle Klassen mit Schülern, Regeln, Räumen, Verlauf und Diensten. Für „Zuletzt verwendet“ merkt sich der Browser nur die Verweise auf die Dateien, nicht deren Inhalt.</p>
-          <p class="hint" style="margin:0">Version 2026-10-10</p>
+          <p class="hint" style="margin:0">Version 2026-10-11</p>
         </div>
       </details>
 
@@ -3883,6 +3887,11 @@ function fileData() {
 }
 function renderFileInfo() {
   if ($('hfName')) $('hfName').innerHTML = (fileName ? `📄 <b>${esc(fileName)}</b>` : '📄 <i>noch nicht gespeichert</i>') + (dirty ? ' <span class="unsaved">•</span>' : '');
+  if (devOn()) {
+    const t = devTime ? new Date(devTime).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) : '';
+    if ($('hfName')) $('hfName').innerHTML = `📱 <b>${esc(fileName || 'Auf diesem Gerät')}</b>` + (dirty ? ' <span class="unsaved">•</span>' : ' <span class="saved">✓</span>');
+    $('fileInfo').innerHTML = `📱 <b>${esc(fileName || 'Auf diesem Gerät')}</b> ` + (dirty ? '<span class="unsaved">• wird gespeichert …</span>' : `<span class="saved">✓ auf dem Gerät gespeichert${t ? ' ' + t : ''}</span>`);
+  } else
   $('fileInfo').innerHTML = (fileName ? `📄 <b>${esc(fileName)}</b>` : '📄 <i>noch nicht gespeichert</i>') +
     (dirty ? ' <span class="unsaved">• ungespeicherte Änderungen</span>' : (fileName ? ' <span class="saved">✓ gespeichert</span>' : ''));
   document.title = (dirty ? '• ' : '') + (fileName ? fileName.replace(/\.json$/i, '') + ' – ' : '') + 'Klassenmanager';
@@ -3914,7 +3923,12 @@ async function addRecent(handle) {
 }
 async function renderRecent() {
   const box = $('recentList');
-  if (!FS) { box.innerHTML = '<p class="hint">„Zuletzt verwendet“ und das direkte Überschreiben funktionieren in Chrome und Edge. In diesem Browser wird beim Speichern eine Datei heruntergeladen.</p>'; return; }
+  if (!FS) {
+    $('devBox').hidden = false; $('devOn').checked = devOn(); $('recentHead').hidden = true;
+    $('saveAs').textContent = '📤 Als Datei sichern'; $('saveAs').title = 'Eine Kopie als Datei sichern oder teilen (z. B. „In Dateien sichern“)';
+    box.innerHTML = devOn() ? '' : '<p class="hint">Dieser Browser (z. B. auf dem iPad) kann Dateien nicht direkt überschreiben – beim Speichern wird eine neue Datei angelegt. Bequemer: unten „Auf diesem Gerät automatisch speichern“ einschalten.</p>';
+    return;
+  }
   const list = (await idbGet('recent')) || [];
   box.innerHTML = list.length ? list.map((r, i) =>
     `<button class="recent" data-i="${i}" title="${esc(r.name)} öffnen"><span>📄 ${esc(r.name)}</span><small>${new Date(r.time).toLocaleDateString('de-DE')} ${new Date(r.time).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}</small></button>`).join('')
@@ -4011,18 +4025,59 @@ async function openFile() {
   } catch (e) { if (e.name !== 'AbortError') window.alert('Die Datei konnte nicht geöffnet werden.'); }
 }
 
-async function saveFile(saveAs) {
-  if (!FS) {   // Fallback: Herunterladen
-    const name = saveAs || !fileName ? (window.prompt('Dateiname:', fileName || 'sitzplan.json') || '') : fileName;
-    if (!name) return;
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([fileData()], { type: 'application/json' }));
-    a.download = /\.json$/i.test(name) ? name : name + '.json';
-    document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-    fileName = a.download; dirty = false; renderFileInfo();
-    setResult(`„${fileName}“ in den Download-Ordner gespeichert.`, 'ok');
+/* ---------- iPad & Co. (kein direkter Dateizugriff): automatisch im Gerät speichern ----------
+   Nur wenn eingeschaltet. Gespeichert wird im Speicher dieser App auf diesem Gerät (IndexedDB), nichts verlässt das Gerät. */
+const devOn = () => { try { return !FS && localStorage.getItem('km-device') === '1'; } catch { return false; } };
+let devTime = 0;
+async function saveDevice() {
+  await idbSet('device', { text: fileData(), name: fileName, time: Date.now() });
+  devTime = Date.now(); dirty = false; renderFileInfo();
+}
+setInterval(() => { if (dirty && devOn()) saveDevice(); }, 1500);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden' && dirty && devOn()) saveDevice(); });
+async function loadDevice() {
+  if (!devOn()) return;
+  const d = await idbGet('device'); if (!d || !d.text) return;
+  if (loadData(d.text, d.name || '', null)) { undoStack = []; redoStack = []; dirty = false; devTime = d.time; renderAll(); setResult('Letzter Stand von diesem Gerät geladen.', 'ok'); }
+}
+$('devOn').addEventListener('change', async e => {
+  if (e.target.checked) {
+    try { localStorage.setItem('km-device', '1'); } catch {}
+    if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+    await saveDevice(); setResult('Ab jetzt wird automatisch auf diesem Gerät gespeichert.', 'ok');
+  } else {
+    if (!window.confirm('Automatisches Speichern ausschalten und den Speicher der App auf diesem Gerät löschen?\n(Sichere vorher mit „📤 Als Datei sichern“, wenn du die Daten behalten willst.)')) { e.target.checked = true; return; }
+    try { localStorage.removeItem('km-device'); } catch {}
+    await idbSet('device', null); devTime = 0; dirty = true; renderFileInfo();
+  }
+  renderRecent();
+});
+// Datei sichern ohne Dateizugriff: Teilen-Menü (iPad: „In Dateien sichern“), sonst Download
+async function exportFile(askName) {
+  let name = fileName;
+  if (askName || !name) name = window.prompt('Dateiname:', fileName || 'klasse.json') || '';
+  if (!name) return;
+  if (!/\.json$/i.test(name)) name += '.json';
+  const file = new File([fileData()], name, { type: 'application/json' });
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try { await navigator.share({ files: [file] }); }
+    catch (e) { if (e.name === 'AbortError') return; window.alert('Teilen hat nicht geklappt: ' + e.message); return; }
+    fileName = name; if (devOn()) saveDevice(); else dirty = false; renderFileInfo();
+    setResult(`„${name}“ übergeben – z. B. mit „In Dateien sichern“ ablegen.`, 'ok');
     return;
+  }
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(file); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  fileName = name; if (devOn()) saveDevice(); else dirty = false; renderFileInfo();
+  setResult(`„${name}“ in den Download-Ordner gespeichert.`, 'ok');
+}
+
+async function saveFile(saveAs) {
+  if (!FS) {
+    if (devOn() && !saveAs) { await saveDevice(); setResult('Auf diesem Gerät gespeichert.', 'ok'); return; }
+    return exportFile(saveAs);
   }
   try {
     let h = fileHandle;
@@ -4054,6 +4109,7 @@ function newFile() {
   $('pickBanner').hidden = true; $('importText').value = '';
   renderAll();
   setResult('Neuer, leerer Plan – trage Schüler ein oder richte den Raum ein.', 'ok');
+  if (devOn()) saveDevice();
 }
 $('newFile').addEventListener('click', newFile);
 $('saveFile').addEventListener('click', () => saveFile(false));
@@ -4090,11 +4146,11 @@ function migrate(data) {
 // Fallback-Öffnen (Browser ohne File System Access API)
 $('fileInput').addEventListener('change', async () => {
   const file = $('fileInput').files[0];
-  if (file) loadData(await file.text(), file.name, null);
+  if (file && loadData(await file.text(), file.name, null) && devOn()) saveDevice();
   $('fileInput').value = '';
 });
 
-window.addEventListener('beforeunload', e => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
+window.addEventListener('beforeunload', e => { if (dirty && devOn()) { saveDevice(); return; } if (dirty) { e.preventDefault(); e.returnValue = ''; } });
 window.addEventListener('resize', positionItembar);
 
 /* ---------- Start ---------- */
@@ -4106,6 +4162,7 @@ $('planDate').value = todayStr();
 renderAll();
 renderRecent();
 autoOpenLast();
+loadDevice();
 /* ---------- An die Schüler-iPads senden (QR-Code, ohne Schülernamen) ---------- */
 function buildPayload(o) {
   const c = cls(), today = todayStr(), P = { app: 'jpw', v: 1, cls: c.name, d: today };
