@@ -113,6 +113,11 @@
   .tcard .tm:hover { background: #f1f5f9; }
   .tcard .tm.tdrop { background: #dcfce7; }
   .tcard h3 small { font-weight: 600; opacity: .7; }
+  .rolebox { margin: 4px 0; } .rolebox summary { cursor: pointer; font-weight: 700; font-size: .85rem; color: var(--muted); }
+  .rolebox.big { margin-top: 10px; font-size: .95rem; }
+  .rolesel { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+  .rolesel .rs { padding: 3px 9px; border-radius: 999px; font-size: .8rem; font-weight: 600; border: 1px solid var(--line); background: #fff; color: var(--muted); opacity: .75; }
+  .rolesel .rs.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); opacity: 1; }
   .tren { cursor: pointer; } .tren:hover { text-decoration: underline; }
   .tm .ri { margin-right: 3px; } .tcard .tm .rn { display: block; font-size: .55em; font-weight: 600; color: var(--muted); margin-top: -2px; }
   .role-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 12px; font-size: .95rem; font-weight: 600; color: var(--muted); }
@@ -606,7 +611,7 @@
             <p class="hint" style="margin:2px 0 0">Jede Änderung wird sofort im Speicher dieser App auf dem iPad abgelegt und beim nächsten Start wieder geladen – ohne Datei. Die Daten verlassen das Gerät nicht. Mit „📤 Als Datei sichern“ machst du eine Sicherung (z. B. für den PC). Ausschalten löscht den Speicher der App auf diesem Gerät.</p>
           </div>
           <p class="hint">Eine Datei enthält alle Klassen mit Schülern, Regeln, Räumen, Verlauf und Diensten. Für „Zuletzt verwendet“ merkt sich der Browser nur die Verweise auf die Dateien, nicht deren Inhalt.</p>
-          <p class="hint" style="margin:0">Version 2026-10-13</p>
+          <p class="hint" style="margin:0">Version 2026-10-14</p>
         </div>
       </details>
 
@@ -659,7 +664,7 @@
       </details>
 
       <details class="card">
-        <summary>👥 Partner &amp; Gruppen</summary>
+        <summary>👥 Gruppeneinteilung</summary>
         <div class="cbody">
           <div class="row fill">
             <select id="teamMode">
@@ -671,8 +676,9 @@
           </div>
           <label class="chk"><input type="checkbox" id="teamRules" checked> Regeln „nicht/gerne neben“ beachten</label>
           <label class="chk"><input type="checkbox" id="teamMix"> Jungen und Mädchen mischen</label>
-          <div class="row fill"><button class="primary" id="teamMake">🎲 Bilden</button><button id="teamShow" disabled>⛶ Groß anzeigen</button><button id="teamClear" disabled title="Partner/Gruppen verwerfen" style="flex:0 0 auto">✕</button></div>
+          <div class="row fill"><button class="primary" id="teamMake">🎲 Bilden</button><button id="teamShow" disabled>⛶ Groß anzeigen</button><button id="teamClear" disabled title="Gruppeneinteilung verwerfen" style="flex:0 0 auto">✕</button></div>
           <label class="chk"><input type="checkbox" id="teamColor" checked> Plätze im Sitzplan in Gruppenfarben anzeigen</label>
+          <details class="rolebox"><summary>🎭 Rollen, die verteilt werden</summary><div class="rolesel" id="roleSel"></div></details>
           <div class="row fill" id="teamRoleRow"><button id="teamRoles" title="In jeder Gruppe die Rollen zufällig verteilen (Reihenfolge: Leitung, Zeit, Schrift, Sprecher, Material, Lautstärke, Qualität, Motivation)">🎭 Rollen verteilen</button><button id="teamRolesClear" title="Alle Rollen entfernen" style="flex:0 0 auto">✕ Rollen</button></div>
           <div class="teams" id="teamList"></div>
           <p class="hint">Nur anwesende Kinder. Namen lassen sich per Ziehen umsetzen: auf einen anderen Namen = tauschen, auf eine Gruppe = dorthin verschieben (auch in der großen Ansicht). Bei ungerader Zahl entsteht eine Dreiergruppe.</p>
@@ -815,7 +821,7 @@
         <button id="clear">Plätze leeren</button>
         <button class="primary" id="shuffle">🎲 Namen verteilen</button>
         <span class="spacer"></span>
-        <span class="tgroup"><button id="pickBtn2" title="Zufällig ein Kind auswählen">🎯 Wer ist dran?</button><button id="teamsBtn" title="Partner- und Gruppeneinteilung">👥 Partner &amp; Gruppen ▾</button></span>
+        <span class="tgroup"><button id="pickBtn2" title="Zufällig ein Kind auswählen">🎯 Wer ist dran?</button><button id="teamsBtn" title="Gruppeneinteilung">👥 Gruppeneinteilung ▾</button></span>
       </div>
       <div class="print-header"><h2 id="phTitle"></h2><span id="phDate"></span></div>
       <div class="room" id="room">
@@ -906,14 +912,14 @@
   <button data-p="timer" title="Timer">⏱</button>
   <button data-p="colors" class="toggle" title="Eigene Farben ein/aus">🎨</button>
   <button data-p="gender" class="toggle" title="Geschlechterfarben ein/aus">⚥</button>
-  <button data-p="teams" class="toggle" title="Partner &amp; Gruppen">👥</button>
+  <button data-p="teams" class="toggle" title="Gruppeneinteilung">👥</button>
   <button data-p="duties" class="toggle" title="Dienste-Liste ein/aus">🧽</button>
   <button data-p="flip" class="toggle" title="Schülersicht (Tafel oben)">👁</button>
   <button data-p="exit" class="primary" title="Präsentation beenden (Esc)">✕ Beenden</button>
 </div>
 
 <div id="teamsMenu" hidden>
-  <div class="tp-title">👥 Partner &amp; Gruppen</div>
+  <div class="tp-title">👥 Gruppeneinteilung</div>
       <label class="chk"><input type="checkbox" id="pmTeamColor"> Gruppenfarben auf den Tischen</label>
       <label class="chk only-present"><input type="checkbox" id="pmTeamList"> Gruppeneinteilung neben dem Plan anzeigen</label>
       <div class="row">
@@ -1104,9 +1110,10 @@
 
 <div class="cdlg-back" id="teamsDlg" hidden tabindex="-1">
   <div class="teams-big">
-    <div class="tb-head"><b>Partner &amp; Gruppen</b><span class="hint" style="margin-left:10px">Namen ziehen zum Umsetzen</span><span class="spacer"></span><label class="chk" style="font-size:.9rem"><input type="checkbox" id="teamColor2" checked> im Plan einfärben</label><button id="teamsRoles">🎭 Rollen verteilen</button><button id="teamsAgain">🎲 Neu bilden</button><button class="primary" id="teamsClose">Schließen</button></div>
+    <div class="tb-head"><b>Gruppeneinteilung</b><span class="hint" style="margin-left:10px">Namen ziehen zum Umsetzen</span><span class="spacer"></span><label class="chk" style="font-size:.9rem"><input type="checkbox" id="teamColor2" checked> im Plan einfärben</label><button id="teamsRoles">🎭 Rollen verteilen</button><button id="teamsAgain">🎲 Neu bilden</button><button class="primary" id="teamsClose">Schließen</button></div>
     <div class="tgrid" id="teamsGrid"></div>
     <div class="role-legend" id="roleLegend"></div>
+    <details class="rolebox big"><summary>🎭 Rollen, die verteilt werden</summary><div class="rolesel" id="roleSel2"></div></details>
   </div>
 </div>
 
@@ -1191,6 +1198,18 @@ const teamShort = i => { const n = ui.teams && ui.teams.names && ui.teams.names[
 const ROLES = [
   { k: 'lead', i: '👑', n: 'Gruppenleiter/in' }, { k: 'time', i: '⏱️', n: 'Zeitwächter/in' }, { k: 'write', i: '✍️', n: 'Schriftführer/in' }, { k: 'speak', i: '🎤', n: 'Sprecher/in' },
   { k: 'mat', i: '📦', n: 'Materialmanager/in' }, { k: 'quiet', i: '🤫', n: 'Lautstärkewächter/in' }, { k: 'qual', i: '🔍', n: 'Qualitätsprüfer/in' }, { k: 'motiv', i: '💪', n: 'Motivator/in' }];
+const roleSel = () => { const c = cls(); return Array.isArray(c.roleSel) ? c.roleSel : ROLES.map(r => r.k); };
+function renderRoleSel() {
+  const sel = roleSel(), html = ROLES.map(r => `<button class="rs${sel.includes(r.k) ? ' on' : ''}" data-rs="${r.k}" title="${r.n} ${sel.includes(r.k) ? 'wird verteilt – Klick = nicht verteilen' : 'wird nicht verteilt – Klick = verteilen'}">${r.i} ${r.n}</button>`).join('');
+  $('roleSel').innerHTML = html; $('roleSel2').innerHTML = html;
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-rs]'); if (!b) return;
+  const sel = roleSel().slice(), k = b.dataset.rs, i = sel.indexOf(k);
+  if (i >= 0) sel.splice(i, 1); else sel.push(k);
+  change(() => { cls().roleSel = ROLES.map(r => r.k).filter(x => sel.includes(x)); }, { keepList: true });
+  renderRoleSel();
+});
 const roleIcons = id => ((ui.teams && ui.teams.roles && ui.teams.roles[id]) || []).map(k => (ROLES.find(r => r.k === k) || {}).i || '').join('');
 const roleNames = id => ((ui.teams && ui.teams.roles && ui.teams.roles[id]) || []).map(k => (ROLES.find(r => r.k === k) || {}).n || '').join(', ');
 // Farbe eines Platzes: Geschlechter-Ansicht (wenn eingeschaltet) > Partner/Gruppen > eigene Farbe des Kindes
@@ -2588,7 +2607,7 @@ function teamTitle(i) { return (ui.teams.names && ui.teams.names[i]) || (ui.team
 function renderTeams() {
   $('teamN').disabled = $('teamMode').value === 'pairs';
   const dn = displayNames(cls().students);
-  $('teamRoleRow').hidden = !ui.teams;
+  $('teamRoleRow').hidden = !ui.teams; renderRoleSel();
   if (!ui.teams) { $('teamList').innerHTML = ''; $('teamShow').disabled = true; $('teamClear').disabled = true; return; }
   $('teamClear').disabled = false;
   $('teamShow').disabled = false;
@@ -2645,12 +2664,15 @@ document.addEventListener('pointerup', () => {
   if (!d.ghost) { openRolePop(d.t, d.k, d.el); return; }
   if (!d.over) return;
   const L = ui.teams.list, id = L[d.t][d.k];
-  if (d.over.classList.contains('tm')) {          // auf einen Namen: die beiden tauschen
-    const t2 = +d.over.dataset.t, k2 = +d.over.dataset.k;
+  const RO = ui.teams.roles = ui.teams.roles || {};
+  if (d.over.classList.contains('tm')) {          // auf einen Namen: die beiden tauschen – die Rollen bleiben in der Gruppe (werden mitgetauscht)
+    const t2 = +d.over.dataset.t, k2 = +d.over.dataset.k, id2 = L[t2][k2];
     [L[d.t][d.k], L[t2][k2]] = [L[t2][k2], L[d.t][d.k]];
-  } else {                                        // auf eine Gruppe: dorthin verschieben
+    if (t2 !== d.t) { const r1 = RO[id], r2 = RO[id2]; delete RO[id]; delete RO[id2]; if (r1 && r1.length) RO[id2] = r1; if (r2 && r2.length) RO[id] = r2; }
+  } else {                                        // auf eine Gruppe: dorthin verschieben – seine Rolle bleibt in der alten Gruppe zurück
     const t2 = +d.over.dataset.t; if (t2 === d.t) return;
     L[d.t].splice(d.k, 1); L[t2].push(id);
+    if (RO[id] && RO[id].length) { setResult(`Rolle ${roleIcons(id)} ist in ${teamTitle(d.t)} jetzt frei.`, 'warn'); delete RO[id]; }
   }
   renderTeams(); renderRoom();
 });
@@ -2670,7 +2692,8 @@ function openRolePop(t, k, el) {
   const mine = (ui.teams.roles && ui.teams.roles[id]) || [];
   const taken = new Map(); ui.teams.list[t].forEach(o => { if (o !== id) ((ui.teams.roles || {})[o] || []).forEach(rk => taken.set(rk, o)); });
   const dn = displayNames(cls().students);
-  $('rolePop').innerHTML = `<b>${esc(dn.get(id) || '')}</b>${ROLES.map(r => `<button data-role="${r.k}" class="${mine.includes(r.k) ? 'on' : ''}">${r.i} ${r.n}${taken.has(r.k) ? `<small> (bisher ${esc(dn.get(taken.get(r.k)) || '')})</small>` : ''}</button>`).join('')}<button data-role="" class="none">✕ keine Rolle</button>`;
+  const avail = ROLES.filter(r => roleSel().includes(r.k) || mine.includes(r.k));
+  $('rolePop').innerHTML = `<b>${esc(dn.get(id) || '')}</b>${avail.map(r => `<button data-role="${r.k}" class="${mine.includes(r.k) ? 'on' : ''}">${r.i} ${r.n}${taken.has(r.k) ? `<small> (bisher ${esc(dn.get(taken.get(r.k)) || '')})</small>` : ''}</button>`).join('')}<button data-role="" class="none">✕ keine Rolle</button>`;
   const p = $('rolePop'); p.hidden = false;
   const b = el.getBoundingClientRect(), pw = p.offsetWidth, ph = p.offsetHeight;
   p.style.left = Math.max(8, Math.min(innerWidth - pw - 8, b.left)) + 'px';
@@ -2690,7 +2713,9 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('rolePo
 function dealRoles() {
   if (!ui.teams) return;
   const R = ui.teams.roles = {};
-  ui.teams.list.forEach(t => { const ids = t.slice().sort(() => Math.random() - .5); ids.forEach((id, j) => { if (j < ROLES.length) R[id] = [ROLES[j].k]; }); });
+  const use = ROLES.filter(r => roleSel().includes(r.k));
+  if (!use.length) { setResult('Keine Rollen ausgewählt – wähle unter „Rollen“ aus, welche verteilt werden sollen.', 'warn'); renderTeams(); return; }
+  ui.teams.list.forEach(t => { const ids = t.slice().sort(() => Math.random() - .5); ids.forEach((id, j) => { if (j < use.length) R[id] = [use[j].k]; }); });
   renderTeams(); renderRoom(); setResult('🎭 Rollen in jeder Gruppe zufällig verteilt.', 'ok');
 }
 $('teamRoles').addEventListener('click', dealRoles);
@@ -3036,9 +3061,9 @@ function renderTeamsPanel(dn) {
   const p = $('teamsPanel');
   if (!ui.present || !ui.showTeamList) { p.hidden = true; return; }
   p.hidden = false;
-  if (!ui.teams) { p.innerHTML = '<b>Partner &amp; Gruppen</b><div class="empty-hint">Noch keine Gruppen gebildet – über 👥 → „Gruppen neu bilden“.</div>'; return; }
+  if (!ui.teams) { p.innerHTML = '<b>Gruppeneinteilung</b><div class="empty-hint">Noch keine Gruppen gebildet – über 👥 → „Gruppen neu bilden“.</div>'; return; }
   const L = ui.teams.list, cols = L.length > 6 ? 2 : 1;
-  p.innerHTML = `<b>${ui.teams.mode === 'pairs' ? 'Partner' : 'Gruppen'}</b><div class="tgrid2" style="grid-template-columns:repeat(${cols}, auto)">` +
+  p.innerHTML = `<b>Gruppeneinteilung</b><div class="tgrid2" style="grid-template-columns:repeat(${cols}, auto)">` +
     L.map((t, i) => `<div class="team" data-t="${i}" style="--tc:${teamColor(i)}"><b>${teamShort(i)}</b>${t.map((id, k) => `<span class="tm" data-t="${i}" data-k="${k}">${roleIcons(id) ? `<span class="ri">${roleIcons(id)}</span>` : ''}${esc(dn.get(id) || '?')}</span>`).join('') || '<i class="empty-hint">leer</i>'}</div>`).join('') + '</div>';
 }
 function syncPresentBar() {
