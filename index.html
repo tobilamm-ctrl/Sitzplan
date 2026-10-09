@@ -119,6 +119,11 @@
   .rolesel .rs { padding: 3px 9px; border-radius: 999px; font-size: .8rem; font-weight: 600; border: 1px solid var(--line); background: #fff; color: var(--muted); opacity: .75; }
   .rolesel .rs.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); opacity: 1; }
   .tren { cursor: pointer; }
+  .lfbar select { flex: 0 0 auto; width: auto; max-width: 260px; }
+  .mx tbody td.nm[data-kid] { cursor: pointer; } .mx tbody td.nm[data-kid]:hover { color: var(--accent); text-decoration: underline; }
+  .cdlg.kid-dlg { width: 820px; max-width: 100%; max-height: 92vh; display: flex; flex-direction: column; user-select: text; }
+  .kid-bar { display: flex; gap: 6px; align-items: center; padding: 10px 12px; border-bottom: 1px solid #e5e7eb; flex-wrap: wrap; } .kid-bar .spacer { flex: 1; } .kid-bar select { width: auto; }
+  .kid-body { overflow: auto; padding: 14px 18px 18px; } .kid-body .r-kid { break-after: auto; }
   .spick { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; max-height: 210px; overflow: auto; } .spick[hidden] { display: none; }
   .spick .spk { padding: 3px 9px; border-radius: 999px; font-size: .82rem; font-weight: 600; border: 1px solid var(--line); background: #fff; color: var(--muted); }
   .spick .spk.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
@@ -773,7 +778,7 @@
             <p class="hint" style="margin:2px 0 0">Jede Änderung wird sofort im Speicher dieser App auf dem iPad abgelegt und beim nächsten Start wieder geladen – ohne Datei. Die Daten verlassen das Gerät nicht. Mit „📤 Als Datei sichern“ machst du eine Sicherung (z. B. für den PC). Ausschalten löscht den Speicher der App auf diesem Gerät.</p>
           </div>
           <p class="hint">Eine Datei enthält alle Klassen mit Schülern, Regeln, Räumen, Verlauf und Diensten. Für „Zuletzt verwendet“ merkt sich der Browser nur die Verweise auf die Dateien, nicht deren Inhalt.</p>
-          <p class="hint" style="margin:0">Version 2026-10-16</p>
+          <p class="hint" style="margin:0">Version 2026-10-17</p>
         </div>
       </details>
 
@@ -880,6 +885,7 @@
         <div class="topbar lfbar">
           <select id="lfType"><option value="all">Alles</option><option value="hw">nur Hausaufgaben</option><option value="list">nur Abhaklisten</option></select>
           <select id="lfSubject"></select>
+          <select id="lfSort" title="Namen sortieren"><option value="last">↕ Nachname</option><option value="first">↕ Vorname</option></select>
           <select id="lfRange"><option value="week">Woche</option><option value="month">Monat</option><option value="open">nur noch nicht komplett erledigte</option><option value="all">gesamter Zeitraum</option></select>
           <span class="lfnav" id="lfNav"><button id="lfPrev" title="zurück">◀</button><button id="lfLbl" title="Zur aktuellen Woche bzw. zum aktuellen Monat"></button><button id="lfNext" title="vor">▶</button></span>
           <button id="noteModeBtn" class="toggle" title="Bemerkungs-Modus: Klick auf ein Feld bzw. einen Namen öffnet die Bemerkung statt abzuhaken">📝 Bemerkung</button>
@@ -1036,6 +1042,15 @@
   </div>
 </div>
 
+<div class="cdlg-back" id="kidDlg" hidden tabindex="-1">
+  <div class="cdlg kid-dlg">
+    <div class="kid-bar"><button id="kidPrev" title="vorheriges Kind">◀</button><select id="kidSel"></select><button id="kidNext" title="nächstes Kind">▶</button>
+      <select id="kidRange"><option value="per">Zeitraum der Tabelle</option><option value="all">gesamter Zeitraum</option></select>
+      <span class="spacer"></span><button id="kidPrint">🖨 Drucken</button><button class="primary" id="kidClose">Schließen</button></div>
+    <div class="kid-body" id="kidBody"></div>
+  </div>
+</div>
+
 <div class="cdlg-back" id="subjDlg" hidden>
   <div class="cdlg nc" style="width:460px">
     <div class="cdlg-title">Fach bearbeiten</div>
@@ -1044,7 +1059,8 @@
       <div class="row"><span>Farbe</span><button class="sw" id="sjColor" style="width:60px"><i></i></button></div>
       <label class="nc-name">Material (für die Packliste der Schüler)<input type="text" id="sjMat" placeholder="z. B. Buch, Heft, Arbeitsheft – mit Komma trennen"></label>
       <div class="nc-name">👥 Schüler in diesem Fach
-        <div class="row"><label class="chk"><input type="radio" name="sjAll" id="sjAllOn" checked> alle</label><label class="chk"><input type="radio" name="sjAll" id="sjAllOff"> nur ausgewählte (z. B. Religion/Ethik, Gruppen)</label></div>
+        <div class="row"><label class="chk"><input type="radio" name="sjAll" id="sjAllOn" checked> alle</label><label class="chk"><input type="radio" name="sjAll" id="sjAllOff"> nur ausgewählte (z. B. Religion/Ethik)</label><label class="chk"><input type="radio" name="sjAll" id="sjSplit"> in zwei Gruppen</label></div>
+        <div class="hint" id="sjStuHint"></div>
         <div class="spick" id="sjStu"></div>
       </div>
       <div class="row" style="justify-content:flex-end"><button id="sjDel" class="danger" style="margin-right:auto">Löschen</button><button id="sjCancel">Abbrechen</button><button class="primary" id="sjSave">Speichern</button></div>
@@ -1126,7 +1142,8 @@
       <div id="abBox" style="display:flex;flex-direction:column;gap:6px;padding-left:24px">
         <label class="nc-name"><span>In <b id="abWeek"></b> hat Gruppe 1:</span><select id="abG1"></select></label>
         <div class="hint" id="abInfo"></div>
-        <div class="nc-name">👥 Wer ist Gruppe 1? <span class="hint" id="abCnt"></span><div class="spick" id="abStu"></div></div>
+        <div class="hint" id="abSrc"></div>
+        <details id="abOwn"><summary class="hint" style="cursor:pointer;font-weight:700">Abweichend nur für diese Stunde: Gruppe 1 festlegen <span id="abCnt"></span></summary><div class="spick" id="abStu"></div></details>
         <div class="hint">Woche wechseln: mit ◀ ▶ über dem Stundenplan blättern, dann hier einstellen.</div>
       </div>
       <div class="row" style="justify-content:flex-end"><button id="abCancel">Abbrechen</button><button class="primary" id="abSave">Speichern</button></div>
@@ -2149,7 +2166,7 @@ function removeSelected() {
 /* ---------- Tastatur ---------- */
 document.addEventListener('keydown', e => {
   const typing = e.target.matches('input[type=text], input[type=date], input[type=number], textarea');
-  if (!$('cdDlg').hidden || !$('teamsDlg').hidden || !$('notePop').hidden || !$('ncDlg').hidden || !$('chkDlg').hidden || !$('repDlg').hidden || !$('slotDlg').hidden || !$('subjDlg').hidden || !$('cnPop').hidden || !$('examDlg').hidden || !$('qrDlg').hidden || !$('abDlg').hidden || !$('msgDlg').hidden) return;
+  if (!$('cdDlg').hidden || !$('teamsDlg').hidden || !$('notePop').hidden || !$('ncDlg').hidden || !$('chkDlg').hidden || !$('repDlg').hidden || !$('slotDlg').hidden || !$('subjDlg').hidden || !$('cnPop').hidden || !$('examDlg').hidden || !$('qrDlg').hidden || !$('abDlg').hidden || !$('msgDlg').hidden || !$('kidDlg').hidden) return;
   if (ui.view !== 'plan' && !((e.ctrlKey || e.metaKey) && /^[zy]$/i.test(e.key))) return;
   if ((e.ctrlKey || e.metaKey) && !typing) {
     const k = e.key.toLowerCase();
@@ -3248,10 +3265,14 @@ const addDays = (s, n) => { const d = new Date(s + 'T00:00'); d.setDate(d.getDat
 const chkDate = k => k.due || k.given || k.created || '';
 const isLate = k => k.due && k.due < todayStr();
 
+ui.nameSort = (() => { try { return localStorage.getItem('km-sort') || 'last'; } catch { return 'last'; } })();
 function listStudents() {
-  const c = cls();
-  return c.students.slice().sort((a, b) => (a.last || a.first).localeCompare(b.last || b.first, 'de') || a.first.localeCompare(b.first, 'de'));
+  const c = cls(), byFirst = ui.nameSort === 'first';
+  return c.students.slice().sort((a, b) => byFirst
+    ? a.first.localeCompare(b.first, 'de') || (a.last || '').localeCompare(b.last || '', 'de')
+    : (a.last || a.first).localeCompare(b.last || b.first, 'de') || a.first.localeCompare(b.first, 'de'));
 }
+const sortName = s => ui.nameSort === 'first' || !s.last ? fullName(s) : s.last + ', ' + s.first;
 const fullName = s => [s.first, s.last].filter(Boolean).join(' ');
 function chkCounts(k, studs) {
   const r = { ok: 0, no: 0, open: 0 };
@@ -3318,7 +3339,7 @@ function renderListView() {
   const subs = subjects();
   $('lfSubject').innerHTML = '<option value="">alle Fächer</option>' + subs.map(s => `<option ${ui.lf.subject === s ? 'selected' : ''}>${esc(s)}</option>`).join('');
   if (ui.lf.subject && !subs.includes(ui.lf.subject)) ui.lf.subject = '';
-  $('lfType').value = ui.lf.type; $('lfRange').value = ui.lf.range;
+  $('lfType').value = ui.lf.type; $('lfRange').value = ui.lf.range; $('lfSort').value = ui.nameSort;
   const per = lfPeriod(); $('lfNav').hidden = !per || ui.listTab !== 'table'; $('lfRange').hidden = ui.listTab !== 'table';
   if (per) { $('lfLbl').textContent = per.lbl; $('lfLbl').classList.toggle('off', !!ui.lf.off); }
   $('subjList').innerHTML = subjectSuggest().map(s => `<option>${esc(s)}</option>`).join('');
@@ -3352,12 +3373,13 @@ function renderMatrix() {
       const nt = k.notes && k.notes[s.id];
       return `<td class="cell s-${v || 'e'}${!v && isLate(k) ? ' late' : ''}${nt ? ' hasnote' : ''}" data-cid="${k.id}" data-sid="${s.id}"${nt ? ` title="📝 ${esc(nt)}"` : ''}>${STATE_SYM[v]}</td>`;
     }).join('');
-    return `<tr><td class="nm" title="${esc(fullName(s))}">${esc(fullName(s))}${isAbsent(s) ? ' <span title="heute abwesend">🤒</span>' : ''}</td>
+    return `<tr><td class="nm" data-kid="${s.id}" title="${esc(fullName(s))} – Klick = Übersicht">${esc(sortName(s))}${isAbsent(s) ? ' <span title="heute abwesend">🤒</span>' : ''}</td>
       <td class="sum">${no ? `<b class="no">✗${no}</b>` : ''}${open ? ` <span class="op">○${open}</span>` : ''}</td>${cells}</tr>`;
   }).join('');
   $('mxWrap').innerHTML = `<table class="mx"><thead><tr><th class="nm">Name</th><th class="sum" title="✗ vergessen · ○ offen (in der Auswahl)">Σ</th>${cols.map(th).join('')}</tr></thead><tbody>${rows}</tbody></table>`;
 }
 $('mxWrap').addEventListener('click', e => {
+  const kn = e.target.closest('td.nm[data-kid]'); if (kn) { openKid(kn.dataset.kid); return; }
   const td = e.target.closest('td.cell');
   if (td && ui.noteMode) { openCellNote(td.dataset.cid, td.dataset.sid, td); return; }
   if (td) {
@@ -3477,6 +3499,7 @@ $('qhText').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shift
 $('lfType').addEventListener('change', e => { ui.lf.type = e.target.value; renderListView(); });
 $('lfSubject').addEventListener('change', e => { ui.lf.subject = e.target.value; renderListView(); });
 $('lfRange').addEventListener('change', e => { ui.lf.range = e.target.value; ui.lf.off = 0; renderListView(); });
+$('lfSort').addEventListener('change', e => { ui.nameSort = e.target.value; try { localStorage.setItem('km-sort', ui.nameSort); } catch {} renderListView(); });
 $('lfPrev').addEventListener('click', () => { ui.lf.off = (ui.lf.off || 0) - 1; renderListView(); });
 $('lfNext').addEventListener('click', () => { ui.lf.off = (ui.lf.off || 0) + 1; renderListView(); });
 $('lfLbl').addEventListener('click', () => { ui.lf.off = 0; renderListView(); });
@@ -3543,14 +3566,16 @@ $('repDlg').addEventListener('keydown', e => { if (e.key === 'Escape') $('repDlg
 document.querySelectorAll('input[name="rpFmt"]').forEach(r => r.addEventListener('change', () => {
   $('rpWhoRow').hidden = document.querySelector('input[name="rpFmt"]:checked').value !== 'kids';
 }));
-function reportChecks() {
-  const from = $('rpFrom').value, to = $('rpTo').value, hw = $('rpHw').checked, li = $('rpList').checked;
+const repOpt = () => ({ from: $('rpFrom').value, to: $('rpTo').value, hw: $('rpHw').checked, li: $('rpList').checked, note: $('rpNote').checked });
+function reportChecks(o) {
+  const { from, to, hw, li } = o || repOpt();
   return (cls().checks || []).filter(k => ((k.kind === 'hw' && hw) || (k.kind === 'list' && li)) && (!from || chkDate(k) >= from) && (!to || chkDate(k) <= to))
     .sort((a, b) => chkDate(a).localeCompare(chkDate(b)));
 }
 const symTxt = v => v === 'ok' ? '<span class="r-ok">✓ erledigt</span>' : v === 'no' ? '<span class="r-no">✗ vergessen</span>' : '<span class="r-op">○ offen</span>';
-function buildKidReport(ids) {
-  const c = cls(), ks = reportChecks(), from = $('rpFrom').value, to = $('rpTo').value;
+function buildKidReport(ids, o) {
+  o = o || repOpt();
+  const c = cls(), ks = reportChecks(o), from = o.from, to = o.to;
   const range = from || to ? `Zeitraum: ${from ? fmtDate(from) : '…'} – ${to ? fmtDate(to) : fmtDate(todayStr())}` : 'Gesamter Zeitraum';
   return ids.map(id => {
     const s = c.students.find(x => x.id === id); if (!s) return '';
@@ -3563,12 +3588,12 @@ function buildKidReport(ids) {
     return `<section class="r-kid">
       <div class="r-head"><h2>${esc(fullName(s))}</h2><span>Klasse ${esc(c.name)} · ${range} · Stand ${fmtDate(todayStr())}</span></div>
       <div class="r-sum">
-        ${$('rpHw').checked ? `<div><b>Hausaufgaben</b><span class="r-ok">✓ ${ch.ok}</span><span class="r-no">✗ ${ch.no}</span><span class="r-op">○ ${ch.op}</span></div>` : ''}
-        ${$('rpList').checked ? `<div><b>Abhaklisten</b><span class="r-ok">✓ ${cl.ok}</span><span class="r-no">✗ ${cl.no}</span><span class="r-op">○ ${cl.op}</span></div>` : ''}
+        ${o.hw ? `<div><b>Hausaufgaben</b><span class="r-ok">✓ ${ch.ok}</span><span class="r-no">✗ ${ch.no}</span><span class="r-op">○ ${ch.op}</span></div>` : ''}
+        ${o.li ? `<div><b>Abhaklisten</b><span class="r-ok">✓ ${cl.ok}</span><span class="r-no">✗ ${cl.no}</span><span class="r-op">○ ${cl.op}</span></div>` : ''}
       </div>
-      ${$('rpHw').checked ? `<h3>Hausaufgaben</h3>${tbl(hw, true)}` : ''}
-      ${$('rpList').checked ? `<h3>Abhaklisten</h3>${tbl(li, false)}` : ''}
-      ${$('rpNote').checked && s.note ? `<h3>Notiz</h3><p>${esc(s.note)}</p>` : ''}
+      ${o.hw ? `<h3>Hausaufgaben</h3>${tbl(hw, true)}` : ''}
+      ${o.li ? `<h3>Abhaklisten</h3>${tbl(li, false)}` : ''}
+      ${o.note && s.note ? `<h3>Notiz</h3><p>${esc(s.note)}</p>` : ''}
     </section>`;
   }).join('');
 }
@@ -3585,6 +3610,29 @@ function buildClassTable() {
     <p class="r-leg">✓ erledigt · ✗ vergessen/fehlt · leer = offen · * = Bemerkung</p>
     ${(() => { const nl = []; ks.forEach(k => Object.entries(k.notes || {}).forEach(([id, t]) => { const st = c.students.find(x => x.id === id); if (t && st) nl.push(`<li><b>${esc(fullName(st))}</b> – ${esc(k.subject ? k.subject + ': ' : '')}${esc(k.title)}: ${esc(t)}</li>`); })); return nl.length ? `<h3 style="font-size:10pt;margin:3mm 0 1mm">Bemerkungen</h3><ul class="r-notes">${nl.join('')}</ul>` : ''; })()}` : '<p class="r-none">Keine Einträge im gewählten Zeitraum.</p>'}</section>`;
 }
+// Übersicht eines Kindes (Klick auf den Namen in der Abhak-Tabelle)
+let kidId = null;
+function kidOpt() { const p = $('kidRange').value === 'per' ? lfPeriod() : null; return { from: p ? p.from : '', to: p ? p.to : '', hw: ui.lf.type !== 'list', li: ui.lf.type !== 'hw', note: true }; }
+function renderKid() {
+  const studs = listStudents();
+  $('kidSel').innerHTML = studs.map(st => `<option value="${st.id}"${st.id === kidId ? ' selected' : ''}>${esc(sortName(st))}</option>`).join('');
+  $('kidBody').innerHTML = buildKidReport([kidId], kidOpt());
+}
+function openKid(id) { kidId = id; $('kidRange').value = lfPeriod() ? 'per' : 'all'; $('kidRange').querySelector('[value="per"]').disabled = !lfPeriod(); renderKid(); $('kidDlg').hidden = false; $('kidDlg').focus(); }
+const kidStep = n => { const L = listStudents(), i = L.findIndex(x => x.id === kidId); kidId = L[(i + n + L.length) % L.length].id; renderKid(); };
+$('kidPrev').addEventListener('click', () => kidStep(-1));
+$('kidNext').addEventListener('click', () => kidStep(1));
+$('kidSel').addEventListener('change', e => { kidId = e.target.value; renderKid(); });
+$('kidRange').addEventListener('change', renderKid);
+$('kidClose').addEventListener('click', () => { $('kidDlg').hidden = true; });
+$('kidDlg').addEventListener('keydown', e => { if (e.key === 'Escape') $('kidDlg').hidden = true; if (e.key === 'ArrowLeft' && e.target.tagName !== 'SELECT') kidStep(-1); if (e.key === 'ArrowRight' && e.target.tagName !== 'SELECT') kidStep(1); });
+$('kidDlg').addEventListener('click', e => { if (e.target === $('kidDlg')) $('kidDlg').hidden = true; });
+$('kidPrint').addEventListener('click', () => {
+  $('reportSheet').innerHTML = buildKidReport([kidId], kidOpt());
+  $('kidDlg').hidden = true; ui.printReport = true;
+  $('pageStyle').textContent = '@page { size: A4 portrait; margin: 12mm; }';
+  document.body.classList.add('print-report'); window.print();
+});
 $('rpPrint').addEventListener('click', () => {
   const fmt = document.querySelector('input[name="rpFmt"]:checked').value;
   const html = fmt === 'table' ? buildClassTable() : buildKidReport($('rpWho').value ? [$('rpWho').value] : listStudents().map(s => s.id));
@@ -3683,7 +3731,7 @@ function renderTimetable() {
       const ss = cellArr(tt, d + '|' + sl.id).map(id => ttSubj(tt, id)).filter(Boolean), td = thisWeek && d === today;
       const key = d + '|' + sl.id, g1 = ss.length > 1 ? abGroup1(tt, key, monday) : null, off = !!freeDay(addDays(monday, d));
       const who = whoIn(tt, key, monday);
-      const parts = ss.map((s, i) => { const w = who.get(s.id); return `<div class="tt-part" data-i="${i}" style="--sc:${s.color}" title="${esc(s.name)}${w ? ' – ' + w.length + ' Schüler' : ''} · Klick = wer hat dieses Fach">${g1 ? `<em class="grp">Gr. ${s.id === g1 ? 1 : 2}</em>` : ''}<span>${esc(s.name)}</span>${w ? `<em class="cnt">👥${w.length}</em>` : ''}<button class="tt-x" title="Fach entfernen">✕</button></div>`; }).join('');
+      const parts = ss.map((s, i) => { const w = who.groups ? null : who.get(s.id); return `<div class="tt-part" data-i="${i}" style="--sc:${s.color}" title="${esc(s.name)}${w ? ' – ' + w.length + ' Schüler' : ''} · Klick = wer hat dieses Fach">${g1 ? `<em class="grp">Gr. ${s.id === g1 ? 1 : 2}</em>` : ''}<span>${esc(s.name)}</span>${w ? `<em class="cnt">👥${w.length}</em>` : who.groups ? `<em class="cnt" title="in zwei Gruppen">👥${who.groups[0].length}|${who.groups[1].length}</em>` : ''}<button class="tt-x" title="Fach entfernen">✕</button></div>`; }).join('');
       const abBtn = ss.length > 1 ? `<button class="tt-ab${g1 ? ' on' : ''}" title="${g1 ? '14-täglicher Wechsel – Klick = ändern' : 'Klick = 14-täglichen Wechsel einstellen'}">⇄${g1 ? ' 14-tägig' : ''}</button>` : '';
       return `<td class="tt-cell${ss.length ? ' full' : ''}${g1 ? ' ab' : ''}${off ? ' off' : ''}${td ? ' today' : ''}${td && cur && !off ? ' now' : ''}" data-key="${key}">${ss.length ? `<div class="tt-parts${ss.length > 1 ? ' two' : ''}">${parts}</div>` : ''}${abBtn}${ss.length === 1 ? '<div class="tt-add">＋ 2. Gruppe</div>' : ''}</td>`;
     }).join('')}</tr>`;
@@ -3770,15 +3818,25 @@ function stuPickHtml(sel) {
 }
 const pickedIds = boxId => [...document.querySelectorAll('#' + boxId + ' .spk.on')].map(b => b.dataset.sid);
 document.addEventListener('click', e => { const b = e.target.closest('.spick .spk'); if (!b) return; b.classList.toggle('on'); if (b.closest('#abStu')) abSync(); });
-['sjAllOn', 'sjAllOff'].forEach(id => $(id).addEventListener('change', () => { $('sjStu').hidden = $('sjAllOn').checked; }));
+function sjSync() {
+  $('sjStu').hidden = $('sjAllOn').checked;
+  $('sjStuHint').textContent = $('sjSplit').checked ? 'Wähle Gruppe 1 aus – Gruppe 2 sind alle übrigen. Gilt für alle Stunden dieses Fachs und für den 14-täglichen Wechsel (⇄).' : $('sjAllOff').checked ? 'Wer hat dieses Fach? Steht es mit einem zweiten Fach in derselben Stunde, hat das andere Fach automatisch die übrigen Schüler.' : '';
+}
+['sjAllOn', 'sjAllOff', 'sjSplit'].forEach(id => $(id).addEventListener('change', sjSync));
 // Wer hat in dieser Woche welches Fach? (null = alle)
+// Gruppe 1 eines Fachs (in zwei Gruppen geteilt) – gilt für alle Stunden dieses Fachs
+const subjG1 = (tt, id) => { const su = ttSubj(tt, id); return su && su.g1s && su.g1s.length ? su.g1s : null; };
 function whoIn(tt, key, monday) {
   const ids = cellArr(tt, key), all = cls().students.map(s => s.id), ok = new Set(all), res = new Map();
   const ab = tt.ab && tt.ab[key];
-  if (ids.length > 1 && ab && ab.g1s && ab.g1s.length) {
-    const g1 = abGroup1(tt, key, monday), s1 = new Set(ab.g1s.filter(x => ok.has(x)));
-    ids.forEach(id => res.set(id, id === g1 ? [...s1] : all.filter(x => !s1.has(x))));
-    return res;
+  if (ids.length > 1 && ab) {
+    const g1 = abGroup1(tt, key, monday), other = ids.find(x => x !== g1);
+    const list = (ab.g1s && ab.g1s.length ? ab.g1s : null) || subjG1(tt, ab.g1) || subjG1(tt, ids.find(x => x !== ab.g1));
+    if (list) { const s1 = new Set(list.filter(x => ok.has(x))); res.set(g1, [...s1]); res.set(other, all.filter(x => !s1.has(x))); res.split = true; return res; }
+  }
+  if (ids.length === 1 && subjG1(tt, ids[0])) {   // ein Fach, aber in zwei Gruppen (z. B. getrennter Unterricht)
+    const s1 = new Set(subjG1(tt, ids[0]).filter(x => ok.has(x)));
+    res.set(ids[0], all); res.groups = [[...s1], all.filter(x => !s1.has(x))]; return res;
   }
   ids.forEach(id => { const su = ttSubj(tt, id); res.set(id, su && su.sids ? su.sids.filter(x => ok.has(x)) : null); });
   if (ids.length === 2) {   // zwei Fächer parallel: eines eingestellt, das andere = der Rest
@@ -3793,8 +3851,9 @@ function openWho(key, el) {
   const [d, sid] = key.split('|'), sl = tt.slots.find(x => x.id === sid), ab = tt.ab && tt.ab[key];
   const byName = arr => arr.map(id => dn.get(id) || '').filter(Boolean).sort((a, b) => a.localeCompare(b, 'de'));
   $('whoPop').innerHTML = `<b>${DAY_NAMES[+d]}, ${sl ? esc(sl.label) + '. Stunde' : ''}</b><small>${esc($('ttThis').textContent)}${ab ? ' · 14-täglicher Wechsel' : ''}</small>` +
-    [...who.entries()].map(([id, arr]) => { const su = ttSubj(tt, id); return `<div class="wh" style="--sc:${su ? su.color : '#999'}"><div class="whs">${esc(su ? su.name : '?')} <span>${arr ? arr.length : 'alle ' + cls().students.length}</span></div>${arr ? `<div class="whn">${byName(arr).map(esc).join(', ') || '–'}</div>` : '<div class="whn hint">alle Schüler – einstellen per Klick auf das Fach in der Fächerleiste</div>'}</div>`; }).join('') +
-    (cellArr(tt, key).length > 1 && ab && !(ab.g1s && ab.g1s.length) ? '<div class="hint">Wer zu Gruppe 1 gehört, legst du über ⇄ fest.</div>' : '');
+    (who.groups ? who.groups.map((arr, gi) => { const su = ttSubj(tt, cellArr(tt, key)[0]); return `<div class="wh" style="--sc:${su ? su.color : '#999'}"><div class="whs">${esc(su ? su.name : '?')} – Gruppe ${gi + 1} <span>${arr.length}</span></div><div class="whn">${byName(arr).map(esc).join(', ') || '–'}</div></div>`; }).join('')
+    : [...who.entries()].map(([id, arr]) => { const su = ttSubj(tt, id); return `<div class="wh" style="--sc:${su ? su.color : '#999'}"><div class="whs">${esc(su ? su.name : '?')} <span>${arr ? arr.length : 'alle ' + cls().students.length}</span></div>${arr ? `<div class="whn">${byName(arr).map(esc).join(', ') || '–'}</div>` : '<div class="whn hint">alle Schüler – einstellen per Klick auf das Fach in der Fächerleiste</div>'}</div>`; }).join('')) +
+    (cellArr(tt, key).length > 1 && ab && !who.split ? '<div class="hint">Wer Gruppe 1 ist, legst du einmal beim Fach fest (Fächerleiste → Fach anklicken → „in zwei Gruppen“).</div>' : '');
   const p = $('whoPop'); p.hidden = false;
   const r = el.getBoundingClientRect(), pw = p.offsetWidth, ph = p.offsetHeight;
   p.style.left = Math.max(8, Math.min(innerWidth - pw - 8, r.left)) + 'px';
@@ -3811,7 +3870,9 @@ function openAb(key) {
   $('abOn').checked = !!(tt.ab && tt.ab[key]); $('abOff').checked = !$('abOn').checked;
   $('abWeek').textContent = $('ttThis').textContent;
   $('abG1').innerHTML = ids.map(id => { const s = ttSubj(tt, id); return `<option value="${id}"${id === g1 ? ' selected' : ''}>${esc(s ? s.name : '?')}</option>`; }).join('');
-  const cur = tt.ab && tt.ab[key] && tt.ab[key].g1s; $('abStu').innerHTML = stuPickHtml(cur || []);
+  const cur = tt.ab && tt.ab[key] && tt.ab[key].g1s; $('abStu').innerHTML = stuPickHtml(cur || []); $('abOwn').open = !!(cur && cur.length);
+  const src = ids.map(id => ttSubj(tt, id)).find(su => su && su.g1s && su.g1s.length);
+  $('abSrc').innerHTML = src ? `👥 Gruppen kommen aus dem Fach <b>${esc(src.name)}</b> (Gruppe 1: ${src.g1s.length} Schüler).` : '👥 Wer Gruppe 1 ist, legst du am besten einmal beim Fach fest: Fächerleiste → Fach anklicken → „in zwei Gruppen“. Dann gilt es für alle Stunden.';
   abSync(); $('abDlg').hidden = false; $('abDlg').focus();
 }
 function abSync() {
@@ -3819,7 +3880,7 @@ function abSync() {
   $('abBox').hidden = !$('abOn').checked;
   const o = ttSubj(tt, other), a = ttSubj(tt, g1);
   $('abInfo').textContent = `Gruppe 2 hat in dieser Woche ${o ? o.name : '–'}. In der Woche darauf wird getauscht (Gruppe 1: ${o ? o.name : '–'}, Gruppe 2: ${a ? a.name : '–'}).`;
-  const n1 = pickedIds('abStu').length, all = cls().students.length; $('abCnt').textContent = n1 ? `– ${n1} ausgewählt, Gruppe 2 = die übrigen ${all - n1}` : '– noch niemand ausgewählt';
+  const n1 = pickedIds('abStu').length, all = cls().students.length; $('abCnt').textContent = n1 ? `– ${n1} ausgewählt, Gruppe 2 = die übrigen ${all - n1}` : '';
 }
 ['abOn', 'abOff', 'abG1'].forEach(id => $(id).addEventListener('change', abSync));
 $('abCancel').addEventListener('click', () => { $('abDlg').hidden = true; });
@@ -3855,7 +3916,7 @@ function openSubj(id) {
   const s = ttSubj(timetable(), id); if (!s) return;
   subjEdit = id;
   $('sjName').value = s.name; $('sjMat').value = s.mat || '';
-  $('sjAllOn').checked = !s.sids; $('sjAllOff').checked = !!s.sids; $('sjStu').innerHTML = stuPickHtml(s.sids || []); $('sjStu').hidden = !s.sids;
+  $('sjAllOn').checked = !s.sids && !s.g1s; $('sjAllOff').checked = !!s.sids; $('sjSplit').checked = !!s.g1s; $('sjStu').innerHTML = stuPickHtml(s.sids || s.g1s || []); sjSync();
   $('sjColor').style.setProperty('--sw', s.color); $('sjColor').dataset.c = s.color;
   $('subjDlg').hidden = false; $('sjName').focus();
 }
@@ -3867,8 +3928,9 @@ $('sjCancel').addEventListener('click', () => { $('subjDlg').hidden = true; });
 $('sjSave').addEventListener('click', () => {
   const id = subjEdit, name = $('sjName').value.trim(), color = $('sjColor').dataset.c;
   if (!name) return;
-  const sids = $('sjAllOff').checked ? pickedIds('sjStu') : null;
-  change(() => { const s = ttSubj(timetable(), id); if (s) { s.name = name; s.color = color; const m = $('sjMat').value.trim(); if (m) s.mat = m; else delete s.mat; if (sids) s.sids = sids; else delete s.sids; } }, { keepList: true });
+  const sids = $('sjAllOff').checked ? pickedIds('sjStu') : null, g1s = $('sjSplit').checked ? pickedIds('sjStu') : null;
+  change(() => { const s = ttSubj(timetable(), id); if (s) { s.name = name; s.color = color; const m = $('sjMat').value.trim(); if (m) s.mat = m; else delete s.mat;
+    if (sids) s.sids = sids; else delete s.sids; if (g1s && g1s.length) s.g1s = g1s; else delete s.g1s; } }, { keepList: true });
   $('subjDlg').hidden = true;
 });
 $('sjDel').addEventListener('click', () => {
