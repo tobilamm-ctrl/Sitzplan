@@ -330,6 +330,8 @@
   .tt th.off { color: #9aa0a6; } .tt th .fr { display: block; margin: 3px auto 0; width: fit-content; max-width: 100%; font-size: .68rem; background: #e5e7eb; color: #4b5563; border-radius: 999px; padding: 1px 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .tt td.tt-cell.off { background: repeating-linear-gradient(135deg, #f1f1ef 0 6px, #e9e9e6 6px 12px); border-color: #e2e2df; }
   .tt td.tt-cell.off .tt-part { filter: grayscale(1); opacity: .45; }
+  .tt td.tt-free { background: repeating-linear-gradient(135deg, #f1f1ef 0 8px, #e8e8e5 8px 16px); border-radius: 8px; text-align: center; vertical-align: middle; padding: 6px; }
+  .tt td.tt-free span { display: inline-block; font-size: 1.05rem; font-weight: 800; color: #6b7280; background: rgba(255,255,255,.85); border-radius: 8px; padding: 4px 10px; line-height: 1.2; }
   .ag-done { margin-top: 10px; } .ag-done summary { cursor: pointer; color: var(--muted); font-weight: 700; font-size: .85rem; } .ag-done .ag-it { opacity: .7; }
   .heft-done { margin-top: 6px; } .heft-done > summary { cursor: pointer; color: var(--muted); font-weight: 700; padding: 8px 4px; } .heft-done .hw { opacity: .85; }
   .tt-wrap.nopal .tt-pal { display: none; }
@@ -778,7 +780,7 @@
             <p class="hint" style="margin:2px 0 0">Jede Änderung wird sofort im Speicher dieser App auf dem iPad abgelegt und beim nächsten Start wieder geladen – ohne Datei. Die Daten verlassen das Gerät nicht. Mit „📤 Als Datei sichern“ machst du eine Sicherung (z. B. für den PC). Ausschalten löscht den Speicher der App auf diesem Gerät.</p>
           </div>
           <p class="hint">Eine Datei enthält alle Klassen mit Schülern, Regeln, Räumen, Verlauf und Diensten. Für „Zuletzt verwendet“ merkt sich der Browser nur die Verweise auf die Dateien, nicht deren Inhalt.</p>
-          <p class="hint" style="margin:0">Version 2026-10-17</p>
+          <p class="hint" style="margin:0">Version 2026-10-18</p>
         </div>
       </details>
 
@@ -3667,7 +3669,13 @@ const cellArr = (tt, key) => { const v = tt.cells[key]; return (Array.isArray(v)
 function setCell(tt, key, arr) { arr = arr.filter(Boolean).slice(0, 2); if (!arr.length) delete tt.cells[key]; else tt.cells[key] = arr.length === 1 ? arr[0] : arr; if (arr.length < 2 && tt.ab) delete tt.ab[key]; }
 // 14-täglicher Wechsel: tt.ab[key] = { wk: Montag einer Bezugswoche, g1: Fach der Gruppe 1 in dieser Woche }
 const weekParity = (refMonday, monday) => (((Math.round((new Date(monday + 'T00:00') - new Date(refMonday + 'T00:00')) / 6048e5)) % 2) + 2) % 2;
-function abGroup1(tt, key, monday) { const a = tt.ab && tt.ab[key], ids = cellArr(tt, key); if (!a || ids.length < 2) return null; const other = ids.find(x => x !== a.g1) || ids[0]; return weekParity(a.wk, monday) ? other : a.g1; }
+// Wechsel zählt nur Tage, an denen Unterricht stattfindet: Ferien und Feiertage werden übersprungen
+function abParity(refMonday, monday, wd) {
+  let a = addDays(refMonday, wd), b = addDays(monday, wd); if (b < a) [a, b] = [b, a];
+  let n = 0; for (let x = a; x < b; x = addDays(x, 7)) if (!freeDay(x)) n++;
+  return n % 2;
+}
+function abGroup1(tt, key, monday) { const a = tt.ab && tt.ab[key], ids = cellArr(tt, key); if (!a || ids.length < 2) return null; const other = ids.find(x => x !== a.g1) || ids[0]; return abParity(a.wk, monday, +key.split('|')[0]) ? other : a.g1; }
 const cellHas = (v, id) => Array.isArray(v) ? v.includes(id) : v === id;
 const weekdayIdx = d => (d.getDay() + 6) % 7;   // Montag = 0
 
@@ -3723,11 +3731,17 @@ function renderTimetable() {
     $('ttThis').textContent = `KW ${kw} · ${fmtD(monday)}–${fmtD(addDays(monday, days[days.length - 1]))}`; $('ttThis').classList.toggle('off', !thisWeek); $('ttThis').title = thisWeek ? 'Aktuelle Woche' : 'Zurück zur aktuellen Woche'; }
   const exams = cls().exams || [];
   const head = `<tr><th class="tt-time"></th>${days.map(d => { const ds = addDays(monday, d); const fr = freeDay(ds); return `<th class="${thisWeek && d === today ? 'today' : ''}${fr ? ' off' : ''}">${DAY_NAMES[d]}<span class="dt">${fmtD(ds)}</span>${fr ? `<span class="fr" title="unterrichtsfrei">${esc(fr)}</span>` : ''}${exams.filter(x => exOn(x, ds)).map(x => x.kind === 'ev' ? `<span class="exm ev" data-id="${x.id}" title="${esc((x.time ? x.time + ' ' : '') + x.title)}">📅 ${esc(x.title)}</span>` : `<span class="exm" data-id="${x.id}" title="${esc(x.title)}">📝 ${esc(x.subject || x.title)}</span>`).join('')}</th>`; }).join('')}</tr>`;
-  const body = tt.slots.map(sl => {
+  const frees = {}; days.forEach(d => { frees[d] = freeDay(addDays(monday, d)); });
+  const body = tt.slots.map((sl, si) => {
     const cur = thisWeek && sl.start && sl.end && hm >= sl.start && hm < sl.end;
     const tcell = `<td class="tt-time${cur ? ' now' : ''}" data-slot="${sl.id}" title="Klick = Stundenraster bearbeiten"><b>${esc(sl.label)}</b><small>${esc(sl.start || '')}${sl.end ? '–<br>' + esc(sl.end) : ''}</small></td>`;
     if (sl.pause) return `<tr class="tt-pause">${tcell}<td colspan="${days.length}">${esc(sl.label)}</td></tr>`;
     return `<tr>${tcell}${days.map(d => {
+      if (frees[d]) {   // Ferien/Feiertag: kein Unterricht – ein Feld je Block zwischen den Pausen
+        if (si > 0 && !tt.slots[si - 1].pause) return '';
+        let n = 0; for (let j = si; j < tt.slots.length && !tt.slots[j].pause; j++) n++;
+        return `<td class="tt-free" rowspan="${n}"><span>${esc(frees[d])}</span></td>`;
+      }
       const ss = cellArr(tt, d + '|' + sl.id).map(id => ttSubj(tt, id)).filter(Boolean), td = thisWeek && d === today;
       const key = d + '|' + sl.id, g1 = ss.length > 1 ? abGroup1(tt, key, monday) : null, off = !!freeDay(addDays(monday, d));
       const who = whoIn(tt, key, monday);
@@ -3879,7 +3893,7 @@ function abSync() {
   const tt = timetable(), ids = cellArr(tt, abKey), g1 = $('abG1').value, other = ids.find(x => x !== g1);
   $('abBox').hidden = !$('abOn').checked;
   const o = ttSubj(tt, other), a = ttSubj(tt, g1);
-  $('abInfo').textContent = `Gruppe 2 hat in dieser Woche ${o ? o.name : '–'}. In der Woche darauf wird getauscht (Gruppe 1: ${o ? o.name : '–'}, Gruppe 2: ${a ? a.name : '–'}).`;
+  $('abInfo').textContent = `Gruppe 2 hat in dieser Woche ${o ? o.name : '–'}. Beim nächsten Stattfinden wird getauscht (Gruppe 1: ${o ? o.name : '–'}, Gruppe 2: ${a ? a.name : '–'}). Ferien und Feiertage zählen dabei nicht mit.`;
   const n1 = pickedIds('abStu').length, all = cls().students.length; $('abCnt').textContent = n1 ? `– ${n1} ausgewählt, Gruppe 2 = die übrigen ${all - n1}` : '';
 }
 ['abOn', 'abOff', 'abG1'].forEach(id => $(id).addEventListener('change', abSync));
