@@ -113,7 +113,16 @@
   .tcard .tm:hover { background: #f1f5f9; }
   .tcard .tm.tdrop { background: #dcfce7; }
   .tcard h3 small { font-weight: 600; opacity: .7; }
-  .seat .tb { position: absolute; left: 50%; bottom: 2px; transform: translateX(-50%); font-size: clamp(9px, 1.35cqw, 15px); font-weight: 800; color: #fff !important; background: var(--cfg); padding: 0 .45em; border-radius: 999px; line-height: 1.35; box-shadow: 0 1px 2px rgba(0,0,0,.25); }
+  .tren { cursor: pointer; } .tren:hover { text-decoration: underline; }
+  .tm .ri { margin-right: 3px; } .tcard .tm .rn { display: block; font-size: .55em; font-weight: 600; color: var(--muted); margin-top: -2px; }
+  .role-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 12px; font-size: .95rem; font-weight: 600; color: var(--muted); }
+  #teamRoleRow[hidden] { display: none; }
+  #rolePop { position: fixed; z-index: 4000; background: #fff; border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,.25); padding: 8px; display: flex; flex-direction: column; gap: 3px; min-width: 240px; font-size: .95rem; }
+  #rolePop[hidden] { display: none; }
+  #rolePop > b { padding: 2px 6px 6px; } #rolePop button { text-align: left; border: 1px solid transparent; background: none; padding: 5px 8px; border-radius: 8px; font-weight: 600; color: var(--ink); }
+  #rolePop button:hover { background: var(--accent-soft); } #rolePop button.on { background: var(--accent-soft); border-color: var(--accent); }
+  #rolePop button small { font-weight: 400; color: var(--muted); } #rolePop button.none { color: var(--danger); }
+  .seat .tb { white-space: nowrap; max-width: 96%; overflow: hidden; text-overflow: ellipsis; position: absolute; left: 50%; bottom: 2px; transform: translateX(-50%); font-size: clamp(9px, 1.35cqw, 15px); font-weight: 800; color: #fff !important; background: var(--cfg); padding: 0 .45em; border-radius: 999px; line-height: 1.35; box-shadow: 0 1px 2px rgba(0,0,0,.25); }
   .seat.team { padding-bottom: clamp(9px, 1.6cqw, 17px); }
   .seat.team::after { width: 8px; }
   .gcol { display: flex; flex-direction: column; gap: 6px; background: #f8fafc; border-radius: 8px; padding: 8px; }
@@ -301,6 +310,7 @@
   .tt th.today { color: var(--accent); }
   .tt th .exm { display: block; font-size: .72rem; color: #fff; background: var(--red); border-radius: 999px; padding: 1px 8px; margin: 3px auto 0; width: fit-content; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
   .tt th .dt { display: block; font-weight: 400; font-size: .72rem; }
+  .tt th .exm.ev { background: var(--sun); color: var(--ink); }
   .agenda { background: var(--panel); border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.08); padding: 12px 14px; }
   .agenda h3 { margin: 0 0 8px; font-size: .95rem; color: var(--red); }
   .ag-day { margin-top: 8px; } .ag-day > b { display: block; font-size: .82rem; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 4px; }
@@ -308,7 +318,11 @@
   .ag-it { display: flex; gap: 10px; align-items: baseline; padding: 6px 10px; border-radius: 8px; cursor: pointer; background: #fafaf8; margin-bottom: 4px; border-left: 5px solid var(--sc, var(--grey)); }
   .ag-it:hover { background: var(--accent-soft); }
   .ag-it .k { font-size: .75rem; font-weight: 800; padding: 1px 8px; border-radius: 999px; white-space: nowrap; }
-  .ag-it.hw .k { background: var(--accent-soft); color: var(--accent); } .ag-it.ex .k { background: #f9e3e4; color: var(--red); }
+  .ag-it.hw .k { background: var(--accent-soft); color: var(--accent); } .ag-it.ex .k { background: #f9e3e4; color: var(--red); } .ag-it.ev .k { background: #fdf6d6; color: #8a6d00; }
+  .msgbox { background: #fffbeb; border: 1px solid #f3d866; border-radius: 10px; padding: 8px 10px; margin-bottom: 10px; }
+  .msgbox .mh { display: flex; align-items: center; gap: 6px; font-weight: 800; font-size: .85rem; color: #8a6d00; } .msgbox .mh button { margin-left: auto; padding: 1px 8px; }
+  .msg-it { padding: 5px 2px; border-top: 1px dashed #f0dc8a; cursor: pointer; font-size: .9rem; white-space: pre-wrap; } .msg-it:first-of-type { border-top: none; } .msg-it small { display: block; color: var(--muted); font-size: .72rem; }
+  .msg-it:hover { background: #fef3c7; }
   .ag-it .s { font-weight: 700; white-space: nowrap; } .ag-it .t { flex: 1; } .ag-it .m { color: var(--muted); font-size: .8rem; white-space: nowrap; }
   .tt td.tt-time { width: 54px; text-align: center; cursor: pointer; color: var(--muted); font-size: .8rem; border-radius: 6px; }
   .tt td.tt-time b { display: block; color: var(--ink); font-size: .95rem; }
@@ -373,6 +387,7 @@
   .mx .ch small { color: var(--muted); font-size: .72rem; }
   .mx .cnt { font-size: .7rem; } .mx .cnt i { font-style: normal; margin-right: 3px; }
   .ok, .mx .cnt .ok { color: #15803d; } .no, .mx .cnt .no { color: #dc2626; } .op, .mx .cnt .op { color: var(--muted); }
+  .lfnav { display: inline-flex; gap: 2px; } .lfnav[hidden] { display: none; } #lfLbl { min-width: 170px; } #lfLbl.off { background: #fef9e1; border-color: var(--sun); }
   .mx td.cell { text-align: center; cursor: pointer; font-size: 1.15rem; font-weight: 800; height: 34px; user-select: none; }
   .mx td.cell:hover { outline: 2px solid var(--accent); outline-offset: -2px; }
   .mx td.s-ok { background: #dcfce7; color: #15803d; }
@@ -505,7 +520,7 @@
 
   /* Dialog „Weitere Farben“ (angelehnt an den Farbdialog von Office) */
   .cdlg-back { position: fixed; inset: 0; background: rgba(15,23,42,.35); z-index: 3000; display: flex; align-items: center; justify-content: center; padding: 16px; }
-  .cdlg-back[hidden] { display: none; }
+  .cdlg-back[hidden] { display: none; } #examDlg [hidden] { display: none !important; }
   .qr-dlg { width: 560px; } #qrBox { display: flex; justify-content: center; } #qrBox svg { width: min(420px, 70vh); height: auto; display: block; }
   .qr-nav { justify-content: center; } #qrNav[hidden] { display: none; }
   #qrDlg.big { padding: 0; background: #fff; } #qrDlg.big .qr-dlg { width: 100%; height: 100%; border-radius: 0; box-shadow: none; display: flex; flex-direction: column; }
@@ -543,7 +558,9 @@
     body.print-fit #dutyBox { font-size: 11pt; box-shadow: none; }
     #subSheet h3 { font-size: 11pt; margin: 4mm 0 1mm; border-bottom: 1px solid #ccc; }
     #subSheet p { margin: 0; } #subSheet .pre { white-space: pre-wrap; }
-    #subSheet table { width: 100%; border-collapse: collapse; } #subSheet th, #subSheet td { border: 1px solid #bbb; padding: 1.2mm 2mm; text-align: left; vertical-align: top; }
+    #subSheet .pgbrk { break-before: page; } #subSheet h2 { font-size: 14pt; margin: 0 0 3mm; } #subSheet small { color: #555; font-size: 8.5pt; }
+    #subSheet table.nl td { height: 7mm; } #subSheet table.nl td:first-child { white-space: nowrap; }
+    #subSheet table:not(.tt) { width: 100%; border-collapse: collapse; } #subSheet table:not(.tt) > tbody > tr > th, #subSheet table:not(.tt) > tbody > tr > td { border: 1px solid #bbb; padding: 1.2mm 2mm; text-align: left; vertical-align: top; }
     #subSheet th { background: #f0f0f0; } #subSheet tr.abs td { color: #888; } #subSheet tr { break-inside: avoid; }
     .layout { display: block; }
     .print-header { display: flex; justify-content: space-between; align-items: baseline; width: 180mm; margin: 0 auto 4mm; border-bottom: 1px solid #999; padding-bottom: 2mm; }
@@ -589,7 +606,7 @@
             <p class="hint" style="margin:2px 0 0">Jede Änderung wird sofort im Speicher dieser App auf dem iPad abgelegt und beim nächsten Start wieder geladen – ohne Datei. Die Daten verlassen das Gerät nicht. Mit „📤 Als Datei sichern“ machst du eine Sicherung (z. B. für den PC). Ausschalten löscht den Speicher der App auf diesem Gerät.</p>
           </div>
           <p class="hint">Eine Datei enthält alle Klassen mit Schülern, Regeln, Räumen, Verlauf und Diensten. Für „Zuletzt verwendet“ merkt sich der Browser nur die Verweise auf die Dateien, nicht deren Inhalt.</p>
-          <p class="hint" style="margin:0">Version 2026-10-11</p>
+          <p class="hint" style="margin:0">Version 2026-10-13</p>
         </div>
       </details>
 
@@ -656,6 +673,7 @@
           <label class="chk"><input type="checkbox" id="teamMix"> Jungen und Mädchen mischen</label>
           <div class="row fill"><button class="primary" id="teamMake">🎲 Bilden</button><button id="teamShow" disabled>⛶ Groß anzeigen</button><button id="teamClear" disabled title="Partner/Gruppen verwerfen" style="flex:0 0 auto">✕</button></div>
           <label class="chk"><input type="checkbox" id="teamColor" checked> Plätze im Sitzplan in Gruppenfarben anzeigen</label>
+          <div class="row fill" id="teamRoleRow"><button id="teamRoles" title="In jeder Gruppe die Rollen zufällig verteilen (Reihenfolge: Leitung, Zeit, Schrift, Sprecher, Material, Lautstärke, Qualität, Motivation)">🎭 Rollen verteilen</button><button id="teamRolesClear" title="Alle Rollen entfernen" style="flex:0 0 auto">✕ Rollen</button></div>
           <div class="teams" id="teamList"></div>
           <p class="hint">Nur anwesende Kinder. Namen lassen sich per Ziehen umsetzen: auf einen anderen Namen = tauschen, auf eine Gruppe = dorthin verschieben (auch in der großen Ansicht). Bei ungerader Zahl entsteht eine Dreiergruppe.</p>
         </div>
@@ -772,7 +790,8 @@
           <div class="sub">Vertretungsblatt</div>
           <textarea id="subNote" placeholder="Hinweise für die Vertretung (z. B. Material, Aufgaben, Besonderheiten)" style="min-height:70px"></textarea>
           <button id="printSub">📄 Vertretungsblatt drucken</button>
-          <p class="hint">Enthält den Sitzplan – so groß wie möglich auf die Seite eingepasst – mit den Diensten und darunter deine Hinweise.</p>
+          <button id="printMappe" class="primary">📁 Vertretungsmappe drucken</button>
+          <p class="hint">Vertretungsblatt: Sitzplan (eingepasst) mit Diensten und deinen Hinweisen.<br>Vertretungsmappe: zusätzlich der Stundenplan dieser Woche mit Terminen, Mitteilungen, offene Hausaufgaben und anstehende Proben sowie eine Namensliste zum Abhaken.</p>
         </div>
       </details>
     </aside>
@@ -826,7 +845,8 @@
         <div class="topbar lfbar">
           <select id="lfType"><option value="all">Alles</option><option value="hw">nur Hausaufgaben</option><option value="list">nur Abhaklisten</option></select>
           <select id="lfSubject"></select>
-          <select id="lfRange"><option value="all">gesamter Zeitraum</option><option value="7">letzte 7 Tage</option><option value="30">letzte 30 Tage</option><option value="open">nur noch nicht komplett erledigte</option></select>
+          <select id="lfRange"><option value="week">Woche</option><option value="month">Monat</option><option value="open">nur noch nicht komplett erledigte</option><option value="all">gesamter Zeitraum</option></select>
+          <span class="lfnav" id="lfNav"><button id="lfPrev" title="zurück">◀</button><button id="lfLbl" title="Zur aktuellen Woche bzw. zum aktuellen Monat"></button><button id="lfNext" title="vor">▶</button></span>
           <button id="noteModeBtn" class="toggle" title="Bemerkungs-Modus: Klick auf ein Feld bzw. einen Namen öffnet die Bemerkung statt abzuhaken">📝 Bemerkung</button>
           <span class="hint">Klick auf ein Feld: leer → ✓ → ✗ → leer · Rechtsklick (oder 📝-Modus): Bemerkung zum Kind · Klick auf die Spaltenüberschrift: bearbeiten</span>
         </div>
@@ -850,7 +870,7 @@
           <b id="ttTitle" style="font-size:1.05rem" hidden>Stundenplan</b>
           <button id="ttPalToggle" class="toggle" title="Fächerleiste ein-/ausblenden">🎨 Fächer</button>
           <button id="ttRaster" title="Stundenraster bearbeiten">⚙ Raster</button>
-          <button id="ttExamAdd" class="primary">＋ Probe</button>
+          <button id="ttExamAdd" class="primary" title="Probe oder Termin (Ausflug, Elternabend …) eintragen">＋ Probe/Termin</button>
           <button id="ttSend" title="Stundenplan, Hausaufgaben und Proben per QR-Code an die Schüler-iPads">📲 An Schüler</button>
           <label class="chk"><input type="checkbox" id="ttSat"> Samstag</label>
           <span class="tt-week"><button id="ttPrev" title="Woche zurück">◀</button><button id="ttThis" title="Zur aktuellen Woche"></button><button id="ttNext" title="Woche vor">▶</button></span>
@@ -987,6 +1007,7 @@
     <div class="nc-body">
       <label class="nc-name">Name<input type="text" id="sjName"></label>
       <div class="row"><span>Farbe</span><button class="sw" id="sjColor" style="width:60px"><i></i></button></div>
+      <label class="nc-name">Material (für die Packliste der Schüler)<input type="text" id="sjMat" placeholder="z. B. Buch, Heft, Arbeitsheft – mit Komma trennen"></label>
       <div class="row" style="justify-content:flex-end"><button id="sjDel" class="danger" style="margin-right:auto">Löschen</button><button id="sjCancel">Abbrechen</button><button class="primary" id="sjSave">Speichern</button></div>
     </div>
   </div>
@@ -1016,13 +1037,28 @@
   <div class="cdlg nc" style="width:400px">
     <div class="cdlg-title" id="exTitle">Probe eintragen</div>
     <div class="nc-body">
+      <div class="row"><label class="chk"><input type="radio" name="exKind" id="exKindEx" checked> 📝 Probe</label><label class="chk"><input type="radio" name="exKind" id="exKindEv"> 📅 Termin (Ausflug, Elternabend, Wandertag …)</label></div>
       <div class="row">
-        <label class="nc-name" style="flex:1">Datum<input type="date" id="exDate"></label>
-        <label class="nc-name" style="flex:1">Fach<select id="exSubj" class="subjsel"></select></label>
+        <label class="nc-name" style="flex:1"><span id="exDateLbl">Datum</span><input type="date" id="exDate"></label>
+        <label class="nc-name ev-only" style="flex:1">bis (bei mehreren Tagen)<input type="date" id="exEnd"></label>
+        <label class="nc-name ex-only" style="flex:1">Fach<select id="exSubj" class="subjsel"></select></label>
       </div>
-      <label class="nc-name">Thema / Art<input type="text" id="exText" placeholder="z. B. Probe Bruchrechnen, Diktat, Kurztest"></label>
+      <label class="nc-name ev-only">Uhrzeit (optional)<input type="text" id="exTime" placeholder="z. B. 8:00–12:00 oder 19:30"></label>
+      <label class="nc-name"><span id="exTextLbl">Thema / Art</span><input type="text" id="exText" placeholder="z. B. Probe Bruchrechnen, Diktat, Kurztest"></label>
       <label class="nc-name">Notiz (optional)<input type="text" id="exNote" placeholder="z. B. Hilfsmittel, Seiten im Buch"></label>
       <div class="row" style="justify-content:flex-end"><button id="exDel" class="danger" style="margin-right:auto">Löschen</button><button id="exCancel">Abbrechen</button><button class="primary" id="exSave">Speichern</button></div>
+    </div>
+  </div>
+</div>
+
+<div class="cdlg-back" id="msgDlg" hidden tabindex="-1">
+  <div class="cdlg nc" style="width:440px">
+    <div class="cdlg-title">📣 Mitteilung an die Klasse</div>
+    <div class="nc-body">
+      <label class="nc-name">Text<textarea id="msText" rows="3" placeholder="z. B. Morgen Turnbeutel mitbringen! · Elternbrief bis Freitag unterschrieben zurück"></textarea></label>
+      <label class="nc-name" style="max-width:220px">anzeigen bis<input type="date" id="msUntil"></label>
+      <div class="hint">Wird mit „📲 An Schüler“ an die iPads geschickt und erscheint dort oben, bis das Kind „Gelesen“ tippt oder das Datum vorbei ist.</div>
+      <div class="row" style="justify-content:flex-end"><button id="msDel" class="danger" style="margin-right:auto">Löschen</button><button id="msCancel">Abbrechen</button><button class="primary" id="msSave">Speichern</button></div>
     </div>
   </div>
 </div>
@@ -1031,7 +1067,7 @@
   <div class="cdlg qr-dlg">
     <div class="cdlg-title">📲 An die Schüler-iPads senden</div>
     <div class="nc-body">
-      <div class="row"><label class="chk"><input type="checkbox" id="qrTT"> Stundenplan</label><label class="chk"><input type="checkbox" id="qrHW"> Hausaufgaben (offen)</label><label class="chk"><input type="checkbox" id="qrEX"> Proben (anstehend)</label></div>
+      <div class="row"><label class="chk"><input type="checkbox" id="qrTT"> Stundenplan</label><label class="chk"><input type="checkbox" id="qrHW"> Hausaufgaben (offen)</label><label class="chk"><input type="checkbox" id="qrEX"> Proben &amp; Termine</label><label class="chk"><input type="checkbox" id="qrMS"> Mitteilungen</label></div>
       <div class="hint" id="qrInfo"></div>
       <div id="qrBox"></div>
       <div class="row qr-nav" id="qrNav" hidden><button id="qrPrev">◀</button><span id="qrPartTxt" class="hint"></span><button id="qrNext">▶</button></div>
@@ -1068,10 +1104,13 @@
 
 <div class="cdlg-back" id="teamsDlg" hidden tabindex="-1">
   <div class="teams-big">
-    <div class="tb-head"><b>Partner &amp; Gruppen</b><span class="hint" style="margin-left:10px">Namen ziehen zum Umsetzen</span><span class="spacer"></span><label class="chk" style="font-size:.9rem"><input type="checkbox" id="teamColor2" checked> im Plan einfärben</label><button id="teamsAgain">🎲 Neu bilden</button><button class="primary" id="teamsClose">Schließen</button></div>
+    <div class="tb-head"><b>Partner &amp; Gruppen</b><span class="hint" style="margin-left:10px">Namen ziehen zum Umsetzen</span><span class="spacer"></span><label class="chk" style="font-size:.9rem"><input type="checkbox" id="teamColor2" checked> im Plan einfärben</label><button id="teamsRoles">🎭 Rollen verteilen</button><button id="teamsAgain">🎲 Neu bilden</button><button class="primary" id="teamsClose">Schließen</button></div>
     <div class="tgrid" id="teamsGrid"></div>
+    <div class="role-legend" id="roleLegend"></div>
   </div>
 </div>
+
+<div id="rolePop" hidden></div>
 
 <div class="cdlg-back" id="cdDlg" hidden>
   <div class="cdlg" role="dialog" aria-label="Farben">
@@ -1147,7 +1186,13 @@ document.head.insertAdjacentHTML('beforeend', '<style>.seat[data-c]{background:v
 /* ---------- Farb-Hilfsfunktionen ---------- */
 const TEAM_COLORS = ['#0ea5e9', '#f97316', '#22c55e', '#a855f7', '#ef4444', '#eab308', '#14b8a6', '#ec4899', '#6366f1', '#84cc16', '#92400e', '#64748b'];
 const teamColor = i => TEAM_COLORS[i % TEAM_COLORS.length];
-const teamShort = i => (ui.teams && ui.teams.mode === 'pairs' ? 'P' : 'G') + (i + 1);
+const teamShort = i => { const n = ui.teams && ui.teams.names && ui.teams.names[i]; return n ? (n.length > 8 ? n.slice(0, 7) + '…' : n) : (ui.teams && ui.teams.mode === 'pairs' ? 'P' : 'G') + (i + 1); };
+// Rollen in Gruppen
+const ROLES = [
+  { k: 'lead', i: '👑', n: 'Gruppenleiter/in' }, { k: 'time', i: '⏱️', n: 'Zeitwächter/in' }, { k: 'write', i: '✍️', n: 'Schriftführer/in' }, { k: 'speak', i: '🎤', n: 'Sprecher/in' },
+  { k: 'mat', i: '📦', n: 'Materialmanager/in' }, { k: 'quiet', i: '🤫', n: 'Lautstärkewächter/in' }, { k: 'qual', i: '🔍', n: 'Qualitätsprüfer/in' }, { k: 'motiv', i: '💪', n: 'Motivator/in' }];
+const roleIcons = id => ((ui.teams && ui.teams.roles && ui.teams.roles[id]) || []).map(k => (ROLES.find(r => r.k === k) || {}).i || '').join('');
+const roleNames = id => ((ui.teams && ui.teams.roles && ui.teams.roles[id]) || []).map(k => (ROLES.find(r => r.k === k) || {}).n || '').join(', ');
 // Farbe eines Platzes: Geschlechter-Ansicht (wenn eingeschaltet) > Partner/Gruppen > eigene Farbe des Kindes
 function seatColor(st, teamIdx) {
   if (ui.genderView) return st.gender ? colorInfo(GENDER_VIEW[st.gender]) : null;
@@ -1234,7 +1279,7 @@ function makeItem(d) {
 
 function makeClass(name, items) {
   return { id: newId('c'), name, students: [], rules: { apart: [], together: [], mix: false }, groups: [],
-           plans: [], duties: [], dutyCount: {}, picked: [], showDuties: false, subNote: '', checks: [], tt: null, exams: [],
+           plans: [], duties: [], dutyCount: {}, picked: [], showDuties: false, subNote: '', checks: [], tt: null, exams: [], msgs: [],
            items: (items || DEFAULT_LAYOUT).map(d => makeItem({ ...d, id: null, groupId: null, seats: (d.seats || []).map(s => ({ blocked: s.blocked })) })) };
 }
 
@@ -1718,13 +1763,14 @@ function renderRoom(animate) {
             (st && st.note ? '<span class="nt">📝</span>' : '') +
             (st && ui.pickedId === st.id ? '<span class="pk">👇</span>' : '') +
             (st && dutyOf.has(st.id) ? `<span class="dt">${dutyOf.get(st.id).map(d => esc(dutyIcon(d))).join('')}</span>` : '') +
-            (st && teamIdx && teamIdx.has(st.id) && !ui.genderView ? `<span class="tb">${teamShort(teamIdx.get(st.id))}</span>` : '');
+            (st && teamIdx && teamIdx.has(st.id) && !ui.genderView ? `<span class="tb">${esc(teamShort(teamIdx.get(st.id)))}${roleIcons(st.id) ? ' ' + roleIcons(st.id) : ''}</span>` : '');
           if (st) {
             sd.dataset.sid = st.id;
             const tip = [];
             if (isAbsent(st)) tip.push('heute abwesend');
             if (s.pinned) tip.push('fixiert – bleibt beim Neu-Verteilen sitzen');
             if (st.note) tip.push('Notiz: ' + st.note);
+            if (teamIdx && roleNames(st.id)) tip.push('Rolle: ' + roleNames(st.id));
             if (dutyOf.has(st.id)) { tip.push('Dienst: ' + dutyOf.get(st.id).map(d => d.name).join(', ')); sd.classList.add('hasduty'); }
             if (tip.length) sd.title = dn.get(st.id) + '\n' + tip.join('\n');
           }
@@ -2048,7 +2094,7 @@ function removeSelected() {
 /* ---------- Tastatur ---------- */
 document.addEventListener('keydown', e => {
   const typing = e.target.matches('input[type=text], input[type=date], input[type=number], textarea');
-  if (!$('cdDlg').hidden || !$('teamsDlg').hidden || !$('notePop').hidden || !$('ncDlg').hidden || !$('chkDlg').hidden || !$('repDlg').hidden || !$('slotDlg').hidden || !$('subjDlg').hidden || !$('cnPop').hidden || !$('examDlg').hidden || !$('qrDlg').hidden || !$('abDlg').hidden) return;
+  if (!$('cdDlg').hidden || !$('teamsDlg').hidden || !$('notePop').hidden || !$('ncDlg').hidden || !$('chkDlg').hidden || !$('repDlg').hidden || !$('slotDlg').hidden || !$('subjDlg').hidden || !$('cnPop').hidden || !$('examDlg').hidden || !$('qrDlg').hidden || !$('abDlg').hidden || !$('msgDlg').hidden) return;
   if (ui.view !== 'plan' && !((e.ctrlKey || e.metaKey) && /^[zy]$/i.test(e.key))) return;
   if ((e.ctrlKey || e.metaKey) && !typing) {
     const k = e.key.toLowerCase();
@@ -2534,22 +2580,27 @@ function makeTeams() {
     const nc = cost(A);
     if (nc <= cur) cur = nc; else [A[g1][i1], A[g2][i2]] = [A[g2][i2], A[g1][i1]];
   }
-  ui.teams = { mode, list: A, issues: cur };
+  ui.teams = { mode, list: A, issues: cur, names: [], roles: {} };
   renderTeams(); renderRoom();
   setResult(cur && useRules ? '⚠ Nicht alle Regeln ließen sich bei den Gruppen erfüllen.' : `✓ ${k} ${mode === 'pairs' ? 'Paare' : 'Gruppen'} gebildet.`, cur && useRules ? 'warn' : 'ok');
 }
-function teamTitle(i) { return (ui.teams.mode === 'pairs' ? 'Paar ' : 'Gruppe ') + (i + 1); }
+function teamTitle(i) { return (ui.teams.names && ui.teams.names[i]) || (ui.teams.mode === 'pairs' ? 'Paar ' : 'Gruppe ') + (i + 1); }
 function renderTeams() {
   $('teamN').disabled = $('teamMode').value === 'pairs';
   const dn = displayNames(cls().students);
+  $('teamRoleRow').hidden = !ui.teams;
   if (!ui.teams) { $('teamList').innerHTML = ''; $('teamShow').disabled = true; $('teamClear').disabled = true; return; }
   $('teamClear').disabled = false;
   $('teamShow').disabled = false;
-  const tm = (id, i, k) => `<span class="tm" data-t="${i}" data-k="${k}">${esc(dn.get(id) || '?')}</span>`;
+  const tm = (id, i, k, big) => { const ri = roleIcons(id), rn = roleNames(id);
+    return `<span class="tm" data-t="${i}" data-k="${k}" title="${rn ? esc(rn) + ' · ' : ''}Klick = Rolle festlegen · Ziehen = umsetzen">${ri ? `<span class="ri">${ri}</span>` : ''}${esc(dn.get(id) || '?')}${big && rn ? `<small class="rn">${esc(rn)}</small>` : ''}</span>`; };
+  const ttl = i => `<span class="tren" data-ren="${i}" title="Klick = umbenennen">${esc(teamTitle(i))} ✎</span>`;
   $('teamList').innerHTML = ui.teams.list.map((t, i) =>
-    `<div class="team" data-t="${i}" style="--tc:${teamColor(i)}"><b>${teamTitle(i)}</b>${t.map((id, k) => tm(id, i, k)).join('') || '<i class="hint">leer</i>'}</div>`).join('');
+    `<div class="team" data-t="${i}" style="--tc:${teamColor(i)}"><b>${ttl(i)}</b>${t.map((id, k) => tm(id, i, k)).join('') || '<i class="hint">leer</i>'}</div>`).join('');
   $('teamsGrid').innerHTML = ui.teams.list.map((t, i) =>
-    `<div class="tcard" data-t="${i}" style="--tc:${teamColor(i)}"><h3>${teamTitle(i)} <small>(${t.length})</small></h3>${t.map((id, k) => tm(id, i, k)).join('') || '<i class="hint">leer</i>'}</div>`).join('');
+    `<div class="tcard" data-t="${i}" style="--tc:${teamColor(i)}"><h3>${ttl(i)} <small>(${t.length})</small></h3>${t.map((id, k) => tm(id, i, k, true)).join('') || '<i class="hint">leer</i>'}</div>`).join('');
+  const used = new Set(Object.values(ui.teams.roles || {}).flat());
+  $('roleLegend').innerHTML = used.size ? ROLES.filter(r => used.has(r.k)).map(r => `<span>${r.i} ${r.n}</span>`).join('') : '<span class="hint">Klick auf einen Namen = Rolle festlegen · „🎭 Rollen verteilen“ = zufällig in jeder Gruppe</span>';
   $('teamColor2').checked = $('teamColor').checked;
 }
 $('teamMode').addEventListener('change', renderTeams);
@@ -2591,6 +2642,7 @@ document.addEventListener('pointerup', () => {
   const d = tdrag; tdrag = null;
   if (d.ghost) d.ghost.remove();
   d.el.classList.remove('dragsrc');
+  if (!d.ghost) { openRolePop(d.t, d.k, d.el); return; }
   if (!d.over) return;
   const L = ui.teams.list, id = L[d.t][d.k];
   if (d.over.classList.contains('tm')) {          // auf einen Namen: die beiden tauschen
@@ -2603,6 +2655,47 @@ document.addEventListener('pointerup', () => {
   renderTeams(); renderRoom();
 });
 $('teamMake').addEventListener('click', makeTeams);
+// Gruppen umbenennen
+document.addEventListener('click', e => {
+  const r = e.target.closest('[data-ren]'); if (!r || !ui.teams) return;
+  const i = +r.dataset.ren, n = window.prompt('Name der Gruppe:', teamTitle(i));
+  if (n == null) return;
+  ui.teams.names = ui.teams.names || []; ui.teams.names[i] = n.trim();
+  renderTeams(); renderRoom();
+});
+// Rollen: Klick auf einen Namen öffnet die Auswahl
+let rolePopFor = null;
+function openRolePop(t, k, el) {
+  const id = ui.teams.list[t][k]; rolePopFor = { t, id };
+  const mine = (ui.teams.roles && ui.teams.roles[id]) || [];
+  const taken = new Map(); ui.teams.list[t].forEach(o => { if (o !== id) ((ui.teams.roles || {})[o] || []).forEach(rk => taken.set(rk, o)); });
+  const dn = displayNames(cls().students);
+  $('rolePop').innerHTML = `<b>${esc(dn.get(id) || '')}</b>${ROLES.map(r => `<button data-role="${r.k}" class="${mine.includes(r.k) ? 'on' : ''}">${r.i} ${r.n}${taken.has(r.k) ? `<small> (bisher ${esc(dn.get(taken.get(r.k)) || '')})</small>` : ''}</button>`).join('')}<button data-role="" class="none">✕ keine Rolle</button>`;
+  const p = $('rolePop'); p.hidden = false;
+  const b = el.getBoundingClientRect(), pw = p.offsetWidth, ph = p.offsetHeight;
+  p.style.left = Math.max(8, Math.min(innerWidth - pw - 8, b.left)) + 'px';
+  p.style.top = (b.bottom + ph + 8 < innerHeight ? b.bottom + 4 : Math.max(8, b.top - ph - 4)) + 'px';
+}
+$('rolePop').addEventListener('click', e => {
+  const b = e.target.closest('[data-role]'); if (!b || !rolePopFor) return;
+  const { t, id } = rolePopFor, R = ui.teams.roles = ui.teams.roles || {}, rk = b.dataset.role;
+  if (!rk) delete R[id];
+  else if ((R[id] || []).includes(rk)) R[id] = R[id].filter(x => x !== rk);
+  else { ui.teams.list[t].forEach(o => { if (R[o]) R[o] = R[o].filter(x => x !== rk); }); R[id] = [...(R[id] || []), rk]; }   // eine Rolle je Gruppe nur einmal
+  $('rolePop').hidden = true; rolePopFor = null;
+  renderTeams(); renderRoom();
+});
+document.addEventListener('pointerdown', e => { if (!$('rolePop').hidden && !e.target.closest('#rolePop') && !e.target.closest('.tm')) $('rolePop').hidden = true; }, true);
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('rolePop').hidden) { $('rolePop').hidden = true; e.stopPropagation(); } }, true);
+function dealRoles() {
+  if (!ui.teams) return;
+  const R = ui.teams.roles = {};
+  ui.teams.list.forEach(t => { const ids = t.slice().sort(() => Math.random() - .5); ids.forEach((id, j) => { if (j < ROLES.length) R[id] = [ROLES[j].k]; }); });
+  renderTeams(); renderRoom(); setResult('🎭 Rollen in jeder Gruppe zufällig verteilt.', 'ok');
+}
+$('teamRoles').addEventListener('click', dealRoles);
+$('teamsRoles').addEventListener('click', dealRoles);
+$('teamRolesClear').addEventListener('click', () => { if (!ui.teams) return; ui.teams.roles = {}; renderTeams(); renderRoom(); });
 $('teamClear').addEventListener('click', () => { ui.teams = null; renderTeams(); renderRoom(); setResult(''); });
 $('teamShow').addEventListener('click', () => { $('teamsDlg').hidden = false; });
 $('teamsClose').addEventListener('click', () => { $('teamsDlg').hidden = true; });
@@ -2946,7 +3039,7 @@ function renderTeamsPanel(dn) {
   if (!ui.teams) { p.innerHTML = '<b>Partner &amp; Gruppen</b><div class="empty-hint">Noch keine Gruppen gebildet – über 👥 → „Gruppen neu bilden“.</div>'; return; }
   const L = ui.teams.list, cols = L.length > 6 ? 2 : 1;
   p.innerHTML = `<b>${ui.teams.mode === 'pairs' ? 'Partner' : 'Gruppen'}</b><div class="tgrid2" style="grid-template-columns:repeat(${cols}, auto)">` +
-    L.map((t, i) => `<div class="team" data-t="${i}" style="--tc:${teamColor(i)}"><b>${teamShort(i)}</b>${t.map((id, k) => `<span class="tm" data-t="${i}" data-k="${k}">${esc(dn.get(id) || '?')}</span>`).join('') || '<i class="empty-hint">leer</i>'}</div>`).join('') + '</div>';
+    L.map((t, i) => `<div class="team" data-t="${i}" style="--tc:${teamColor(i)}"><b>${teamShort(i)}</b>${t.map((id, k) => `<span class="tm" data-t="${i}" data-k="${k}">${roleIcons(id) ? `<span class="ri">${roleIcons(id)}</span>` : ''}${esc(dn.get(id) || '?')}</span>`).join('') || '<i class="empty-hint">leer</i>'}</div>`).join('') + '</div>';
 }
 function syncPresentBar() {
   const set = (k, on) => { const b = document.querySelector(`#presentBar [data-p="${k}"]`); if (b) b.classList.toggle('on', on); };
@@ -3085,7 +3178,7 @@ function gong() {
    Jeder Eintrag hat pro Kind: leer = offen, 'ok' = ✓ erledigt, 'no' = ✗ vergessen/fehlt
    ===================================================================== */
 ui.view = 'plan'; ui.listTab = 'table';
-ui.lf = { type: 'all', subject: '', range: 'all' };
+ui.lf = { type: 'all', subject: '', range: 'month', off: 0 };
 const STATE_NEXT = { '': 'ok', ok: 'no', no: '' };
 const STATE_SYM = { '': '', ok: '✓', no: '✗' };
 const fmtD = s => s ? new Date(s + 'T00:00').toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }) : '';
@@ -3104,14 +3197,22 @@ function chkCounts(k, studs) {
   studs.forEach(s => { const v = k.status[s.id] || ''; if (v === 'ok') r.ok++; else if (v === 'no') r.no++; else r.open++; });
   return r;
 }
-function visibleChecks() {
-  const c = cls(), f = ui.lf, studs = c.students;
-  const lim = f.range === '30' ? addDays(todayStr(), -30) : f.range === '7' ? addDays(todayStr(), -7) : '';
+// Zeitraum der Abhak-Tabelle: Woche oder Monat, mit ◀ ▶ blätterbar
+function lfPeriod() {
+  const f = ui.lf, t = todayStr();
+  if (f.range === 'week') { const mo = addDays(t, -weekdayIdx(new Date()) + 7 * (f.off || 0)); return { from: mo, to: addDays(mo, 6), lbl: 'KW ' + isoWeek(mo) + ' · ' + fmtD(mo) + '–' + fmtD(addDays(mo, 4)) }; }
+  if (f.range === 'month') { const d = new Date(); d.setDate(1); d.setMonth(d.getMonth() + (f.off || 0)); const from = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-01'; const e = new Date(d.getFullYear(), d.getMonth() + 1, 0);
+    return { from, to: from.slice(0, 8) + String(e.getDate()).padStart(2, '0'), lbl: d.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' }) }; }
+  return null;
+}
+function isoWeek(ds) { const th = new Date(addDays(ds, 3 - weekdayIdx(new Date(ds + 'T00:00'))) + 'T00:00'), y1 = new Date(th.getFullYear(), 0, 4); return 1 + Math.round(((th - y1) / 864e5 - 3 + (y1.getDay() + 6) % 7) / 7); }
+function visibleChecks(noPeriod) {
+  const c = cls(), f = ui.lf, studs = c.students, per = noPeriod ? null : lfPeriod();
   return (c.checks || []).filter(k =>
     (f.type === 'all' || k.kind === f.type) &&
     (!f.subject || (k.subject || '') === f.subject) &&
-    (f.range !== 'open' || chkCounts(k, studs).ok < studs.length) &&
-    (!lim || chkDate(k) >= lim)
+    (noPeriod || f.range !== 'open' || chkCounts(k, studs).ok < studs.length) &&
+    (!per || (chkDate(k).slice(0, 10) >= per.from && chkDate(k).slice(0, 10) <= per.to))
   ).sort((a, b) => chkDate(b).localeCompare(chkDate(a)) || (b.created || '').localeCompare(a.created || ''));
 }
 function subjects() { return [...new Set((cls().checks || []).map(k => k.subject).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'de')); }
@@ -3153,6 +3254,8 @@ function renderListView() {
   $('lfSubject').innerHTML = '<option value="">alle Fächer</option>' + subs.map(s => `<option ${ui.lf.subject === s ? 'selected' : ''}>${esc(s)}</option>`).join('');
   if (ui.lf.subject && !subs.includes(ui.lf.subject)) ui.lf.subject = '';
   $('lfType').value = ui.lf.type; $('lfRange').value = ui.lf.range;
+  const per = lfPeriod(); $('lfNav').hidden = !per || ui.listTab !== 'table'; $('lfRange').hidden = ui.listTab !== 'table';
+  if (per) { $('lfLbl').textContent = per.lbl; $('lfLbl').classList.toggle('off', !!ui.lf.off); }
   $('subjList').innerHTML = subjectSuggest().map(s => `<option>${esc(s)}</option>`).join('');
   if (document.activeElement !== $('qhSubj')) fillSubjSel($('qhSubj'), $('qhSubj').value && $('qhSubj').value !== '__new' ? $('qhSubj').value : '');
   document.querySelectorAll('#listTabs button').forEach(b => b.classList.toggle('active', b.dataset.t === ui.listTab));
@@ -3167,7 +3270,7 @@ function renderListView() {
 
 function renderMatrix() {
   const studs = listStudents(), cols = visibleChecks();
-  if (!cols.length) { $('mxWrap').innerHTML = '<p class="hint" style="padding:16px">Keine Einträge für diese Auswahl. Lege mit „＋ Hausaufgabe“ oder „＋ Abhakliste“ einen an.</p>'; return; }
+  if (!cols.length) { $('mxWrap').innerHTML = `<p class="hint" style="padding:16px">Keine Einträge ${lfPeriod() ? 'in diesem Zeitraum – mit ◀ ▶ blättern oder' : 'für diese Auswahl –'} mit „＋ Hausaufgabe“ oder „＋ Abhakliste“ einen anlegen.</p>`; return; }
   const th = k => {
     const n = chkCounts(k, studs);
     return `<th class="col${k.kind === 'hw' ? ' hwc' : ''}${isLate(k) && n.open ? ' late' : ''}" data-cid="${k.id}" title="Klicken zum Bearbeiten${k.note ? '\n' + esc(k.note) : ''}">
@@ -3206,7 +3309,7 @@ $('mxWrap').addEventListener('click', e => {
 function renderHeft() {
   if (!$('qhGiven').value) $('qhGiven').value = todayStr();
   const studs = listStudents();
-  const all = visibleChecks().filter(k => k.kind === 'hw');
+  const all = visibleChecks(true).filter(k => k.kind === 'hw');
   const hws = all.filter(k => !hwFinished(k)), doneHw = all.filter(hwFinished).sort((a, b) => (b.due || b.given || '').localeCompare(a.due || a.given || ''));
   const card = k => {
     const n = chkCounts(k, studs);
@@ -3308,7 +3411,10 @@ $('qhText').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shift
 // Filter, Reiter, Neu-Knöpfe
 $('lfType').addEventListener('change', e => { ui.lf.type = e.target.value; renderListView(); });
 $('lfSubject').addEventListener('change', e => { ui.lf.subject = e.target.value; renderListView(); });
-$('lfRange').addEventListener('change', e => { ui.lf.range = e.target.value; renderListView(); });
+$('lfRange').addEventListener('change', e => { ui.lf.range = e.target.value; ui.lf.off = 0; renderListView(); });
+$('lfPrev').addEventListener('click', () => { ui.lf.off = (ui.lf.off || 0) - 1; renderListView(); });
+$('lfNext').addEventListener('click', () => { ui.lf.off = (ui.lf.off || 0) + 1; renderListView(); });
+$('lfLbl').addEventListener('click', () => { ui.lf.off = 0; renderListView(); });
 $('listTabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { ui.listTab = b.dataset.t; renderListView(); } });
 $('undo2').addEventListener('click', undo);
 $('redo2').addEventListener('click', redo);
@@ -3494,7 +3600,7 @@ function renderTimetable() {
   // Fächer-Leiste
   $('ttSubjects').innerHTML = tt.subjects.map(s => {
     const n = Object.values(tt.cells).filter(v => cellHas(v, s.id)).length;
-    return `<div class="tt-tile" data-sub="${s.id}" style="--sc:${s.color}" title="Ziehen = in eine Stunde setzen · Klick = bearbeiten"><span>${esc(s.name)}</span><small>${n || ''}</small></div>`;
+    return `<div class="tt-tile" data-sub="${s.id}" style="--sc:${s.color}" title="Ziehen = in eine Stunde setzen · Klick = bearbeiten (Name, Farbe, Material)${s.mat ? '\nMaterial: ' + esc(s.mat) : ''}"><span>${esc(s.name)}${s.mat ? ' <i class="mt" title="Material eingetragen">🎒</i>' : ''}</span><small>${n || ''}</small></div>`;
   }).join('') || '<p class="hint">Noch keine Fächer – unten eines hinzufügen.</p>';
   // Raster
   const days = ttDays(tt), now = new Date(), today = weekdayIdx(now), hm = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
@@ -3503,7 +3609,7 @@ function renderTimetable() {
   { const m = new Date(monday + 'T00:00'), th = new Date(m); th.setDate(m.getDate() + 3); const y1 = new Date(th.getFullYear(), 0, 4); const kw = 1 + Math.round(((th - y1) / 864e5 - 3 + (y1.getDay() + 6) % 7) / 7);
     $('ttThis').textContent = `KW ${kw} · ${fmtD(monday)}–${fmtD(addDays(monday, days[days.length - 1]))}`; $('ttThis').classList.toggle('off', !thisWeek); $('ttThis').title = thisWeek ? 'Aktuelle Woche' : 'Zurück zur aktuellen Woche'; }
   const exams = cls().exams || [];
-  const head = `<tr><th class="tt-time"></th>${days.map(d => { const ds = addDays(monday, d); const fr = freeDay(ds); return `<th class="${thisWeek && d === today ? 'today' : ''}${fr ? ' off' : ''}">${DAY_NAMES[d]}<span class="dt">${fmtD(ds)}</span>${fr ? `<span class="fr" title="unterrichtsfrei">${esc(fr)}</span>` : ''}${exams.filter(x => x.date === ds).map(x => `<span class="exm" data-id="${x.id}" title="${esc(x.title)}">📝 ${esc(x.subject || x.title)}</span>`).join('')}</th>`; }).join('')}</tr>`;
+  const head = `<tr><th class="tt-time"></th>${days.map(d => { const ds = addDays(monday, d); const fr = freeDay(ds); return `<th class="${thisWeek && d === today ? 'today' : ''}${fr ? ' off' : ''}">${DAY_NAMES[d]}<span class="dt">${fmtD(ds)}</span>${fr ? `<span class="fr" title="unterrichtsfrei">${esc(fr)}</span>` : ''}${exams.filter(x => exOn(x, ds)).map(x => x.kind === 'ev' ? `<span class="exm ev" data-id="${x.id}" title="${esc((x.time ? x.time + ' ' : '') + x.title)}">📅 ${esc(x.title)}</span>` : `<span class="exm" data-id="${x.id}" title="${esc(x.title)}">📝 ${esc(x.subject || x.title)}</span>`).join('')}</th>`; }).join('')}</tr>`;
   const body = tt.slots.map(sl => {
     const cur = thisWeek && sl.start && sl.end && hm >= sl.start && hm < sl.end;
     const tcell = `<td class="tt-time${cur ? ' now' : ''}" data-slot="${sl.id}" title="Klick = Stundenraster bearbeiten"><b>${esc(sl.label)}</b><small>${esc(sl.start || '')}${sl.end ? '–<br>' + esc(sl.end) : ''}</small></td>`;
@@ -3641,7 +3747,7 @@ let subjEdit = null;
 function openSubj(id) {
   const s = ttSubj(timetable(), id); if (!s) return;
   subjEdit = id;
-  $('sjName').value = s.name;
+  $('sjName').value = s.name; $('sjMat').value = s.mat || '';
   $('sjColor').style.setProperty('--sw', s.color); $('sjColor').dataset.c = s.color;
   $('subjDlg').hidden = false; $('sjName').focus();
 }
@@ -3653,7 +3759,7 @@ $('sjCancel').addEventListener('click', () => { $('subjDlg').hidden = true; });
 $('sjSave').addEventListener('click', () => {
   const id = subjEdit, name = $('sjName').value.trim(), color = $('sjColor').dataset.c;
   if (!name) return;
-  change(() => { const s = ttSubj(timetable(), id); if (s) { s.name = name; s.color = color; } }, { keepList: true });
+  change(() => { const s = ttSubj(timetable(), id); if (s) { s.name = name; s.color = color; const m = $('sjMat').value.trim(); if (m) s.mat = m; else delete s.mat; } }, { keepList: true });
   $('subjDlg').hidden = true;
 });
 $('sjDel').addEventListener('click', () => {
@@ -3741,13 +3847,28 @@ function ttPalShown() { if (ui.ttPal == null) ui.ttPal = !Object.keys(timetable(
 
 /* ---------- Proben ---------- */
 let exEdit = null;
-function openExam(id) {
+const exEnd = x => x.kind === 'ev' && x.end && x.end > x.date ? x.end : x.date;
+const exCurrent = x => x.kind === 'ev' ? Date.now() < new Date(exEnd(x) + 'T23:59').getTime() : stillCurrent(x.date);
+const exOn = (x, ds) => ds >= x.date && ds <= exEnd(x);
+function exKindSync() {
+  const ev = $('exKindEv').checked;
+  document.querySelectorAll('#examDlg .ev-only').forEach(el => el.hidden = !ev);
+  document.querySelectorAll('#examDlg .ex-only').forEach(el => el.hidden = ev);
+  $('exTextLbl').textContent = ev ? 'Was?' : 'Thema / Art';
+  $('exText').placeholder = ev ? 'z. B. Wandertag, Elternabend, Schwimmen, Museumsbesuch' : 'z. B. Probe Bruchrechnen, Diktat, Kurztest';
+  $('exTitle').textContent = (exEdit ? (ev ? 'Termin' : 'Probe') + ' bearbeiten' : (ev ? 'Termin' : 'Probe') + ' eintragen');
+}
+['exKindEx', 'exKindEv'].forEach(id => $(id).addEventListener('change', () => { if ($('exKindEv').checked && $('exText').value === 'Probe') $('exText').value = ''; if ($('exKindEx').checked && !$('exText').value) $('exText').value = 'Probe'; exKindSync(); }));
+function openExam(id, kind) {
   const c = cls(), x = id ? (c.exams || []).find(e => e.id === id) : null;
   exEdit = id || null;
-  $('exTitle').textContent = x ? 'Probe bearbeiten' : 'Probe eintragen';
+  const ev = x ? x.kind === 'ev' : kind === 'ev';
+  $('exKindEv').checked = ev; $('exKindEx').checked = !ev;
   $('exDate').value = x ? x.date : addDays(todayStr(), 7);
+  $('exEnd').value = x && x.end ? x.end : ''; $('exTime').value = x ? (x.time || '') : '';
   fillSubjSel($('exSubj'), x ? (x.subject || '') : '');
-  $('exText').value = x ? (x.title || '') : 'Probe';
+  $('exText').value = x ? (x.title || '') : ev ? '' : 'Probe';
+  exKindSync();
   $('exNote').value = x ? (x.note || '') : '';
   $('exDel').hidden = !x;
   $('examDlg').hidden = false; $('exDate').focus();
@@ -3760,20 +3881,44 @@ $('examDlg').addEventListener('keydown', e => {
 });
 $('exSave').addEventListener('click', () => {
   const date = $('exDate').value; if (!date) { $('exDate').focus(); return; }
-  const id = exEdit, subj = ($('exSubj').value || '').replace('__new', '');
+  const id = exEdit, ev = $('exKindEv').checked, subj = ev ? '' : ($('exSubj').value || '').replace('__new', '');
+  if (ev && !$('exText').value.trim()) { $('exText').focus(); return; }
   change(() => {
     const c = cls(); c.exams = c.exams || [];
     let x = id && c.exams.find(e => e.id === id);
     if (!x) { x = { id: newId('e') }; c.exams.push(x); }
     Object.assign(x, { date, subject: subj, title: $('exText').value.trim() || 'Probe', note: $('exNote').value.trim() });
+    if (ev) Object.assign(x, { kind: 'ev', end: $('exEnd').value > date ? $('exEnd').value : '', time: $('exTime').value.trim() }); else { delete x.kind; delete x.end; delete x.time; }
   }, { keepList: true });
   $('examDlg').hidden = true;
 });
 $('exDel').addEventListener('click', () => {
-  const id = exEdit; if (!id || !window.confirm('Diese Probe löschen?')) return;
+  const id = exEdit; if (!id || !window.confirm($('exKindEv').checked ? 'Diesen Termin löschen?' : 'Diese Probe löschen?')) return;
   change(() => { cls().exams = (cls().exams || []).filter(e => e.id !== id); }, { keepList: true });
   $('examDlg').hidden = true;
 });
+
+/* ---------- Mitteilungen an die Klasse ---------- */
+const msgCurrent = m => !m.until || m.until >= todayStr();
+function msgBoxHtml() {
+  const list = (cls().msgs || []).filter(msgCurrent);
+  return `<div class="msgbox"><div class="mh">📣 Mitteilungen an die Klasse<button id="msgAdd" title="Neue Mitteilung">＋</button></div>${list.map(m => `<div class="msg-it" data-id="${m.id}">${esc(m.text)}<small>bis ${fmtDW(m.until)}</small></div>`).join('') || '<div class="hint" style="font-size:.8rem">Keine aktuelle Mitteilung.</div>'}</div>`;
+}
+let msEdit = null;
+function openMsg(id) {
+  const m = id ? (cls().msgs || []).find(x => x.id === id) : null; msEdit = id;
+  $('msText').value = m ? m.text : ''; $('msUntil').value = m ? m.until : addDays(todayStr(), 7); $('msDel').hidden = !m;
+  $('msgDlg').hidden = false; $('msText').focus();
+}
+$('msCancel').addEventListener('click', () => { $('msgDlg').hidden = true; });
+$('msgDlg').addEventListener('keydown', e => { if (e.key === 'Escape') $('msgDlg').hidden = true; if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) $('msSave').click(); });
+$('msSave').addEventListener('click', () => {
+  const text = $('msText').value.trim(); if (!text) { $('msText').focus(); return; }
+  const id = msEdit, until = $('msUntil').value || addDays(todayStr(), 7);
+  change(() => { const c = cls(); c.msgs = c.msgs || []; let m = id && c.msgs.find(x => x.id === id); if (!m) { m = { id: newId('m'), from: todayStr() }; c.msgs.push(m); } Object.assign(m, { text, until }); }, { keepList: true });
+  $('msgDlg').hidden = true;
+});
+$('msDel').addEventListener('click', () => { const id = msEdit; if (!window.confirm('Diese Mitteilung löschen?')) return; change(() => { cls().msgs = (cls().msgs || []).filter(x => x.id !== id); }, { keepList: true }); $('msgDlg').hidden = true; });
 
 /* ---------- Anstehend: Hausaufgaben und Proben (verschwinden am Fälligkeitstag um 13 Uhr) ---------- */
 function renderAgenda() {
@@ -3781,16 +3926,18 @@ function renderAgenda() {
   const color = name => { const s = tt.subjects.find(x => x.name === name); return s ? s.color : ''; };
   const items = [
     ...(c.checks || []).filter(k => k.kind === 'hw' && k.due && !hwFinished(k)).map(k => ({ date: stillCurrent(k.due) ? k.due : '0000', past: k.due, kind: 'hw', id: k.id, subject: k.subject, title: k.title, meta: (() => { const n = chkCounts(k, c.students); return n.open + n.no ? `${n.ok}/${c.students.length} ✓` : 'alle ✓'; })() })),
-    ...(c.exams || []).filter(x => stillCurrent(x.date)).map(x => ({ date: x.date, kind: 'ex', id: x.id, subject: x.subject, title: x.title + (x.note ? ' – ' + x.note : ''), meta: '' }))
-  ].sort((a, b) => a.date.localeCompare(b.date) || (a.kind === 'ex' ? -1 : 1));
+    ...(c.exams || []).filter(exCurrent).map(x => x.kind === 'ev'
+      ? { date: x.date < todayStr() ? todayStr() : x.date, kind: 'ev', id: x.id, subject: '', title: (x.time ? x.time + ' · ' : '') + x.title + (x.end && x.end > x.date ? ' (bis ' + fmtD(x.end) + ')' : '') + (x.note ? ' – ' + x.note : ''), meta: '' }
+      : { date: x.date, kind: 'ex', id: x.id, subject: x.subject, title: x.title + (x.note ? ' – ' + x.note : ''), meta: '' })
+  ].sort((a, b) => a.date.localeCompare(b.date) || ('ev ex hw'.indexOf(a.kind) - 'ev ex hw'.indexOf(b.kind)));
   const dayLbl = d => d === '0000' ? 'Noch nicht von allen erledigt' : d === todayStr() ? 'Heute (bis 13 Uhr)' : d === addDays(todayStr(), 1) ? 'Morgen, ' + fmtDW(d) : fmtDW(d);
-  let html = '<h3>Anstehende Hausaufgaben und Proben</h3>';
-  if (!items.length) html += '<p class="hint">Nichts anstehend. Hausaufgaben trägst du in der Klassenliste ein, Proben hier mit „＋ Probe“.</p>';
+  let html = msgBoxHtml() + '<h3>Anstehend: Hausaufgaben, Proben, Termine</h3>';
+  if (!items.length) html += '<p class="hint">Nichts anstehend. Hausaufgaben trägst du in der Klassenliste ein, Proben und Termine hier mit „＋ Probe/Termin“.</p>';
   let last = '';
   items.forEach(it => {
     if (it.date !== last) { if (last) html += '</div>'; html += `<div class="ag-day${it.date === todayStr() ? ' today' : ''}${it.date === '0000' ? ' over' : ''}"><b>${dayLbl(it.date)}</b>`; last = it.date; }
-    html += `<div class="ag-it ${it.kind}" data-k="${it.kind}" data-id="${it.id}" style="--sc:${color(it.subject) || (it.kind === 'ex' ? 'var(--red)' : 'var(--accent)')}">
-      <span class="k">${it.kind === 'ex' ? '📝 Probe' : it.date === '0000' ? '📚 ' + fmtD(it.past) : '📚 HA'}</span><span class="s">${esc(it.subject || '')}</span><span class="t">${esc(it.title)}</span><span class="m">${it.meta}</span></div>`;
+    html += `<div class="ag-it ${it.kind}" data-k="${it.kind}" data-id="${it.id}" style="--sc:${color(it.subject) || (it.kind === 'ex' ? 'var(--red)' : it.kind === 'ev' ? 'var(--sun)' : 'var(--accent)')}">
+      <span class="k">${it.kind === 'ev' ? '📅 Termin' : it.kind === 'ex' ? '📝 Probe' : it.date === '0000' ? '📚 ' + fmtD(it.past) : '📚 HA'}</span><span class="s">${esc(it.subject || '')}</span><span class="t">${esc(it.title)}</span><span class="m">${it.meta}</span></div>`;
   });
   if (last) html += '</div>';
   const lim = addDays(todayStr(), -14), done = (c.checks || []).filter(k => k.kind === 'hw' && hwFinished(k) && (k.due || k.given || '9') >= lim).sort((a, b) => (b.due || '').localeCompare(a.due || ''));
@@ -3799,7 +3946,10 @@ function renderAgenda() {
   $('ttAgenda').innerHTML = html;
   const dd = $('ttAgenda').querySelector('.ag-done'); if (dd) dd.addEventListener('toggle', () => { ui.agDone = dd.open; });
 }
-$('ttAgenda').addEventListener('click', e => { const it = e.target.closest('.ag-it'); if (!it) return; if (it.dataset.k === 'ex') openExam(it.dataset.id); else openChk(it.dataset.id); });
+$('ttAgenda').addEventListener('click', e => {
+  if (e.target.closest('#msgAdd')) { openMsg(null); return; }
+  const m = e.target.closest('.msg-it'); if (m) { openMsg(m.dataset.id); return; }
+  const it = e.target.closest('.ag-it'); if (!it) return; if (it.dataset.k === 'ex' || it.dataset.k === 'ev') openExam(it.dataset.id); else openChk(it.dataset.id); });
 $('ttGrid').addEventListener('click', e => { const x = e.target.closest('.exm'); if (x) { e.stopPropagation(); openExam(x.dataset.id); } }, true);
 // jede Minute aktualisieren (laufende Stunde, 13-Uhr-Regel)
 setInterval(() => { if (ui.view === 'tt') renderTimetable(); }, 60000);
@@ -3860,19 +4010,41 @@ function afterPrint() {
   if (!printPrev) return;
   const p = printPrev; printPrev = null;
   ui.flipped = p.flipped; ui.selectedId = p.sel; ui.selSeat = p.seat;
-  ui.printSub = false; ui.fit = false; document.body.classList.remove('print-sub', 'print-fit');
+  ui.printSub = false; ui.mappe = false; ui.fit = false; document.body.classList.remove('print-sub', 'print-fit');
   $('optGender').checked = p.g; $('optColors').checked = p.c;
   renderAll({ keepList: true });
 }
 window.addEventListener('beforeprint', beforePrint);
 window.addEventListener('afterprint', afterPrint);
 $('print').addEventListener('click', () => { ui.printSub = false; beforePrint(); window.print(); });
-$('printSub').addEventListener('click', () => { ui.printSub = true; beforePrint(); window.print(); });
+$('printSub').addEventListener('click', () => { ui.printSub = true; ui.mappe = false; beforePrint(); window.print(); });
+$('printMappe').addEventListener('click', () => { ui.printSub = true; ui.mappe = true; beforePrint(); window.print(); });
 
 // Vertretungsblatt: Sitzplan (mit Diensten) + Hinweise
 function buildSubSheet() {
   const note = (cls().subNote || '').trim();
-  $('subSheet').innerHTML = note ? `<h3>Hinweise</h3><p class="pre">${esc(note)}</p>` : '';
+  $('subSheet').innerHTML = (note ? `<h3>Hinweise</h3><p class="pre">${esc(note)}</p>` : '') + (ui.mappe ? mappeHtml() : '');
+}
+// Vertretungsmappe: weitere Seiten (Stundenplan, Termine, Hausaufgaben, Namensliste)
+function mappeHtml() {
+  const c = cls(), t = todayStr(), end = addDays(t, 14), studs = listStudents();
+  let tt = '';
+  if (c.tt && Object.keys(c.tt.cells).length) {
+    const v = ui.view, w = ui.ttWeek; ui.view = 'tt'; ui.ttWeek = 0; renderTimetable(); tt = $('ttGrid').innerHTML; ui.view = v; ui.ttWeek = w;
+  }
+  const ev = (c.exams || []).filter(x => exEnd(x) >= t && x.date <= end).sort((a, b) => a.date.localeCompare(b.date));
+  const msgs = (c.msgs || []).filter(msgCurrent);
+  const hws = (c.checks || []).filter(k => k.kind === 'hw' && !hwFinished(k)).sort((a, b) => (a.due || '9').localeCompare(b.due || '9'));
+  const dueSoon = hws.filter(k => k.due && k.due >= t && k.due <= addDays(t, 1));
+  const p2 = `<div class="pgbrk"><h2>Vertretungsmappe ${esc(c.name)} – ${fmtDate(t)}</h2>
+    ${tt ? `<h3>Stundenplan diese Woche</h3><section class="r-tt">${tt}</section>` : ''}
+    <h3>Proben und Termine (nächste 14 Tage)</h3>${ev.length ? `<table><tr><th>Datum</th><th>Art</th><th>Was</th><th>Hinweis</th></tr>${ev.map(x => `<tr><td>${fmtDW(x.date)}${x.kind === 'ev' && x.end ? ' – ' + fmtDW(x.end) : ''}</td><td>${x.kind === 'ev' ? 'Termin' + (x.time ? ', ' + esc(x.time) : '') : 'Probe' + (x.subject ? ' ' + esc(x.subject) : '')}</td><td>${esc(x.title)}</td><td>${esc(x.note || '')}</td></tr>`).join('')}</table>` : '<p>keine</p>'}
+    ${msgs.length ? `<h3>Aktuelle Mitteilungen an die Klasse</h3>${msgs.map(m => `<p class="pre">• ${esc(m.text)}</p>`).join('')}` : ''}</div>`;
+  const p3 = `<div class="pgbrk"><h2>Hausaufgaben und Namensliste – ${esc(c.name)}</h2>
+    <h3>Offene Hausaufgaben</h3>${hws.length ? `<table><tr><th>Fach</th><th>Aufgabe</th><th>fällig</th><th>Stand</th></tr>${hws.map(k => { const n = chkCounts(k, c.students); return `<tr><td>${esc(k.subject || '')}</td><td>${esc(k.title || '')}${k.note ? '<br><small>' + esc(k.note) + '</small>' : ''}</td><td>${k.due ? fmtDW(k.due) : ''}</td><td>${n.ok}/${c.students.length} ✓</td></tr>`; }).join('')}</table>` : '<p>keine</p>'}
+    <h3>Namensliste zum Abhaken</h3><table class="nl"><tr><th>Name</th><th>anwesend</th>${dueSoon.map(k => `<th>HA ${esc(k.subject || '')}<br><small>${esc(k.title || '')}</small></th>`).join('')}<th>Bemerkung</th></tr>
+    ${studs.map(st => `<tr><td>${esc(fullName(st))}</td><td></td>${dueSoon.map(k => `<td>${STATE_SYM[k.status[st.id] || '']}</td>`).join('')}<td></td></tr>`).join('')}</table></div>`;
+  return p2 + p3;
 }
 
 /* ---------- Datei: Öffnen, Speichern, Speichern unter, zuletzt verwendet ----------
@@ -4124,7 +4296,7 @@ document.addEventListener('keydown', e => {
 
 // liest auch ältere Dateien (Version 1 und 2) ein
 function migrate(data) {
-  const fill = c => Object.assign({ plans: [], duties: [], dutyCount: {}, picked: [], showDuties: false, subNote: '', groups: [], checks: [], exams: [] }, c);
+  const fill = c => Object.assign({ plans: [], duties: [], dutyCount: {}, picked: [], showDuties: false, subNote: '', groups: [], checks: [], exams: [], msgs: [] }, c);
   if (Array.isArray(data.classes) && data.classes.length) return { classes: data.classes.map(fill), current: data.current || data.classes[0].id, seq: data.seq || 10000 };
   const fresh = { classes: [], current: null, seq: 0 };
   state = fresh;   // damit newId() fortlaufend zählt
@@ -4175,11 +4347,12 @@ function buildPayload(o) {
     });
     const ab = {};
     Object.keys(tt.ab || {}).forEach(k => { const [d, sid] = k.split('|'), i = tt.slots.findIndex(s => s.id === sid); if (i >= 0 && cellArr(tt, k).length > 1) ab[d + '|' + i] = [tt.ab[k].wk, tt.ab[k].g1]; });
-    P.tt = { sat: tt.sat ? 1 : 0, sl, su: tt.subjects.filter(s => used.has(s.id)).map(s => [s.id, s.name, s.color]), c: cells };
+    P.tt = { sat: tt.sat ? 1 : 0, sl, su: tt.subjects.filter(s => used.has(s.id)).map(s => s.mat ? [s.id, s.name, s.color, s.mat] : [s.id, s.name, s.color]), c: cells };
     if (Object.keys(ab).length) P.tt.ab = ab;
   }
   if (o.hw) P.hw = (c.checks || []).filter(k => k.kind === 'hw' && (!k.due || k.due >= today)).map(k => [k.id, k.subject || '', k.title || '', k.given || '', k.due || '', k.note || '']);
-  if (o.ex) P.ex = (c.exams || []).filter(x => x.date >= today).map(x => [x.id, x.date, x.subject || '', x.title || '', x.note || '']);
+  if (o.ex) P.ex = (c.exams || []).filter(x => exEnd(x) >= today).map(x => { const a = [x.id, x.date, x.subject || '', x.title || '', x.note || '']; if (x.kind === 'ev') a.push('ev', x.end || '', x.time || ''); return a; });
+  if (o.ms) P.m = (c.msgs || []).filter(msgCurrent).map(m => [m.id, m.text, m.until || '']);
   return P;
 }
 function payloadParts(P) {
@@ -4189,19 +4362,20 @@ function payloadParts(P) {
 }
 let qrState = { parts: [], i: 0, timer: null };
 function openSend() {
-  const o = ui.qrOpts || (ui.qrOpts = { tt: true, hw: true, ex: true });
-  $('qrTT').checked = o.tt; $('qrHW').checked = o.hw; $('qrEX').checked = o.ex;
+  const o = ui.qrOpts || (ui.qrOpts = { tt: true, hw: true, ex: true, ms: true });
+  $('qrTT').checked = o.tt; $('qrHW').checked = o.hw; $('qrEX').checked = o.ex; $('qrMS').checked = o.ms !== false;
   $('qrDlg').hidden = false; $('qrDlg').focus(); renderSend();
 }
 function renderSend() {
-  const o = ui.qrOpts = { tt: $('qrTT').checked, hw: $('qrHW').checked, ex: $('qrEX').checked };
+  const o = ui.qrOpts = { tt: $('qrTT').checked, hw: $('qrHW').checked, ex: $('qrEX').checked, ms: $('qrMS').checked };
   clearInterval(qrState.timer);
   const P = buildPayload(o), info = [];
   if (o.tt) info.push(P.tt ? 'Stundenplan' : 'kein Stundenplan angelegt');
   if (o.hw) info.push((P.hw.length || 'keine') + (P.hw.length === 1 ? ' Hausaufgabe' : ' Hausaufgaben'));
-  if (o.ex) info.push((P.ex.length || 'keine') + (P.ex.length === 1 ? ' Probe' : ' Proben'));
+  if (o.ex) info.push((P.ex.length || 'keine') + ' Proben/Termine');
+  if (o.ms) info.push((P.m.length || 'keine') + (P.m.length === 1 ? ' Mitteilung' : ' Mitteilungen'));
   $('qrInfo').textContent = (info.join(' · ') || 'Nichts ausgewählt') + ' – Klasse ' + cls().name + ' (ohne Schülernamen)';
-  if (!o.tt && !o.hw && !o.ex) { $('qrBox').innerHTML = ''; $('qrNav').hidden = true; return; }
+  if (!o.tt && !o.hw && !o.ex && !o.ms) { $('qrBox').innerHTML = ''; $('qrNav').hidden = true; return; }
   qrState.parts = payloadParts(P); qrState.i = 0;
   drawQr();
   $('qrNav').hidden = qrState.parts.length < 2;
@@ -4212,7 +4386,7 @@ function drawQr() {
   $('qrBox').innerHTML = q.createSvgTag({ cellSize: 4, margin: 4, scalable: true });
   $('qrPartTxt').textContent = `Code ${qrState.i + 1} von ${qrState.parts.length} – wechselt automatisch`;
 }
-['qrTT', 'qrHW', 'qrEX'].forEach(id => $(id).addEventListener('change', renderSend));
+['qrTT', 'qrHW', 'qrEX', 'qrMS'].forEach(id => $(id).addEventListener('change', renderSend));
 $('qrPrev').addEventListener('click', () => { const n = qrState.parts.length; qrState.i = (qrState.i - 1 + n) % n; drawQr(); });
 $('qrNext').addEventListener('click', () => { qrState.i = (qrState.i + 1) % qrState.parts.length; drawQr(); });
 $('qrBig').addEventListener('click', () => { $('qrDlg').classList.toggle('big'); $('qrBig').textContent = $('qrDlg').classList.contains('big') ? '↙ Verkleinern' : '⛶ Groß anzeigen'; });
