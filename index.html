@@ -611,7 +611,7 @@
             <p class="hint" style="margin:2px 0 0">Jede Änderung wird sofort im Speicher dieser App auf dem iPad abgelegt und beim nächsten Start wieder geladen – ohne Datei. Die Daten verlassen das Gerät nicht. Mit „📤 Als Datei sichern“ machst du eine Sicherung (z. B. für den PC). Ausschalten löscht den Speicher der App auf diesem Gerät.</p>
           </div>
           <p class="hint">Eine Datei enthält alle Klassen mit Schülern, Regeln, Räumen, Verlauf und Diensten. Für „Zuletzt verwendet“ merkt sich der Browser nur die Verweise auf die Dateien, nicht deren Inhalt.</p>
-          <p class="hint" style="margin:0">Version 2026-10-14</p>
+          <p class="hint" style="margin:0">Version 2026-10-15</p>
         </div>
       </details>
 
@@ -1062,8 +1062,9 @@
     <div class="cdlg-title">📣 Mitteilung an die Klasse</div>
     <div class="nc-body">
       <label class="nc-name">Text<textarea id="msText" rows="3" placeholder="z. B. Morgen Turnbeutel mitbringen! · Elternbrief bis Freitag unterschrieben zurück"></textarea></label>
-      <label class="nc-name" style="max-width:220px">anzeigen bis<input type="date" id="msUntil"></label>
-      <div class="hint">Wird mit „📲 An Schüler“ an die iPads geschickt und erscheint dort oben, bis das Kind „Gelesen“ tippt oder das Datum vorbei ist.</div>
+      <label class="nc-name" style="max-width:220px">anzeigen bis (leer = ohne Ende)<input type="date" id="msUntil"></label>
+      <label class="chk"><input type="checkbox" id="msFix"> 📌 Dauerhaft anzeigen – die Schüler können sie nicht als „gelesen“ wegtippen</label>
+      <div class="hint">Wird mit „📲 An Schüler“ an die iPads geschickt. Ohne 📌 verschwindet sie, wenn das Kind ✓ tippt; sonst bleibt sie bis zum Datum stehen.</div>
       <div class="row" style="justify-content:flex-end"><button id="msDel" class="danger" style="margin-right:auto">Löschen</button><button id="msCancel">Abbrechen</button><button class="primary" id="msSave">Speichern</button></div>
     </div>
   </div>
@@ -3927,20 +3928,20 @@ $('exDel').addEventListener('click', () => {
 const msgCurrent = m => !m.until || m.until >= todayStr();
 function msgBoxHtml() {
   const list = (cls().msgs || []).filter(msgCurrent);
-  return `<div class="msgbox"><div class="mh">📣 Mitteilungen an die Klasse<button id="msgAdd" title="Neue Mitteilung">＋</button></div>${list.map(m => `<div class="msg-it" data-id="${m.id}">${esc(m.text)}<small>bis ${fmtDW(m.until)}</small></div>`).join('') || '<div class="hint" style="font-size:.8rem">Keine aktuelle Mitteilung.</div>'}</div>`;
+  return `<div class="msgbox"><div class="mh">📣 Mitteilungen an die Klasse<button id="msgAdd" title="Neue Mitteilung">＋</button></div>${list.map(m => `<div class="msg-it" data-id="${m.id}">${m.fix ? '📌 ' : ''}${esc(m.text)}<small>${m.until ? 'bis ' + fmtDW(m.until) : 'ohne Ende'}${m.fix ? ' · dauerhaft' : ''}</small></div>`).join('') || '<div class="hint" style="font-size:.8rem">Keine aktuelle Mitteilung.</div>'}</div>`;
 }
 let msEdit = null;
 function openMsg(id) {
   const m = id ? (cls().msgs || []).find(x => x.id === id) : null; msEdit = id;
-  $('msText').value = m ? m.text : ''; $('msUntil').value = m ? m.until : addDays(todayStr(), 7); $('msDel').hidden = !m;
+  $('msText').value = m ? m.text : ''; $('msUntil').value = m ? (m.until || '') : addDays(todayStr(), 7); $('msFix').checked = !!(m && m.fix); $('msDel').hidden = !m;
   $('msgDlg').hidden = false; $('msText').focus();
 }
 $('msCancel').addEventListener('click', () => { $('msgDlg').hidden = true; });
 $('msgDlg').addEventListener('keydown', e => { if (e.key === 'Escape') $('msgDlg').hidden = true; if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) $('msSave').click(); });
 $('msSave').addEventListener('click', () => {
   const text = $('msText').value.trim(); if (!text) { $('msText').focus(); return; }
-  const id = msEdit, until = $('msUntil').value || addDays(todayStr(), 7);
-  change(() => { const c = cls(); c.msgs = c.msgs || []; let m = id && c.msgs.find(x => x.id === id); if (!m) { m = { id: newId('m'), from: todayStr() }; c.msgs.push(m); } Object.assign(m, { text, until }); }, { keepList: true });
+  const id = msEdit, until = $('msUntil').value || '', fix = $('msFix').checked;
+  change(() => { const c = cls(); c.msgs = c.msgs || []; let m = id && c.msgs.find(x => x.id === id); if (!m) { m = { id: newId('m'), from: todayStr() }; c.msgs.push(m); } Object.assign(m, { text, until, fix }); }, { keepList: true });
   $('msgDlg').hidden = true;
 });
 $('msDel').addEventListener('click', () => { const id = msEdit; if (!window.confirm('Diese Mitteilung löschen?')) return; change(() => { cls().msgs = (cls().msgs || []).filter(x => x.id !== id); }, { keepList: true }); $('msgDlg').hidden = true; });
@@ -4377,7 +4378,7 @@ function buildPayload(o) {
   }
   if (o.hw) P.hw = (c.checks || []).filter(k => k.kind === 'hw' && (!k.due || k.due >= today)).map(k => [k.id, k.subject || '', k.title || '', k.given || '', k.due || '', k.note || '']);
   if (o.ex) P.ex = (c.exams || []).filter(x => exEnd(x) >= today).map(x => { const a = [x.id, x.date, x.subject || '', x.title || '', x.note || '']; if (x.kind === 'ev') a.push('ev', x.end || '', x.time || ''); return a; });
-  if (o.ms) P.m = (c.msgs || []).filter(msgCurrent).map(m => [m.id, m.text, m.until || '']);
+  if (o.ms) P.m = (c.msgs || []).filter(msgCurrent).map(m => m.fix ? [m.id, m.text, m.until || '', 1] : [m.id, m.text, m.until || '']);
   return P;
 }
 function payloadParts(P) {
