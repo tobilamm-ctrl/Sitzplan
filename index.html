@@ -138,7 +138,7 @@
   #whoPop .wh { border-left: 5px solid var(--sc); padding: 2px 8px; } #whoPop .whs { font-weight: 800; } #whoPop .whs span { color: var(--muted); font-weight: 600; font-size: .8rem; } #whoPop .whn { font-size: .85rem; } .tren:hover { text-decoration: underline; }
   .tm .ri { margin-right: 3px; } .tcard .tm .rn { display: block; font-size: .55em; font-weight: 600; color: var(--muted); margin-top: -2px; }
   .role-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 12px; font-size: .95rem; font-weight: 600; color: var(--muted); }
-  #teamRoleRow[hidden] { display: none; } #roomSw[hidden], #room2Btn[hidden], #presentBar [hidden] { display: none !important; }
+  #teamRoleRow[hidden] { display: none; } #room2Btn[hidden], #presentBar [hidden] { display: none !important; }
   #rolePop { position: fixed; z-index: 4000; background: #fff; border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,.25); padding: 8px; display: flex; flex-direction: column; gap: 3px; min-width: 240px; font-size: .95rem; }
   #rolePop[hidden] { display: none; }
   #rolePop > b { padding: 2px 6px 6px; } #rolePop button { text-align: left; border: 1px solid transparent; background: none; padding: 5px 8px; border-radius: 8px; font-weight: 600; color: var(--ink); }
@@ -528,23 +528,11 @@
   .obj { display: flex; align-items: center; justify-content: center; text-align: center; background: var(--obj); border: 2px solid var(--obj-line); border-radius: 3px; color: #57534e; font-size: clamp(8px, 1.4cqw, 14px); font-weight: 600; padding: 2px 4px; }
   .obj.round { border-radius: 50%; padding: 4px 8px; }
   .obj.round .size-handle { right: calc(14.6% - 9px); bottom: calc(14.6% - 9px); }
-  .roomtag { position: absolute; left: 12px; top: 10px; z-index: 5; padding: .25em .8em; border-radius: 8px; background: #f1f5f9; border: 1.5px dashed #94a3b8; color: #64748b; font-weight: 800; letter-spacing: .08em; font-size: clamp(10px, 1.6cqw, 22px); text-transform: uppercase; white-space: nowrap; pointer-events: none; }
-  #pip { position: absolute; top: 10px; right: 10px; width: 34%; z-index: 5; background: #fff; border: 2px solid #94a3b8; border-radius: 10px; box-shadow: 0 3px 12px rgba(0,0,0,.18); cursor: pointer; container-type: inline-size; overflow: hidden; }
-  #pip[hidden] { display: none; }
-  #pip:hover { border-color: var(--accent); }
-  body:not(.present) .room.flipped #pip { top: auto; bottom: 10px; }
-  body.present #pip { width: min(30vw, 460px); }
-  #pip .pip-h { display: flex; align-items: center; gap: 6px; padding: 4px 6px 4px 10px; background: #f1f5f9; border-bottom: 1.5px dashed #94a3b8; font-weight: 800; color: #475569; font-size: clamp(10px, 4.6cqw, 20px); text-transform: uppercase; letter-spacing: .05em; }
-  #pip .pip-h small { font-weight: 600; text-transform: none; letter-spacing: 0; color: var(--muted); margin-left: auto; font-size: .78em; }
-  #pip .pip-h button { border: 1px solid #cbd5e1; background: #fff; border-radius: 6px; padding: 0 .45em; font: inherit; line-height: 1.3; cursor: pointer; color: #475569; }
-  #pip.min .pip-c { display: none; }
-  #pip .pip-c { position: relative; margin: 6px; }
-  #pip .pi { position: absolute; box-sizing: border-box; border: 1.5px solid #64748b; background: #fffdf7; border-radius: 2px; }
-  #pip .pi.pdesk[style*="--tc"] { border: 2px solid var(--tc); background: color-mix(in srgb, var(--tc) 12%, #fff); }
-  #pip .pi.pobj { background: #e2e8f0; border-color: #94a3b8; display: flex; align-items: center; justify-content: center; font-size: clamp(6px, 2.6cqw, 13px); color: #475569; overflow: hidden; white-space: nowrap; }
-  #pip .pi.isl-drop { outline: 3px solid var(--accent); }
-  #pip .pip-sign { position: absolute; transform: translate(-50%, -50%); z-index: 2; background: color-mix(in srgb, var(--tc) 14%, #fff); border: 2px solid var(--tc); border-radius: 7px; padding: .15em .4em; font-size: clamp(7px, 3.3cqw, 17px); line-height: 1.2; text-align: center; width: max-content; max-width: 70%; pointer-events: none; }
-  #pip .pip-sign b { display: block; color: var(--tc); text-transform: uppercase; font-size: .8em; }
+  .r2zone { position: absolute; z-index: 0; border: 2.5px dashed #94a3b8; border-radius: 10px; background: rgba(241,245,249,.55); pointer-events: none; }
+  .r2zone .r2t { position: absolute; left: 10px; top: 0; transform: translateY(-50%); background: var(--panel); padding: 0 .5em; font-weight: 800; color: #64748b; letter-spacing: .06em; text-transform: uppercase; font-size: clamp(9px, 1.5cqw, 20px); white-space: nowrap; }
+  .r2zone .r2b { position: absolute; right: 8px; top: 0; transform: translateY(-50%); display: flex; gap: 4px; pointer-events: auto; }
+  .r2zone .r2b button { border: 1.5px solid #94a3b8; background: #fff; border-radius: 7px; font: inherit; font-size: 12px; font-weight: 700; padding: 1px 8px; cursor: pointer; color: #334155; }
+  .r2zone .r2b button:hover { border-color: var(--accent); color: var(--accent); }
   .isl-sign { position: absolute; transform: translate(-50%, -50%); z-index: 4; pointer-events: none; background: color-mix(in srgb, var(--tc) 14%, #fff); border: 3px solid var(--tc); border-radius: 12px; padding: .35em .6em; box-shadow: 0 2px 8px rgba(0,0,0,.15); font-size: clamp(9px, 1.45cqw, 26px); text-align: center; line-height: 1.25; }
   .isl-sign b { display: block; color: var(--tc); font-size: .8em; text-transform: uppercase; letter-spacing: .04em; margin-bottom: .15em; }
   .isl-sign .nl { display: flex; flex-wrap: wrap; justify-content: center; gap: .1em .55em; font-weight: 700; color: var(--ink); }
@@ -826,7 +814,7 @@
             <p class="hint" style="margin:2px 0 0">Jede Änderung wird sofort im Speicher dieser App auf dem iPad abgelegt und beim nächsten Start wieder geladen – ohne Datei. Die Daten verlassen das Gerät nicht. Mit „📤 Als Datei sichern“ machst du eine Sicherung (z. B. für den PC). Ausschalten löscht den Speicher der App auf diesem Gerät.</p>
           </div>
           <p class="hint">Eine Datei enthält alle Klassen mit Schülern, Regeln, Räumen, Verlauf und Diensten. Für „Zuletzt verwendet“ merkt sich der Browser nur die Verweise auf die Dateien, nicht deren Inhalt.</p>
-          <p class="hint" style="margin:0">Version 2026-10-23</p>
+          <p class="hint" style="margin:0">Version 2026-10-24</p>
         </div>
       </details>
 
@@ -895,7 +883,6 @@
         <button id="colorBtn" class="toggle" title="Eigene Farben der Kinder vorübergehend anzeigen">🎨</button>
         <div class="modes" id="layoutSw" title="Tischordnung: normal oder für Gruppenarbeit"><button data-l="normal">🪑 Normal</button><button data-l="gw">👥 Gruppenarbeit</button></div>
         <button id="room2Btn" class="toggle" title="Gruppenraum dazunehmen oder weglassen" hidden>🚪</button>
-        <div class="modes" id="roomSw" hidden><button data-r="1">Klassenzimmer</button><button data-r="2">Gruppenraum</button></div>
         <button id="genderBtn" class="toggle" title="Geschlechter vorübergehend farbig anzeigen (Mädchen rosa, Jungen blau, divers lila)">⚥</button>
         <span class="spacer"></span>
         <span class="tgroup"><button id="timerBtn" title="Gruppenarbeits-Timer">⏱ Timer</button><button id="presentBtn" title="Präsentationsmodus – Plan bildschirmfüllend (Esc beendet)">⛶ Präsentieren</button></span>
@@ -1000,7 +987,6 @@
   <button data-p="gender" class="toggle" title="Geschlechterfarben ein/aus">⚥</button>
   <button data-p="teams" class="toggle" title="Gruppeneinteilung">👥</button>
   <button data-p="duties" class="toggle" title="Dienste-Liste ein/aus">🧽</button>
-  <button data-p="room" class="toggle" title="Zum Gruppenraum wechseln" hidden>🚪</button>
   <button data-p="flip" class="toggle" title="Schülersicht (Tafel oben)">👁</button>
   <button data-p="exit" class="primary" title="Präsentation beenden (Esc)">✕ Beenden</button>
 </div>
@@ -1396,6 +1382,7 @@ function makeItem(d) {
     label: type === 'obj' ? (d.label ?? 'Schrank') : type === 'round' ? (d.label ?? 'Pflanze') : type === 'area' ? (d.label ?? 'Gruppenraum') : '',
     ...(type === 'area' ? { role: d.role || 'room2' } : {}),
     groupId: d.groupId || null,
+    ...(d.r2 ? { r2: true } : {}),
     seats: Array.from({ length: SEATS_PER[type] }, (_, i) => ({
       sid: (src[i] && !src[i].blocked && src[i].sid) || null,
       blocked: !!(src[i] && src[i].blocked),
@@ -1412,7 +1399,16 @@ function makeClass(name, items) {
 
 // Möbel bleiben im Raum: Mittelpunkt so begrenzen, dass das (gedrehte) Rechteck ganz innen liegt
 function halfExt(it) { const t = (it.r || 0) * Math.PI / 180, c = Math.abs(Math.cos(t)), s = Math.abs(Math.sin(t)); return { hx: Math.min(50, (it.w * c + it.h * s) / 2), hy: Math.min(50, (it.w * s + it.h * c) / 2) }; }
-function fitIn(it) { if (it.type === 'area') return; const { hx, hy } = halfExt(it); it.x = Math.min(100 - hx, Math.max(hx, it.x)); it.y = Math.min(100 - hy, Math.max(hy, it.y)); }
+// Gruppenraum: fester Bereich oben im Plan (nur Tischordnung „Gruppenarbeit“, wenn zugeschaltet)
+const ZONE = { x0: 2, x1: 98, y0: 1.5, y1: 25 };
+const zoneOn = () => cls().layout === 'gw' && cls().room2Off === false;
+function bnd(it) {
+  const { hx, hy } = halfExt(it);
+  const lb = isDesk(it) ? 3 : 0;   // Platz für die Beschriftung „Tisch …“
+  if (it.r2) return { x0: ZONE.x0 + hx, x1: ZONE.x1 - hx, y0: ZONE.y0 + hy + lb, y1: Math.max(ZONE.y0 + hy + lb, ZONE.y1 - hy) };
+  return { x0: hx, x1: 100 - hx, y0: zoneOn() ? Math.min(ZONE.y1 + 1 + hy + lb, 100 - hy) : hy, y1: 100 - hy };
+}
+function fitIn(it) { if (it.type === 'area') return; const b = bnd(it); it.x = Math.min(b.x1, Math.max(b.x0, it.x)); it.y = Math.min(b.y1, Math.max(b.y0, it.y)); }
 /* ---------- Rückgängig / Wiederholen ---------- */
 const snap = () => JSON.stringify(state);
 function commit(before) {
@@ -1865,6 +1861,7 @@ function renderRoom(animate) {
   const islTeam = new Map();   // Tisch → Gruppe (Tischordnung Gruppenarbeit)
   if (GW() && ui.teams && ui.teams.place) { const isl = new Map(islands().map(x => [x.key, x])); Object.entries(ui.teams.place).forEach(([t, key]) => { const x = isl.get(key); if (x) x.desks.forEach(d => islTeam.set(d.id, +t)); }); }
   const groupShown = new Set();   // Gruppenname nur am ersten Tisch einer Gruppe anzeigen
+  let nr2 = 0;
   items.forEach(it => {
     const el = document.createElement('div');
     el.className = 'item ' + (isDesk(it) ? 'desk' : 'obj' + (it.type === 'round' ? ' round' : it.type === 'area' ? ' area' : '')) + (ui.multi.has(it.id) && !studentMode() && !ui.preview ? ' selected' : '');
@@ -1873,7 +1870,7 @@ function renderRoom(animate) {
     if (isDesk(it)) {
       const g = it.groupId && groups.find(g => g.id === it.groupId);
       const showGN = g && !groupShown.has(g.id); if (g) groupShown.add(g.id);
-      ++nr; el.innerHTML = g && !showGN ? '' : `<span class="nr">Tisch ${nr}${showGN ? `<span class="gn"> · ${esc(g.name)}</span>` : ''}</span>`;
+      const no = it.r2 ? ++nr2 : ++nr; el.innerHTML = g && !showGN ? '' : `<span class="nr">Tisch ${no}${showGN ? `<span class="gn"> · ${esc(g.name)}</span>` : ''}</span>`;
       if (g) { el.classList.add('grouped'); el.style.setProperty('--gc', g.color); }
       const tIdx = islTeam.get(it.id); if (tIdx != null) { el.classList.add('grouped', 'gwocc'); el.style.setProperty('--gc', teamColor(tIdx)); }
       it.seats.forEach((s, i) => {
@@ -1935,10 +1932,8 @@ function renderRoom(animate) {
     pv.hidden = false;
   } else pv.hidden = true;
 
-  { const fr = stage.querySelector('.front'), r2v = GW() && cls().gwRoom === 2; fr.hidden = r2v; let tag = room.querySelector('.roomtag');
-    if (r2v && !tag) { tag = document.createElement('div'); tag.className = 'roomtag'; tag.textContent = '🚪 Gruppenraum'; room.appendChild(tag); } else if (!r2v && tag) tag.remove(); }
+  renderZone();
   renderIslandSigns(items);
-  renderPip();
   $('dutyBtn').classList.toggle('on', !!c.showDuties);
   room.classList.toggle('has-picked', !!ui.pickedId && !!stage.querySelector('.seat.picked'));
   renderTeamsPanel(dn);
@@ -2133,7 +2128,7 @@ room.addEventListener('pointermove', e => {
     const dx = p.x - drag.p0.x, dy = p.y - drag.p0.y;
     if (Math.abs(dx) + Math.abs(dy) > 0.3) drag.moved = true;
     let lo = -1e9, hi = 1e9, loY = -1e9, hiY = 1e9;   // gemeinsame Verschiebung so begrenzen, dass alles im Raum bleibt
-    drag.starts.forEach(o => { const { hx, hy } = halfExt(o.s); lo = Math.max(lo, hx - o.x); hi = Math.min(hi, 100 - hx - o.x); loY = Math.max(loY, hy - o.y); hiY = Math.min(hiY, 100 - hy - o.y); });
+    drag.starts.forEach(o => { const b = bnd(o.s); lo = Math.max(lo, b.x0 - o.x); hi = Math.min(hi, b.x1 - o.x); loY = Math.max(loY, b.y0 - o.y); hiY = Math.min(hiY, b.y1 - o.y); });
     const ddx = Math.min(hi, Math.max(lo, dx)), ddy = Math.min(hiY, Math.max(loY, dy));
     drag.starts.forEach(o => {
       o.s.x = o.x + ddx; o.s.y = o.y + ddy;
@@ -2690,15 +2685,52 @@ $('pickBanner').addEventListener('click', () => { ui.pickedId = null; $('pickBan
    Tischordnung „Gruppenarbeit“: eigene Anordnung (Klassenzimmer + Gruppenraum), Gruppen auf Tischinseln
    ===================================================================== */
 const GW = () => cls().layout === 'gw';
-// Räume: c.items = der gerade angezeigte Raum, c.gwOther = der andere (Klassenzimmer bzw. Gruppenraum)
+// Gruppenraum: Tische mit r2 = true stehen im festen Bereich oben im Plan (ausgeblendet in c.gwR2)
 function makeGwLayout(c) {
-  const items = c.items.map(it => makeItem({ ...it, id: null, groupId: null, seats: isDesk(it) ? it.seats.map(() => ({})) : [] }));
-  const r2 = [], groups = [], gcol = ['#0ea5e9', '#f97316'];
-  [30, 70].forEach((x, gi) => {
+  return c.items.filter(it => !it.r2).map(it => makeItem({ ...it, id: null, groupId: null, seats: isDesk(it) ? it.seats.map(() => ({})) : [] }));
+}
+// Standard-Gruppenraum: zwei Inseln aus je zwei Doppeltischen
+function defaultR2() {
+  const items = [], groups = [], gcol = ['#0ea5e9', '#f97316'];
+  [28, 72].forEach((x, gi) => {
     const g = { id: newId('g'), name: 'Gruppentisch ' + (gi + 1), color: gcol[gi] }; groups.push(g);
-    [46, 53.5].forEach(y => r2.push(makeItem({ type: 'desk2', x, y, groupId: g.id })));
+    [9.5, 17].forEach(y => items.push(makeItem({ type: 'desk2', x, y: y + 0.5, groupId: g.id, r2: true })));
   });
-  return { items, groups: [], other: { items: r2, groups } };
+  return { items, groups };
+}
+// freien Platz für einen weiteren Tisch im Gruppenraum suchen
+function addR2Desk() {
+  if (!zoneOn()) return;
+  change(() => {
+    const c = cls(), r2 = c.items.filter(i => i.r2);
+    let best = null, bd = -1;
+    for (let y = ZONE.y0 + 7.5; y <= ZONE.y1 - 4; y += 3.75) for (let x = ZONE.x0 + 9; x <= ZONE.x1 - 9; x += 4) {
+      const d = r2.reduce((m, i) => Math.min(m, Math.max(Math.abs(i.x - x) - (i.w + 14) / 2, Math.abs(i.y - y) - (i.h + 7.5) / 2)), 99);
+      if (d > bd + 0.01) { bd = d; best = { x, y }; }
+      if (d >= 2) { best = { x, y }; y = 1e9; break; }
+    }
+    const it = makeItem({ type: 'desk2', x: best.x, y: best.y, r2: true });
+    c.items.push(it); ui.selectedId = it.id; ui.multi = new Set();
+  }, { keepList: true });
+}
+function delR2Desk() {
+  const c = cls(), r2 = c.items.filter(i => i.r2 && isDesk(i)); if (!r2.length) return;
+  const sel = r2.find(i => i.id === ui.selectedId) || r2[r2.length - 1];
+  change(() => { c.items = c.items.filter(i => i !== sel); ui.selectedId = null; ui.multi = new Set(); }, { keepList: true });
+  if (ui.teams && ui.teams.place) { const keys = new Set(islands().map(x => x.key)); Object.keys(ui.teams.place).forEach(t => { if (!keys.has(ui.teams.place[t])) delete ui.teams.place[t]; }); gwSync(false); }
+}
+function renderZone() {
+  let z = stage.querySelector('.r2zone');
+  if (!zoneOn() || ui.preview) { if (z) z.remove(); return; }
+  if (!z) {
+    z = document.createElement('div'); z.className = 'r2zone'; stage.insertBefore(z, stage.firstChild);
+    z.addEventListener('pointerdown', e => e.stopPropagation());
+    z.addEventListener('click', e => { const b = e.target.closest('[data-r2]'); if (!b) return; if (b.dataset.r2 === 'add') addR2Desk(); else delR2Desk(); });
+  }
+  const xa = Math.min(vx(ZONE.x0), vx(ZONE.x1)), ya = Math.min(vy(ZONE.y0), vy(ZONE.y1));
+  Object.assign(z.style, { left: xa + '%', top: ya + '%', width: (ZONE.x1 - ZONE.x0) + '%', height: (ZONE.y1 - ZONE.y0) + '%' });
+  const n = cls().items.filter(i => i.r2 && isDesk(i)).length, edit = ui.mode === 'room' && !studentMode();
+  z.innerHTML = `<span class="r2t">🚪 Gruppenraum</span>${edit ? `<span class="r2b"><button data-r2="del" title="Markierten (sonst letzten) Tisch im Gruppenraum entfernen"${n ? '' : ' disabled'}>－ Tisch</button><button data-r2="add" title="Doppeltisch im Gruppenraum hinzufügen">＋ Tisch</button></span>` : ''}`;
 }
 // ältere Dateien: beide Räume in einer Fläche (mit Rahmen) → zwei getrennte Räume
 function splitAreas(items, groups) {
@@ -2721,49 +2753,63 @@ function migrateGw(c) {
     const gwCur = c.layout === 'gw', sp = fix(gwCur ? c.items : c.altItems, gwCur ? c.groups : c.altGroups, c.room2);
     if (gwCur) { c.items = sp.a.items; c.groups = sp.a.groups; } else { c.altItems = sp.a.items; c.altGroups = sp.a.groups; }
     c.gwOther = sp.b; c.gwRoom = 1; delete c.room2; if (c.room2Off === undefined) c.room2Off = !sp.b.items.length;
-    sp.a.items.concat(sp.b.items).forEach(fitIn);
   }
-}
-function swapRoom() { const c = cls(), o = c.gwOther || { items: [], groups: [] }; c.gwOther = { items: c.items, groups: c.groups }; c.items = o.items; c.groups = o.groups; c.gwRoom = c.gwRoom === 2 ? 1 : 2; }
-function setRoom(r) {
-  const c = cls(); if (!GW() || (c.gwRoom || 1) === r || (r === 2 && c.room2Off !== false)) return;
-  swapRoom(); ui.selectedId = null; ui.selSeat = null; ui.multi = new Set();
-  dirty = true; renderFileInfo(); renderAll({ keepList: true }); syncGwUi();
+  if (c.gwOther) {   // Zwischenstand mit zwei getrennten Räumen → Gruppenraum als Bereich oben im Plan
+    const gwCur = c.layout === 'gw';
+    let A = { items: gwCur ? c.items : c.altItems, groups: gwCur ? c.groups : c.altGroups }, B = c.gwOther;
+    if (c.gwRoom === 2) [A, B] = [B, A];
+    const its = B.items || [], gs = B.groups || [];
+    let x0 = 100, y0 = 100, x1 = 0, y1 = 0;
+    its.forEach(d => { const { hx, hy } = halfExt(d); x0 = Math.min(x0, d.x - hx); x1 = Math.max(x1, d.x + hx); y0 = Math.min(y0, d.y - hy); y1 = Math.max(y1, d.y + hy); });
+    const sc = its.length ? Math.min(1, (ZONE.x1 - ZONE.x0 - 4) / (x1 - x0), (ZONE.y1 - ZONE.y0 - 3) / (y1 - y0)) : 1;
+    const mx = (x0 + x1) / 2, my = (y0 + y1) / 2, zx = (ZONE.x0 + ZONE.x1) / 2, zy = (ZONE.y0 + ZONE.y1) / 2 + 1;
+    const moved = its.map(d => ({ ...d, r2: true, x: zx + (d.x - mx) * sc, y: zy + (d.y - my) * sc, w: d.w * sc, h: d.h * sc }));
+    const items = (A.items || []).filter(i => !i.r2), groups = (A.groups || []).slice();
+    if (c.room2Off === false) { items.push(...moved); groups.push(...gs); } else c.gwR2 = { items: moved, groups: gs };
+    if (gwCur) { c.items = items; c.groups = groups; } else { c.altItems = items; c.altGroups = groups; }
+    delete c.gwOther; delete c.gwRoom;
+    if (gwCur) items.forEach(fitIn);
+  }
 }
 function setLayout(l) {
   const c = cls(); if ((c.layout || 'normal') === l) return;
-  if (l === 'normal' && c.gwRoom === 2) swapRoom();
   let made = false;
   change(() => {
-    if (l === 'gw' && !c.altItems) { const g = makeGwLayout(c); c.altItems = g.items; c.altGroups = g.groups; c.gwOther = g.other; c.gwRoom = 1; made = true; }
+    if (l === 'gw' && !c.altItems) { c.altItems = makeGwLayout(c); c.altGroups = []; c.room2Off = true; made = true; }
     const ci = c.items, cg = c.groups; c.items = c.altItems || []; c.groups = c.altGroups || []; c.altItems = ci; c.altGroups = cg; c.layout = l;
-    if (l === 'gw') { c.showDuties = false; c.gwRoom = 1; migrateGw(c); }
+    if (l === 'gw') { c.showDuties = false; migrateGw(c); }
     ui.selectedId = null; ui.selSeat = null; ui.multi = new Set();
   }, { keepList: true });
-  if (made) setResult('👥 Tischordnung „Gruppenarbeit“ angelegt – eine Kopie deines Klassenzimmers (gesperrte Tische sind frei). Unter „🪑 Raum einrichten“ Tische zu Inseln zusammenstellen und als Tischgruppe markieren. Mit 🚪 kommt der Gruppenraum dazu.', 'ok');
+  if (made) setResult('👥 Tischordnung „Gruppenarbeit“ angelegt – eine Kopie deines Klassenzimmers (gesperrte Tische sind frei). Unter „🪑 Raum einrichten“ Tische zu Inseln zusammenstellen und als Tischgruppe markieren. Mit 🚪 kommt der Gruppenraum oben im Plan dazu.', 'ok');
   else setResult(l === 'gw' ? '👥 Tischordnung „Gruppenarbeit“' : '🪑 Normale Tischordnung', 'ok');
   if (l === 'gw') gwSync(false);
   syncGwUi();
 }
 function setRoom2(on) {
   const c = cls(); if (!GW() || !!on === (c.room2Off === false)) return;
-  if (!on && c.gwRoom === 2) swapRoom();
-  change(() => { c.room2Off = !on; if (on && !c.gwOther) c.gwOther = makeGwLayout(c).other; }, { keepList: true });
+  change(() => {
+    if (on) {
+      const st = c.gwR2 && c.gwR2.items && c.gwR2.items.length ? c.gwR2 : defaultR2();
+      c.items.push(...st.items.map(i => ({ ...i, r2: true }))); c.groups.push(...(st.groups || [])); delete c.gwR2;
+      c.room2Off = false;
+    } else {
+      const its = c.items.filter(i => i.r2), ids = new Set(its.map(i => i.groupId).filter(Boolean));
+      c.gwR2 = { items: its, groups: c.groups.filter(g => ids.has(g.id)) };
+      c.items = c.items.filter(i => !i.r2); c.groups = c.groups.filter(g => !ids.has(g.id));
+      c.room2Off = true; ui.selectedId = null; ui.multi = new Set();
+    }
+  }, { keepList: true });
   if (ui.teams && ui.teams.place) Object.keys(ui.teams.place).forEach(t => { if (!islands().some(x => x.key === ui.teams.place[t])) delete ui.teams.place[t]; });
   gwSync(true); syncGwUi();
-  if (on) setResult('🚪 Gruppenraum dazugenommen – oben mit „Klassenzimmer | Gruppenraum“ umschalten.', 'ok');
+  setResult(on ? '🚪 Gruppenraum oben im Plan dazugenommen – unter „🪑 Raum einrichten“ lassen sich dort Tische verschieben, hinzufügen und entfernen.' : '🚪 Gruppenraum ausgeblendet (seine Tische bleiben gespeichert).', 'ok');
 }
 function islands() {
   const c = cls(), out = [];
-  const add = (items, groups, room) => {
-    const desks = items.filter(isDesk), nr = new Map(desks.map((d, i) => [d.id, i + 1])), pre = room === 2 ? 'Gruppenraum · ' : '';
-    groups.forEach(g => { const ds = desks.filter(d => d.groupId === g.id); if (ds.length) out.push({ key: 'g:' + g.id, name: pre + g.name, desks: ds, room }); });
+  [1, 2].forEach(room => {
+    const desks = c.items.filter(i => isDesk(i) && !!i.r2 === (room === 2)), nr = new Map(desks.map((d, i) => [d.id, i + 1])), pre = room === 2 ? 'Gruppenraum · ' : '';
+    c.groups.forEach(g => { const ds = desks.filter(d => d.groupId === g.id); if (ds.length) out.push({ key: 'g:' + g.id, name: pre + g.name, desks: ds, room }); });
     desks.filter(d => !d.groupId).forEach(d => out.push({ key: 'd:' + d.id, name: pre + 'Tisch ' + nr.get(d.id), desks: [d], room }));
-  };
-  const cur = c.gwRoom === 2 ? 2 : 1;
-  add(c.items, c.groups, cur);
-  if (GW() && c.gwOther && c.room2Off === false) add(c.gwOther.items, c.gwOther.groups, cur === 2 ? 1 : 2);
-  out.sort((a, b) => a.room - b.room);
+  });
   out.forEach(o => o.cap = o.desks.reduce((n, d) => n + d.seats.filter(x => !x.blocked).length, 0));
   return out;
 }
@@ -2782,7 +2828,7 @@ function autoPlace() {
 function seatTeams() {
   if (!GW() || !ui.teams) return { over: [], none: [] };
   const isl = new Map(islands().map(x => [x.key, x])), none = [];
-  const all = () => cls().items.concat(cls().gwOther ? cls().gwOther.items : []);
+  const all = () => cls().items;
   if (all().some(i => i.seats.some(st => st.sid))) change(() => { all().forEach(i => i.seats.forEach(st => { st.sid = null; st.pinned = false; })); }, { keepList: true });
   ui.teams.list.forEach((t, i) => { const key = ui.teams.place && ui.teams.place[i]; if (t.length && !(key && isl.get(key))) none.push(i); });
   renderRoom();
@@ -2805,45 +2851,6 @@ function renderIslandSigns(items) {
     const sw = stage.clientWidth ? el.offsetWidth / stage.clientWidth * 50 : 0; if (sw) el.style.left = Math.min(99.5 - sw, Math.max(0.5 + sw, vx((x0 + x1) / 2))) + '%';
   });
 }
-// Bild im Bild: der jeweils andere Raum klein in der Ecke – Klick tauscht die Räume
-function renderPip() {
-  let el = $('pip'); const c = cls();
-  const show = GW() && c.room2Off === false && c.gwOther && !ui.preview && !ui.fit;
-  if (!show) { if (el) el.hidden = true; return; }
-  if (!el) {
-    el = document.createElement('div'); el.id = 'pip'; room.appendChild(el); el.addEventListener('pointerdown', e => e.stopPropagation());
-    el.addEventListener('click', e => { if (e.target.closest('[data-pipmin]')) { ui.pipMin = !ui.pipMin; renderPip(); if (ui.present) layoutStage(); return; } setRoom(cls().gwRoom === 2 ? 1 : 2); });
-  }
-  el.hidden = false; el.classList.toggle('min', !!ui.pipMin);
-  el.title = 'Klicken: zu diesem Raum wechseln';
-  const items = c.gwOther.items, isR2 = c.gwRoom !== 2;
-  let x0 = 100, y0 = 100, x1 = 0, y1 = 0;
-  items.forEach(d => { const { hx, hy } = halfExt(d), X = vx(d.x), Y = vy(d.y); x0 = Math.min(x0, X - hx); x1 = Math.max(x1, X + hx); y0 = Math.min(y0, Y - hy); y1 = Math.max(y1, Y + hy); });
-  if (!items.length) { x0 = y0 = 30; x1 = y1 = 70; }
-  x0 -= 4; y0 -= 4; x1 += 4; y1 += 4;
-  const grow = (a, b, m) => { const d = m - (b - a); return d > 0 ? [a - d / 2, b + d / 2] : [a, b]; };
-  [x0, x1] = grow(x0, x1, 36); [y0, y1] = grow(y0, y1, 24);
-  if ((y1 - y0) > (x1 - x0) * 1.1) [x0, x1] = grow(x0, x1, (y1 - y0) / 1.1);   // nicht zu hoch werden
-  const bw = x1 - x0, bh = y1 - y0, X = v => (v - x0) / bw * 100, Y = v => (v - y0) / bh * 100;
-  const keyOf = it => it.groupId ? 'g:' + it.groupId : 'd:' + it.id;
-  const team = {}; if (ui.teams && ui.teams.place) Object.entries(ui.teams.place).forEach(([t, k]) => { if (ui.teams.list[+t]) team[k] = +t; });
-  const dn = displayNames(c.students);
-  let h = `<div class="pip-h">${isR2 ? '🚪 Gruppenraum' : '🏫 Klassenzimmer'}<small>⇄ wechseln</small><button data-pipmin title="${ui.pipMin ? 'Aufklappen' : 'Zuklappen'}">${ui.pipMin ? '▾' : '▴'}</button></div><div class="pip-c" style="aspect-ratio:${bw.toFixed(2)}/${bh.toFixed(2)}">`;
-  items.forEach(it => {
-    const desk = isDesk(it), k = desk ? keyOf(it) : '', t = desk ? team[k] : undefined;
-    h += `<div class="pi ${desk ? 'pdesk' : 'pobj'}"${desk ? ` data-pk="${k}"` : ''} style="left:${X(vx(it.x))}%;top:${Y(vy(it.y))}%;width:${it.w / bw * 100}%;height:${it.h / bh * 100}%;transform:translate(-50%,-50%) rotate(${it.r || 0}deg)${t != null ? ';--tc:' + teamColor(t) : ''}">${desk ? '' : esc(it.label || '')}</div>`;
-  });
-  const done = new Set();
-  items.filter(isDesk).forEach(it => {
-    const k = keyOf(it), t = team[k]; if (t == null || done.has(k)) return; done.add(k);
-    const ds = items.filter(d => isDesk(d) && keyOf(d) === k), cx = ds.reduce((a, d) => a + vx(d.x), 0) / ds.length, cy = ds.reduce((a, d) => a + vy(d.y), 0) / ds.length;
-    const iw = Math.max(...ds.map(d => vx(d.x) + halfExt(d).hx)) - Math.min(...ds.map(d => vx(d.x) - halfExt(d).hx));
-    h += `<div class="pip-sign" style="left:${X(cx)}%;top:${Y(cy)}%;max-width:${Math.max(28, (iw + 6) / bw * 100).toFixed(1)}%;--tc:${teamColor(t)}"><b>${esc(teamTitle(t))}</b>${ui.teams.list[t].map(id => esc(dn.get(id) || '?')).join(', ')}</div>`;
-  });
-  el.innerHTML = h + '</div>';
-  const pc = el.querySelector('.pip-c'), W = pc.clientWidth;   // Schilder nicht über den Rand hinausragen lassen
-  if (W) el.querySelectorAll('.pip-sign').forEach(sg => { const hw = sg.offsetWidth / W * 50; sg.style.left = Math.min(100 - hw, Math.max(hw, parseFloat(sg.style.left))) + '%'; });
-}
 function gwSync(reassign) {
   if (!GW() || !ui.teams) return;
   if (cls().gwMode !== 'manual' && (reassign || !ui.teams.place || !Object.keys(ui.teams.place).length)) autoPlace();
@@ -2864,8 +2871,6 @@ function syncGwUi() {
   const c = cls(), gw = GW();
   document.querySelectorAll('#layoutSw button').forEach(b => b.classList.toggle('active', b.dataset.l === (gw ? 'gw' : 'normal')));
   $('room2Btn').hidden = !gw; $('room2Btn').classList.toggle('on', gw && c.room2Off === false);
-  $('roomSw').hidden = true; document.querySelectorAll('#roomSw button').forEach(b => b.classList.toggle('active', +b.dataset.r === (c.gwRoom === 2 ? 2 : 1)));
-  const pr = document.querySelector('#presentBar [data-p="room"]'); if (pr) { pr.hidden = true; pr.classList.toggle('on', c.gwRoom === 2); pr.title = c.gwRoom === 2 ? 'Zum Klassenzimmer wechseln' : 'Zum Gruppenraum wechseln'; }
   $('gwOn').checked = $('pmGwOn').checked = gw; $('gwR2').checked = $('pmGwR2').checked = gw && c.room2Off === false;
   $('gwR2Row').hidden = $('pmGwR2Row').hidden = $('gwModeRow').hidden = $('gwHint').hidden = !gw;
   $('gwSeat').hidden = $('pmGwSeat').hidden = !gw || !ui.teams;
@@ -2873,7 +2878,6 @@ function syncGwUi() {
 }
 $('layoutSw').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setLayout(b.dataset.l); });
 $('room2Btn').addEventListener('click', () => setRoom2(cls().room2Off !== false));
-$('roomSw').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setRoom(+b.dataset.r); });
 ['gwOn', 'pmGwOn'].forEach(id => $(id).addEventListener('change', e => setLayout(e.target.checked ? 'gw' : 'normal')));
 ['gwR2', 'pmGwR2'].forEach(id => $(id).addEventListener('change', e => setRoom2(e.target.checked)));
 ['gwAuto', 'gwHand'].forEach(id => $(id).addEventListener('change', () => { cls().gwMode = $('gwHand').checked ? 'manual' : 'auto'; dirty = true; renderFileInfo(); }));
@@ -2894,7 +2898,6 @@ document.addEventListener('pointermove', e => {
   const d = under.find(x => x.classList && x.classList.contains('desk'));
   const key = pk ? pk.dataset.pk : d ? (() => { const it = byId(d.dataset.id); return it ? (it.groupId ? 'g:' + it.groupId : 'd:' + it.id) : null; })() : null;
   room.querySelectorAll('.isl-drop').forEach(x => x.classList.remove('isl-drop'));
-  if (key) room.querySelectorAll('#pip .pdesk').forEach(x => x.classList.toggle('isl-drop', x.dataset.pk === key));
   if (key) room.querySelectorAll('.item.desk').forEach(x => { const it = byId(x.dataset.id); if (it && (it.groupId ? 'g:' + it.groupId : 'd:' + it.id) === key) x.classList.add('isl-drop'); });
   pdrag.over = key;
 }, true);
@@ -3322,8 +3325,9 @@ $('tplApply').addEventListener('click', () => {
   change(() => {
     const c = cls();
     const desks = templateDesks(t, n);
-    c.items = c.items.filter(i => !isDesk(i));
-    c.groups = [];
+    const keepG = new Set(c.items.filter(i => i.r2 && i.groupId).map(i => i.groupId));
+    c.items = c.items.filter(i => !isDesk(i) || i.r2);
+    c.groups = c.groups.filter(g => keepG.has(g.id));
     const gmap = {};
     desks.forEach(d => {
       const it = makeItem(d);
@@ -3362,7 +3366,7 @@ ui.present = false;
 // Plan so vergrößern, dass möglichst wenig leere Fläche bleibt.
 // Timer und Dienste-Liste kommen in den freien Rand (rechts oder oben – je nachdem, wo der Plan größer bleibt).
 function layoutStage() {
-  const panels = ui.fit ? [$('dutyBox')] : [$('pip'), $('timerBox'), $('pickBanner'), $('teamsPanel'), $('dutyBox')].filter(Boolean);
+  const panels = ui.fit ? [$('dutyBox')] : [$('timerBox'), $('pickBanner'), $('teamsPanel'), $('dutyBox')];
   const front = stage.querySelector('.front');
   panels.forEach(p => { p.classList.remove('side'); p.style.left = p.style.top = p.style.right = p.style.transform = p.style.width = ''; });
   front.style.top = front.style.bottom = '';
@@ -3380,6 +3384,7 @@ function layoutStage() {
     add(vx(P.x), vy(P.y) - d.h / 2 - 3);   // Platz für die Beschriftung „Tisch …“
   });
   if (!items.length) { x0 = 20; y0 = 20; x1 = 80; y1 = 80; }
+  if (zoneOn() && !ui.preview) { add(vx(ZONE.x0), vy(ZONE.y0) - (ui.flipped ? 0 : 2)); add(vx(ZONE.x1), vy(ZONE.y1) + (ui.flipped ? 2 : 0)); }   // Gruppenraum-Bereich
   if (layoutStage.ext) { const e = layoutStage.ext; add(e[0], e[1]); add(e[2], e[3]); }   // Namensschilder der Gruppen
   // Tafel direkt an den Plan heranrücken statt an den Raumrand
   const tafelH = 5;
@@ -3497,7 +3502,6 @@ $('presentBar').addEventListener('click', e => {
   if (k === 'gender') setGenderView(!ui.genderView);
   if (k === 'teams') { openTeamsMenu(b); return; }
   if (k === 'duties') change(() => { cls().showDuties = !cls().showDuties; }, { keepList: true });
-  if (k === 'room') setRoom(cls().gwRoom === 2 ? 1 : 2);
   if (k === 'flip') { ui.flipped = !ui.flipped; renderAll({ keepList: true }); }
   syncPresentBar();
 });
