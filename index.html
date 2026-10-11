@@ -736,6 +736,10 @@
           <button id="addDesk1">＋ Einzeltisch</button>
           <button id="addObj">＋ Objekt eckig (Schrank, Regal)</button>
           <button id="addRound">＋ Objekt rund (Pflanze, Mülleimer)</button>
+          <div class="sub">Raumtiefe</div>
+          <label class="chk" style="gap:8px"><input type="range" id="roomHIn" min="50" max="100" step="1" style="flex:1"> <b id="roomHv"></b></label>
+          <button id="roomHFit">✂️ Auf die Möbel zuschneiden</button>
+          <p class="hint">Kürzt den Raum hinten (gegenüber der Tafel), damit kein leerer Streifen bleibt. Alle Möbel rücken mit.</p>
           <div class="sub">Raumvorlage</div>
           <select id="tplType">
             <option value="rows">Reihen (Zweiertische)</option>
@@ -814,7 +818,7 @@
             <p class="hint" style="margin:2px 0 0">Jede Änderung wird sofort im Speicher dieser App auf dem iPad abgelegt und beim nächsten Start wieder geladen – ohne Datei. Die Daten verlassen das Gerät nicht. Mit „📤 Als Datei sichern“ machst du eine Sicherung (z. B. für den PC). Ausschalten löscht den Speicher der App auf diesem Gerät.</p>
           </div>
           <p class="hint">Eine Datei enthält alle Klassen mit Schülern, Regeln, Räumen, Verlauf und Diensten. Für „Zuletzt verwendet“ merkt sich der Browser nur die Verweise auf die Dateien, nicht deren Inhalt.</p>
-          <p class="hint" style="margin:0">Version 2026-10-26</p>
+          <p class="hint" style="margin:0">Version 2026-10-27</p>
         </div>
       </details>
 
@@ -1393,7 +1397,7 @@ function makeItem(d) {
 
 function makeClass(name, items) {
   return { id: newId('c'), name, students: [], rules: { apart: [], together: [], mix: false }, groups: [],
-           plans: [], duties: [], dutyCount: {}, picked: [], showDuties: false, subNote: '', checks: [], tt: null, exams: [], msgs: [],
+           plans: [], duties: [], dutyCount: {}, picked: [], showDuties: false, subNote: '', checks: [], tt: null, exams: [], msgs: [], roomH: 100,
            items: (items || DEFAULT_LAYOUT).map(d => makeItem({ ...d, id: null, groupId: null, seats: (d.seats || []).map(s => ({ blocked: s.blocked })) })) };
 }
 
@@ -1402,7 +1406,23 @@ function halfExt(it) { const t = (it.r || 0) * Math.PI / 180, c = Math.abs(Math.
 // Gruppenraum: fester Bereich oben im Plan (nur Tischordnung „Gruppenarbeit“, wenn zugeschaltet)
 const ZONE = { x0: 2, x1: 98, y0: 1.5, y1: 22.5 };
 const EXT = ZONE.y1 + 1;   // um so viel rückt das Klassenzimmer (mit allen Möbeln und der Tafel) nach unten, wenn der Gruppenraum dazukommt
-const YMAX = () => zoneOn() ? 100 + EXT : 100;
+const roomH = () => cls().roomH || 100;   // Raumtiefe (Breite = 100); hinten (gegenüber der Tafel) abgeschnitten
+const YMAX = () => roomH() + (zoneOn() && !ui.preview ? EXT : 0);
+// Raum hinten um d kürzen (d < 0: verlängern): alle Klassenzimmer-Möbel beider Anordnungen und des Verlaufs rücken mit
+function cropRoom(c, d) {
+  const sh = arr => (arr || []).forEach(i => { if (!i.r2) i.y -= d; });
+  sh(c.items); sh(c.altItems); (c.plans || []).forEach(p => sh(p.items));
+  c.roomH = Math.round(((c.roomH || 100) - d) * 10) / 10;
+}
+// beim ersten Öffnen: leeren Bereich hinten im Raum abschneiden
+function autoRoomH(c) {
+  let top = 100;
+  const scan = (arr, off) => (arr || []).forEach(i => { if (i.r2 || i.type === 'area') return; top = Math.min(top, i.y - off - halfExt(i).hy - (isDesk(i) && !(Math.abs(i.r || 0) % 180 > 45 && Math.abs(i.r || 0) % 180 < 135) ? 3.5 : 0)); });
+  const gwOff = c.zoneShift ? EXT : 0;
+  scan(c.items, c.layout === 'gw' ? gwOff : 0); scan(c.altItems, c.layout === 'gw' ? 0 : gwOff);
+  const d = Math.max(0, Math.min(35, Math.floor(top - 1.5)));
+  return d >= 4 ? d : 0;
+}
 // Klassenzimmer-Möbel der Gruppenarbeit-Anordnung um dy verschieben (Gruppenraum-Tische bleiben)
 function shiftClass(items, dy) { (items || []).forEach(i => { if (!i.r2) i.y += dy; }); }
 const zoneOn = () => cls().layout === 'gw' && cls().room2Off === false;
@@ -1410,7 +1430,7 @@ function bnd(it) {
   const { hx, hy } = halfExt(it);
   const lb = isDesk(it) ? 3 : 0;   // Platz für die Beschriftung „Tisch …“
   if (it.r2) return { x0: ZONE.x0 + hx, x1: ZONE.x1 - hx, y0: ZONE.y0 + hy + lb, y1: Math.max(ZONE.y0 + hy + lb, ZONE.y1 - hy) };
-  return zoneOn() ? { x0: hx, x1: 100 - hx, y0: EXT + hy, y1: 100 + EXT - hy } : { x0: hx, x1: 100 - hx, y0: hy, y1: 100 - hy };
+  const H = roomH(); return zoneOn() ? { x0: hx, x1: 100 - hx, y0: EXT + hy, y1: H + EXT - hy } : { x0: hx, x1: 100 - hx, y0: hy, y1: H - hy };
 }
 function fitIn(it) { if (it.type === 'area') return; const b = bnd(it); it.x = Math.min(b.x1, Math.max(b.x0, it.x)); it.y = Math.min(b.y1, Math.max(b.y0, it.y)); }
 /* ---------- Rückgängig / Wiederholen ---------- */
@@ -1848,6 +1868,7 @@ const vy = y => ui.flipped ? YMAX() - y : y;
 
 function renderRoom(animate) {
   const c = cls();
+  if (c.roomH == null) { const d = autoRoomH(c); c.roomH = 100; if (d) { cropRoom(c, d); (c.items || []).forEach(fitIn); dirty = true; renderFileInfo(); } }
   if (GW()) migrateGw(c);
   const items = ui.preview ? ui.preview.items : c.items;
   const groups = ui.preview ? ui.preview.groups : c.groups;
@@ -1937,6 +1958,7 @@ function renderRoom(animate) {
   } else pv.hidden = true;
 
   renderZone();
+  $('roomHIn').value = roomH(); $('roomHv').textContent = roomH() + ' %';
   renderIslandSigns(items);
   $('dutyBtn').classList.toggle('on', !!c.showDuties);
   room.classList.toggle('has-picked', !!ui.pickedId && !!stage.querySelector('.seat.picked'));
@@ -2549,6 +2571,14 @@ function addItem(type) {
   }, { keepList: true });
 }
 $('addDesk2').addEventListener('click', () => addItem('desk2'));
+function setRoomH(h) {
+  const c = cls(); h = clamp(Math.round(h), 50, 100); const d = roomH() - h; if (!d) return;
+  change(() => { cropRoom(c, d); }, { keepList: true });
+  setResult(`Raumtiefe: ${roomH()} % der Breite.`, 'ok');
+}
+$('roomHIn').addEventListener('input', e => { $('roomHv').textContent = e.target.value + ' %'; });
+$('roomHIn').addEventListener('change', e => setRoomH(+e.target.value));
+$('roomHFit').addEventListener('click', () => { const d = autoRoomH(cls()); if (!d) setResult('Hinten ist kein leerer Streifen zum Abschneiden.', 'warn'); else setRoomH(roomH() - d); });
 $('addDesk1').addEventListener('click', () => addItem('desk1'));
 $('addObj').addEventListener('click', () => addItem('obj'));
 $('addRound').addEventListener('click', () => addItem('round'));
@@ -2811,7 +2841,7 @@ function setRoom2(on) {
   }, { keepList: true });
   if (ui.teams && ui.teams.place) Object.keys(ui.teams.place).forEach(t => { if (!islands().some(x => x.key === ui.teams.place[t])) delete ui.teams.place[t]; });
   gwSync(true); syncGwUi();
-  setResult(on ? '🚪 Gruppenraum oben im Plan dazugenommen – das Klassenzimmer rückt nach unten. Unter „🪑 Raum einrichten“ lassen sich dort Tische verschieben, hinzufügen und entfernen.' : '🚪 Gruppenraum ausgeblendet (seine Tische bleiben gespeichert).', 'ok');
+  if (on) setResult('🚪 Gruppenraum oben im Plan dazugenommen – das Klassenzimmer rückt nach unten. Unter „🪑 Raum einrichten“ lassen sich dort Tische verschieben, hinzufügen und entfernen.', 'ok'); else setResult('');
 }
 function islands() {
   const c = cls(), out = [];
@@ -3335,12 +3365,13 @@ $('tplApply').addEventListener('click', () => {
   change(() => {
     const c = cls();
     const desks = templateDesks(t, n);
+    const tShift = Math.max(0, Math.min(100 - roomH(), Math.min(...desks.map(d => d.y)) - 9));   // Vorlage passt für 100 % Tiefe → nach oben rücken
     const keepG = new Set(c.items.filter(i => i.r2 && i.groupId).map(i => i.groupId));
     c.items = c.items.filter(i => !isDesk(i) || i.r2);
     c.groups = c.groups.filter(g => keepG.has(g.id));
     const gmap = {};
     desks.forEach(d => {
-      const it = makeItem(d);
+      const it = makeItem({ ...d, y: d.y - tShift + (zoneOn() ? EXT : 0) });
       if (d.g != null) { if (!gmap[d.g]) gmap[d.g] = newGroup().id; it.groupId = gmap[d.g]; }
       c.items.push(it);
     });
@@ -3382,9 +3413,9 @@ function layoutStage() {
   front.style.top = front.style.bottom = '';
   room.style.aspectRatio = ''; room.style.width = '';
   if (!ui.present && !ui.fit) {
-    const ym = ui.preview ? 100 : YMAX();
-    if (ym > 100) {   // Plan mit Gruppenraum: nach unten verlängert, Tafel an den unteren Rand
-      room.style.aspectRatio = '100 / ' + ym; room.style.width = `min(100%, max(320px, calc((100vh - 175px) * ${100 / ym})))`;
+    const ym = YMAX();
+    if (ym !== 100) {   // Raum nicht quadratisch (Raumtiefe, Gruppenraum): Seitenverhältnis anpassen, Tafel an den unteren Rand
+      room.style.aspectRatio = '100 / ' + ym; room.style.width = ym > 100 ? `min(100%, max(320px, calc((100vh - 175px) * ${100 / ym})))` : '';
       if (!ui.flipped) { front.style.bottom = 'auto'; front.style.top = (ym - 7) + '%'; }
     }
     Object.assign(stage.style, { left: '0', top: '0', width: '100%', height: (100 * 100 / ym) + '%' }); fitNames(0); return;
