@@ -814,7 +814,7 @@
             <p class="hint" style="margin:2px 0 0">Jede Änderung wird sofort im Speicher dieser App auf dem iPad abgelegt und beim nächsten Start wieder geladen – ohne Datei. Die Daten verlassen das Gerät nicht. Mit „📤 Als Datei sichern“ machst du eine Sicherung (z. B. für den PC). Ausschalten löscht den Speicher der App auf diesem Gerät.</p>
           </div>
           <p class="hint">Eine Datei enthält alle Klassen mit Schülern, Regeln, Räumen, Verlauf und Diensten. Für „Zuletzt verwendet“ merkt sich der Browser nur die Verweise auf die Dateien, nicht deren Inhalt.</p>
-          <p class="hint" style="margin:0">Version 2026-10-24</p>
+          <p class="hint" style="margin:0">Version 2026-10-25</p>
         </div>
       </details>
 
@@ -1400,13 +1400,15 @@ function makeClass(name, items) {
 // Möbel bleiben im Raum: Mittelpunkt so begrenzen, dass das (gedrehte) Rechteck ganz innen liegt
 function halfExt(it) { const t = (it.r || 0) * Math.PI / 180, c = Math.abs(Math.cos(t)), s = Math.abs(Math.sin(t)); return { hx: Math.min(50, (it.w * c + it.h * s) / 2), hy: Math.min(50, (it.w * s + it.h * c) / 2) }; }
 // Gruppenraum: fester Bereich oben im Plan (nur Tischordnung „Gruppenarbeit“, wenn zugeschaltet)
-const ZONE = { x0: 2, x1: 98, y0: 1.5, y1: 25 };
+const ZONE = { x0: 2, x1: 98, y0: 1.5, y1: 22.5 };
+const EXT = 15;   // so viel wird der Plan mit Gruppenraum nach unten verlängert
+const YMAX = () => cls().layout === 'gw' && (cls().room2Off === false || cls().items.some(i => !i.r2 && i.y + halfExt(i).hy > 100.5)) ? 100 + EXT : 100;
 const zoneOn = () => cls().layout === 'gw' && cls().room2Off === false;
 function bnd(it) {
   const { hx, hy } = halfExt(it);
   const lb = isDesk(it) ? 3 : 0;   // Platz für die Beschriftung „Tisch …“
   if (it.r2) return { x0: ZONE.x0 + hx, x1: ZONE.x1 - hx, y0: ZONE.y0 + hy + lb, y1: Math.max(ZONE.y0 + hy + lb, ZONE.y1 - hy) };
-  return { x0: hx, x1: 100 - hx, y0: zoneOn() ? Math.min(ZONE.y1 + 1 + hy + lb, 100 - hy) : hy, y1: 100 - hy };
+  const ym = YMAX(); return { x0: hx, x1: 100 - hx, y0: hy, y1: ym - hy };
 }
 function fitIn(it) { if (it.type === 'area') return; const b = bnd(it); it.x = Math.min(b.x1, Math.max(b.x0, it.x)); it.y = Math.min(b.y1, Math.max(b.y0, it.y)); }
 /* ---------- Rückgängig / Wiederholen ---------- */
@@ -1840,7 +1842,7 @@ function renderGroups() {
 
 // Ansichts-Koordinaten (Schülersicht = um 180° gedreht)
 const vx = x => ui.flipped ? 100 - x : x;
-const vy = y => ui.flipped ? 100 - y : y;
+const vy = y => ui.flipped ? YMAX() - y : y;
 
 function renderRoom(animate) {
   const c = cls();
@@ -2041,9 +2043,9 @@ let drag = null, sdrag = null, lastTap = null, marquee = null;
 const seatAt = (x, y) => document.elementsFromPoint(x, y).find(el => el.classList && el.classList.contains('seat'));
 const seatRef = el => ({ id: el.closest('.item').dataset.id, i: +el.dataset.seat });
 
-function roomPoint(e) {
-  const rect = room.getBoundingClientRect();
-  return { x: (e.clientX - rect.left) / rect.width * 100, y: (e.clientY - rect.top) / rect.height * 100, rect };
+function roomPoint(e) {   // in Plan-Einheiten (Breite = 100, auch wenn der Plan nach unten verlängert ist)
+  const rect = stage.getBoundingClientRect();
+  return { x: (e.clientX - rect.left) / rect.width * 100, y: (e.clientY - rect.top) / rect.width * 100, rect };
 }
 
 room.addEventListener('pointerdown', e => {
@@ -2065,7 +2067,7 @@ room.addEventListener('pointerdown', e => {
     if (!add) { ui.selectedId = null; markSelection(); }
     marquee = { x0: p.x, y0: p.y, add, base: new Set(ui.multi), el: document.createElement('div') };
     marquee.el.className = 'marquee';
-    room.appendChild(marquee.el);
+    stage.appendChild(marquee.el);
     room.setPointerCapture(e.pointerId);
     e.preventDefault();
     return;
@@ -3370,8 +3372,15 @@ function layoutStage() {
   const front = stage.querySelector('.front');
   panels.forEach(p => { p.classList.remove('side'); p.style.left = p.style.top = p.style.right = p.style.transform = p.style.width = ''; });
   front.style.top = front.style.bottom = '';
-  room.style.aspectRatio = '';
-  if (!ui.present && !ui.fit) { Object.assign(stage.style, { left: '0', top: '0', width: '100%', height: '100%' }); fitNames(0); return; }
+  room.style.aspectRatio = ''; room.style.width = '';
+  if (!ui.present && !ui.fit) {
+    const ym = ui.preview ? 100 : YMAX();
+    if (ym > 100) {   // Plan mit Gruppenraum: nach unten verlängert, Tafel an den unteren Rand
+      room.style.aspectRatio = '100 / ' + ym; room.style.width = `min(100%, max(320px, calc((100vh - 175px) * ${100 / ym})))`;
+      if (!ui.flipped) { front.style.bottom = 'auto'; front.style.top = (ym - 7) + '%'; }
+    }
+    Object.assign(stage.style, { left: '0', top: '0', width: '100%', height: (100 * 100 / ym) + '%' }); fitNames(0); return;
+  }
   const items = ui.preview ? ui.preview.items : cls().items;
   let x0 = 100, y0 = 100, x1 = 0, y1 = 0;
   const add = (x, y) => { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); };
