@@ -528,8 +528,23 @@
   .obj { display: flex; align-items: center; justify-content: center; text-align: center; background: var(--obj); border: 2px solid var(--obj-line); border-radius: 3px; color: #57534e; font-size: clamp(8px, 1.4cqw, 14px); font-weight: 600; padding: 2px 4px; }
   .obj.round { border-radius: 50%; padding: 4px 8px; }
   .obj.round .size-handle { right: calc(14.6% - 9px); bottom: calc(14.6% - 9px); }
-  .roomtag { position: absolute; left: 50%; bottom: 2%; transform: translateX(-50%); padding: .3em 1em; border-top: 3px dashed #94a3b8; color: #64748b; font-weight: 800; letter-spacing: .08em; font-size: clamp(10px, 1.6cqw, 22px); text-transform: uppercase; white-space: nowrap; pointer-events: none; }
-  .room.flipped .roomtag { bottom: auto; top: 2%; }
+  .roomtag { position: absolute; left: 12px; top: 10px; z-index: 5; padding: .25em .8em; border-radius: 8px; background: #f1f5f9; border: 1.5px dashed #94a3b8; color: #64748b; font-weight: 800; letter-spacing: .08em; font-size: clamp(10px, 1.6cqw, 22px); text-transform: uppercase; white-space: nowrap; pointer-events: none; }
+  #pip { position: absolute; top: 10px; right: 10px; width: 34%; z-index: 5; background: #fff; border: 2px solid #94a3b8; border-radius: 10px; box-shadow: 0 3px 12px rgba(0,0,0,.18); cursor: pointer; container-type: inline-size; overflow: hidden; }
+  #pip[hidden] { display: none; }
+  #pip:hover { border-color: var(--accent); }
+  body:not(.present) .room.flipped #pip { top: auto; bottom: 10px; }
+  body.present #pip { width: min(30vw, 460px); }
+  #pip .pip-h { display: flex; align-items: center; gap: 6px; padding: 4px 6px 4px 10px; background: #f1f5f9; border-bottom: 1.5px dashed #94a3b8; font-weight: 800; color: #475569; font-size: clamp(10px, 4.6cqw, 20px); text-transform: uppercase; letter-spacing: .05em; }
+  #pip .pip-h small { font-weight: 600; text-transform: none; letter-spacing: 0; color: var(--muted); margin-left: auto; font-size: .78em; }
+  #pip .pip-h button { border: 1px solid #cbd5e1; background: #fff; border-radius: 6px; padding: 0 .45em; font: inherit; line-height: 1.3; cursor: pointer; color: #475569; }
+  #pip.min .pip-c { display: none; }
+  #pip .pip-c { position: relative; margin: 6px; }
+  #pip .pi { position: absolute; box-sizing: border-box; border: 1.5px solid #64748b; background: #fffdf7; border-radius: 2px; }
+  #pip .pi.pdesk[style*="--tc"] { border: 2px solid var(--tc); background: color-mix(in srgb, var(--tc) 12%, #fff); }
+  #pip .pi.pobj { background: #e2e8f0; border-color: #94a3b8; display: flex; align-items: center; justify-content: center; font-size: clamp(6px, 2.6cqw, 13px); color: #475569; overflow: hidden; white-space: nowrap; }
+  #pip .pi.isl-drop { outline: 3px solid var(--accent); }
+  #pip .pip-sign { position: absolute; transform: translate(-50%, -50%); z-index: 2; background: color-mix(in srgb, var(--tc) 14%, #fff); border: 2px solid var(--tc); border-radius: 7px; padding: .15em .4em; font-size: clamp(7px, 3.3cqw, 17px); line-height: 1.2; text-align: center; width: max-content; max-width: 70%; pointer-events: none; }
+  #pip .pip-sign b { display: block; color: var(--tc); text-transform: uppercase; font-size: .8em; }
   .isl-sign { position: absolute; transform: translate(-50%, -50%); z-index: 4; pointer-events: none; background: color-mix(in srgb, var(--tc) 14%, #fff); border: 3px solid var(--tc); border-radius: 12px; padding: .35em .6em; box-shadow: 0 2px 8px rgba(0,0,0,.15); font-size: clamp(9px, 1.45cqw, 26px); text-align: center; line-height: 1.25; }
   .isl-sign b { display: block; color: var(--tc); font-size: .8em; text-transform: uppercase; letter-spacing: .04em; margin-bottom: .15em; }
   .isl-sign .nl { display: flex; flex-wrap: wrap; justify-content: center; gap: .1em .55em; font-weight: 700; color: var(--ink); }
@@ -811,7 +826,7 @@
             <p class="hint" style="margin:2px 0 0">Jede Änderung wird sofort im Speicher dieser App auf dem iPad abgelegt und beim nächsten Start wieder geladen – ohne Datei. Die Daten verlassen das Gerät nicht. Mit „📤 Als Datei sichern“ machst du eine Sicherung (z. B. für den PC). Ausschalten löscht den Speicher der App auf diesem Gerät.</p>
           </div>
           <p class="hint">Eine Datei enthält alle Klassen mit Schülern, Regeln, Räumen, Verlauf und Diensten. Für „Zuletzt verwendet“ merkt sich der Browser nur die Verweise auf die Dateien, nicht deren Inhalt.</p>
-          <p class="hint" style="margin:0">Version 2026-10-22</p>
+          <p class="hint" style="margin:0">Version 2026-10-23</p>
         </div>
       </details>
 
@@ -1920,9 +1935,10 @@ function renderRoom(animate) {
     pv.hidden = false;
   } else pv.hidden = true;
 
-  { const fr = stage.querySelector('.front'), r2v = GW() && cls().gwRoom === 2; fr.hidden = r2v; let tag = stage.querySelector('.roomtag');
-    if (r2v && !tag) { tag = document.createElement('div'); tag.className = 'roomtag'; tag.textContent = '🚪 Gruppenraum'; stage.appendChild(tag); } else if (!r2v && tag) tag.remove(); }
+  { const fr = stage.querySelector('.front'), r2v = GW() && cls().gwRoom === 2; fr.hidden = r2v; let tag = room.querySelector('.roomtag');
+    if (r2v && !tag) { tag = document.createElement('div'); tag.className = 'roomtag'; tag.textContent = '🚪 Gruppenraum'; room.appendChild(tag); } else if (!r2v && tag) tag.remove(); }
   renderIslandSigns(items);
+  renderPip();
   $('dutyBtn').classList.toggle('on', !!c.showDuties);
   room.classList.toggle('has-picked', !!ui.pickedId && !!stage.querySelector('.seat.picked'));
   renderTeamsPanel(dn);
@@ -2783,11 +2799,50 @@ function renderIslandSigns(items) {
     const R = ui.teams.roles || {}, sorted = mem.slice().sort((a, b) => ((R[b] || []).includes('lead') ? 1 : 0) - ((R[a] || []).includes('lead') ? 1 : 0));
     const el = document.createElement('div'); el.className = 'isl-sign';
     el.style.setProperty('--tc', teamColor(+t));
-    el.style.left = vx((x0 + x1) / 2) + '%'; el.style.top = vy((y0 + y1) / 2) + '%'; el.style.minWidth = Math.min(x1 - x0, 22) + '%'; el.style.maxWidth = Math.max(x1 - x0 + 10, 26) + '%';
+    el.style.left = vx((x0 + x1) / 2) + '%'; el.style.top = vy((y0 + y1) / 2) + '%'; el.dataset.cx = vx((x0 + x1) / 2); el.dataset.cy = vy((y0 + y1) / 2); el.style.minWidth = Math.min(x1 - x0, 22) + '%'; el.style.maxWidth = Math.max(x1 - x0 + 10, 26) + '%';
     el.innerHTML = `<b>${esc(teamTitle(+t))}</b><div class="nl">${sorted.map(id => `<span>${roleIcons(id) ? roleIcons(id) + ' ' : ''}${esc(dn.get(id) || '?')}</span>`).join('')}</div>`;
     stage.appendChild(el);
     const sw = stage.clientWidth ? el.offsetWidth / stage.clientWidth * 50 : 0; if (sw) el.style.left = Math.min(99.5 - sw, Math.max(0.5 + sw, vx((x0 + x1) / 2))) + '%';
   });
+}
+// Bild im Bild: der jeweils andere Raum klein in der Ecke – Klick tauscht die Räume
+function renderPip() {
+  let el = $('pip'); const c = cls();
+  const show = GW() && c.room2Off === false && c.gwOther && !ui.preview && !ui.fit;
+  if (!show) { if (el) el.hidden = true; return; }
+  if (!el) {
+    el = document.createElement('div'); el.id = 'pip'; room.appendChild(el); el.addEventListener('pointerdown', e => e.stopPropagation());
+    el.addEventListener('click', e => { if (e.target.closest('[data-pipmin]')) { ui.pipMin = !ui.pipMin; renderPip(); if (ui.present) layoutStage(); return; } setRoom(cls().gwRoom === 2 ? 1 : 2); });
+  }
+  el.hidden = false; el.classList.toggle('min', !!ui.pipMin);
+  el.title = 'Klicken: zu diesem Raum wechseln';
+  const items = c.gwOther.items, isR2 = c.gwRoom !== 2;
+  let x0 = 100, y0 = 100, x1 = 0, y1 = 0;
+  items.forEach(d => { const { hx, hy } = halfExt(d), X = vx(d.x), Y = vy(d.y); x0 = Math.min(x0, X - hx); x1 = Math.max(x1, X + hx); y0 = Math.min(y0, Y - hy); y1 = Math.max(y1, Y + hy); });
+  if (!items.length) { x0 = y0 = 30; x1 = y1 = 70; }
+  x0 -= 4; y0 -= 4; x1 += 4; y1 += 4;
+  const grow = (a, b, m) => { const d = m - (b - a); return d > 0 ? [a - d / 2, b + d / 2] : [a, b]; };
+  [x0, x1] = grow(x0, x1, 36); [y0, y1] = grow(y0, y1, 24);
+  if ((y1 - y0) > (x1 - x0) * 1.1) [x0, x1] = grow(x0, x1, (y1 - y0) / 1.1);   // nicht zu hoch werden
+  const bw = x1 - x0, bh = y1 - y0, X = v => (v - x0) / bw * 100, Y = v => (v - y0) / bh * 100;
+  const keyOf = it => it.groupId ? 'g:' + it.groupId : 'd:' + it.id;
+  const team = {}; if (ui.teams && ui.teams.place) Object.entries(ui.teams.place).forEach(([t, k]) => { if (ui.teams.list[+t]) team[k] = +t; });
+  const dn = displayNames(c.students);
+  let h = `<div class="pip-h">${isR2 ? '🚪 Gruppenraum' : '🏫 Klassenzimmer'}<small>⇄ wechseln</small><button data-pipmin title="${ui.pipMin ? 'Aufklappen' : 'Zuklappen'}">${ui.pipMin ? '▾' : '▴'}</button></div><div class="pip-c" style="aspect-ratio:${bw.toFixed(2)}/${bh.toFixed(2)}">`;
+  items.forEach(it => {
+    const desk = isDesk(it), k = desk ? keyOf(it) : '', t = desk ? team[k] : undefined;
+    h += `<div class="pi ${desk ? 'pdesk' : 'pobj'}"${desk ? ` data-pk="${k}"` : ''} style="left:${X(vx(it.x))}%;top:${Y(vy(it.y))}%;width:${it.w / bw * 100}%;height:${it.h / bh * 100}%;transform:translate(-50%,-50%) rotate(${it.r || 0}deg)${t != null ? ';--tc:' + teamColor(t) : ''}">${desk ? '' : esc(it.label || '')}</div>`;
+  });
+  const done = new Set();
+  items.filter(isDesk).forEach(it => {
+    const k = keyOf(it), t = team[k]; if (t == null || done.has(k)) return; done.add(k);
+    const ds = items.filter(d => isDesk(d) && keyOf(d) === k), cx = ds.reduce((a, d) => a + vx(d.x), 0) / ds.length, cy = ds.reduce((a, d) => a + vy(d.y), 0) / ds.length;
+    const iw = Math.max(...ds.map(d => vx(d.x) + halfExt(d).hx)) - Math.min(...ds.map(d => vx(d.x) - halfExt(d).hx));
+    h += `<div class="pip-sign" style="left:${X(cx)}%;top:${Y(cy)}%;max-width:${Math.max(28, (iw + 6) / bw * 100).toFixed(1)}%;--tc:${teamColor(t)}"><b>${esc(teamTitle(t))}</b>${ui.teams.list[t].map(id => esc(dn.get(id) || '?')).join(', ')}</div>`;
+  });
+  el.innerHTML = h + '</div>';
+  const pc = el.querySelector('.pip-c'), W = pc.clientWidth;   // Schilder nicht über den Rand hinausragen lassen
+  if (W) el.querySelectorAll('.pip-sign').forEach(sg => { const hw = sg.offsetWidth / W * 50; sg.style.left = Math.min(100 - hw, Math.max(hw, parseFloat(sg.style.left))) + '%'; });
 }
 function gwSync(reassign) {
   if (!GW() || !ui.teams) return;
@@ -2809,8 +2864,8 @@ function syncGwUi() {
   const c = cls(), gw = GW();
   document.querySelectorAll('#layoutSw button').forEach(b => b.classList.toggle('active', b.dataset.l === (gw ? 'gw' : 'normal')));
   $('room2Btn').hidden = !gw; $('room2Btn').classList.toggle('on', gw && c.room2Off === false);
-  $('roomSw').hidden = !gw || c.room2Off !== false; document.querySelectorAll('#roomSw button').forEach(b => b.classList.toggle('active', +b.dataset.r === (c.gwRoom === 2 ? 2 : 1)));
-  const pr = document.querySelector('#presentBar [data-p="room"]'); if (pr) { pr.hidden = !gw || c.room2Off !== false; pr.classList.toggle('on', c.gwRoom === 2); pr.title = c.gwRoom === 2 ? 'Zum Klassenzimmer wechseln' : 'Zum Gruppenraum wechseln'; }
+  $('roomSw').hidden = true; document.querySelectorAll('#roomSw button').forEach(b => b.classList.toggle('active', +b.dataset.r === (c.gwRoom === 2 ? 2 : 1)));
+  const pr = document.querySelector('#presentBar [data-p="room"]'); if (pr) { pr.hidden = true; pr.classList.toggle('on', c.gwRoom === 2); pr.title = c.gwRoom === 2 ? 'Zum Klassenzimmer wechseln' : 'Zum Gruppenraum wechseln'; }
   $('gwOn').checked = $('pmGwOn').checked = gw; $('gwR2').checked = $('pmGwR2').checked = gw && c.room2Off === false;
   $('gwR2Row').hidden = $('pmGwR2Row').hidden = $('gwModeRow').hidden = $('gwHint').hidden = !gw;
   $('gwSeat').hidden = $('pmGwSeat').hidden = !gw || !ui.teams;
@@ -2835,9 +2890,11 @@ document.addEventListener('pointermove', e => {
   if (!pdrag) return;
   if (!pdrag.ghost) { if (Math.hypot(e.clientX - pdrag.x0, e.clientY - pdrag.y0) < 5) return; pdrag.ghost = document.createElement('div'); pdrag.ghost.className = 'ghost'; pdrag.ghost.textContent = '📍 ' + teamTitle(pdrag.t); pdrag.ghost.style.background = teamColor(pdrag.t); document.body.appendChild(pdrag.ghost); }
   pdrag.ghost.style.left = e.clientX + 'px'; pdrag.ghost.style.top = e.clientY + 'px';
-  const d = document.elementsFromPoint(e.clientX, e.clientY).find(x => x.classList && x.classList.contains('desk'));
-  const key = d ? (() => { const it = byId(d.dataset.id); return it ? (it.groupId ? 'g:' + it.groupId : 'd:' + it.id) : null; })() : null;
+  const under = document.elementsFromPoint(e.clientX, e.clientY), pk = under.find(x => x.dataset && x.dataset.pk);
+  const d = under.find(x => x.classList && x.classList.contains('desk'));
+  const key = pk ? pk.dataset.pk : d ? (() => { const it = byId(d.dataset.id); return it ? (it.groupId ? 'g:' + it.groupId : 'd:' + it.id) : null; })() : null;
   room.querySelectorAll('.isl-drop').forEach(x => x.classList.remove('isl-drop'));
+  if (key) room.querySelectorAll('#pip .pdesk').forEach(x => x.classList.toggle('isl-drop', x.dataset.pk === key));
   if (key) room.querySelectorAll('.item.desk').forEach(x => { const it = byId(x.dataset.id); if (it && (it.groupId ? 'g:' + it.groupId : 'd:' + it.id) === key) x.classList.add('isl-drop'); });
   pdrag.over = key;
 }, true);
@@ -3305,13 +3362,13 @@ ui.present = false;
 // Plan so vergrößern, dass möglichst wenig leere Fläche bleibt.
 // Timer und Dienste-Liste kommen in den freien Rand (rechts oder oben – je nachdem, wo der Plan größer bleibt).
 function layoutStage() {
-  const panels = ui.fit ? [$('dutyBox')] : [$('timerBox'), $('pickBanner'), $('teamsPanel'), $('dutyBox')];
+  const panels = ui.fit ? [$('dutyBox')] : [$('pip'), $('timerBox'), $('pickBanner'), $('teamsPanel'), $('dutyBox')].filter(Boolean);
   const front = stage.querySelector('.front');
   panels.forEach(p => { p.classList.remove('side'); p.style.left = p.style.top = p.style.right = p.style.transform = p.style.width = ''; });
   front.style.top = front.style.bottom = '';
   room.style.aspectRatio = '';
   if (!ui.present && !ui.fit) { Object.assign(stage.style, { left: '0', top: '0', width: '100%', height: '100%' }); fitNames(0); return; }
-  const cc = cls(), items = ui.preview ? ui.preview.items : (GW() && cc.gwOther && cc.room2Off === false ? cc.items.concat(cc.gwOther.items) : cc.items);   // beide Räume gleicher Maßstab
+  const items = ui.preview ? ui.preview.items : cls().items;
   let x0 = 100, y0 = 100, x1 = 0, y1 = 0;
   const add = (x, y) => { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); };
   items.forEach(d => {
@@ -3323,6 +3380,7 @@ function layoutStage() {
     add(vx(P.x), vy(P.y) - d.h / 2 - 3);   // Platz für die Beschriftung „Tisch …“
   });
   if (!items.length) { x0 = 20; y0 = 20; x1 = 80; y1 = 80; }
+  if (layoutStage.ext) { const e = layoutStage.ext; add(e[0], e[1]); add(e[2], e[3]); }   // Namensschilder der Gruppen
   // Tafel direkt an den Plan heranrücken statt an den Raumrand
   const tafelH = 5;
   if (ui.flipped) { front.style.top = (y0 - tafelH) + '%'; y0 -= tafelH + 1; }
@@ -3357,6 +3415,14 @@ function layoutStage() {
   }
   Object.assign(stage.style, { width: S + 'px', height: S + 'px', left: (offX - x0 * S / 100) + 'px', top: (offY - y0 * S / 100) + 'px' });
   fitNames(S);
+  if (!layoutStage.ext) {   // breite Namensschilder: Plan so weit verkleinern, dass sie ganz sichtbar sind
+    const sg = [...stage.querySelectorAll('.isl-sign')];
+    if (sg.length) {
+      let a = 100, b = 100, c2 = 0, d = 0;
+      sg.forEach(el => { const cx = +el.dataset.cx, cy = +el.dataset.cy, hw = el.offsetWidth / S * 50 + 1, hh = el.offsetHeight / S * 50 + 1; a = Math.min(a, cx - hw); c2 = Math.max(c2, cx + hw); b = Math.min(b, cy - hh); d = Math.max(d, cy + hh); });
+      if (a < x0 + m || c2 > x1 - m || b < y0 + m || d > y1 - m) { layoutStage.ext = [Math.max(0, a), Math.max(0, b), Math.min(100, c2), Math.min(100, d)]; layoutStage(); layoutStage.ext = null; return; }
+    }
+  }
   if (!vis.length) return;
   if (side) {   // rechts neben dem Plan, untereinander, senkrecht zentriert
     let y = Math.max(gap, (H - colH) / 2 + gap);
