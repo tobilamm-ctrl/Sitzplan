@@ -528,7 +528,14 @@
   .obj { display: flex; align-items: center; justify-content: center; text-align: center; background: var(--obj); border: 2px solid var(--obj-line); border-radius: 3px; color: #57534e; font-size: clamp(8px, 1.4cqw, 14px); font-weight: 600; padding: 2px 4px; }
   .obj.round { border-radius: 50%; padding: 4px 8px; }
   .obj.round .size-handle { right: calc(14.6% - 9px); bottom: calc(14.6% - 9px); }
-  body.gwl:not(.present):not(.print-fit) main .room { width: 100%; aspect-ratio: 16 / 10; }
+  body.gwl:not(.present):not(.print-fit) main .room { width: 100%; }
+  body.gwl:not(.present):not(.print-fit) main { position: static; max-height: none; }
+  .isl-sign { position: absolute; transform: translate(-50%, -50%); z-index: 4; pointer-events: none; background: color-mix(in srgb, var(--tc) 14%, #fff); border: 3px solid var(--tc); border-radius: 12px; padding: .35em .6em; box-shadow: 0 2px 8px rgba(0,0,0,.15); font-size: clamp(9px, 1.45cqw, 26px); text-align: center; line-height: 1.25; }
+  .isl-sign b { display: block; color: var(--tc); font-size: .8em; text-transform: uppercase; letter-spacing: .04em; margin-bottom: .15em; }
+  .isl-sign .nl { display: flex; flex-wrap: wrap; justify-content: center; gap: .1em .55em; font-weight: 700; color: var(--ink); }
+  .isl-sign .nl span { white-space: nowrap; }
+  .desk.gwocc .seat .nm, .desk.gwocc .seat .tb { visibility: hidden; }
+  .desk.gwocc { border-color: var(--gc) !important; }
   .item.area { background: transparent; border: 2px dashed #94a3b8; border-radius: 12px; align-items: flex-start; justify-content: flex-start; box-shadow: none; }
   .item.area .lbl { font-size: clamp(9px, 1.5cqw, 17px); font-weight: 800; color: #64748b; margin: .4em .7em; text-transform: uppercase; letter-spacing: .06em; text-align: left; }
   body.mode-students .item.area, body.present .item.area { pointer-events: none; }
@@ -804,7 +811,7 @@
             <p class="hint" style="margin:2px 0 0">Jede Änderung wird sofort im Speicher dieser App auf dem iPad abgelegt und beim nächsten Start wieder geladen – ohne Datei. Die Daten verlassen das Gerät nicht. Mit „📤 Als Datei sichern“ machst du eine Sicherung (z. B. für den PC). Ausschalten löscht den Speicher der App auf diesem Gerät.</p>
           </div>
           <p class="hint">Eine Datei enthält alle Klassen mit Schülern, Regeln, Räumen, Verlauf und Diensten. Für „Zuletzt verwendet“ merkt sich der Browser nur die Verweise auf die Dateien, nicht deren Inhalt.</p>
-          <p class="hint" style="margin:0">Version 2026-10-20</p>
+          <p class="hint" style="margin:0">Version 2026-10-21</p>
         </div>
       </details>
 
@@ -883,7 +890,7 @@
         <button id="clear">Plätze leeren</button>
         <button class="primary" id="shuffle">🎲 Namen verteilen</button>
         <span class="spacer"></span>
-        <span class="tgroup"><button id="pickBtn2" title="Zufällig ein Kind auswählen">🎯 Wer ist dran?</button><button id="teamsBtn" title="Gruppeneinteilung">👥 Gruppeneinteilung ▾</button></span>
+        <span class="tgroup"><button id="pickBtn2" title="Zufällig ein Kind auswählen">🎯 Wer ist dran?</button><button id="dutyBtn" class="toggle" title="Dienste im Plan ein- oder ausblenden">🧽 Dienste</button><button id="teamsBtn" title="Gruppeneinteilung">👥 Gruppeneinteilung ▾</button></span>
       </div>
       <div class="print-header"><h2 id="phTitle"></h2><span id="phDate"></span></div>
       <div class="room" id="room">
@@ -1820,7 +1827,9 @@ const vy = y => ui.flipped ? 100 - y : y;
 
 function renderRoom(animate) {
   const c = cls();
+  if (GW()) normGw(c);
   const items = ui.preview ? ui.preview.items : c.items;
+  calcGwOff(items);
   const groups = ui.preview ? ui.preview.groups : c.groups;
   const dn = displayNames(c.students);
   const stu = new Map(c.students.map(s => [s.id, s]));
@@ -1833,6 +1842,8 @@ function renderRoom(animate) {
   if (c.dutyIcons !== false) (c.duties || []).forEach(d => d.sids.filter(Boolean).forEach(id => { if (!dutyOf.has(id)) dutyOf.set(id, []); dutyOf.get(id).push(d); }));
 
   let nr = 0;
+  const islTeam = new Map();   // Tisch → Gruppe (Tischordnung Gruppenarbeit)
+  if (GW() && ui.teams && ui.teams.place) { const isl = new Map(islands().map(x => [x.key, x])); Object.entries(ui.teams.place).forEach(([t, key]) => { const x = isl.get(key); if (x) x.desks.forEach(d => islTeam.set(d.id, +t)); }); }
   const groupShown = new Set();   // Gruppenname nur am ersten Tisch einer Gruppe anzeigen
   items.forEach(it => {
     const el = document.createElement('div');
@@ -1844,6 +1855,7 @@ function renderRoom(animate) {
       const showGN = g && !groupShown.has(g.id); if (g) groupShown.add(g.id);
       ++nr; el.innerHTML = g && !showGN ? '' : `<span class="nr">Tisch ${nr}${showGN ? `<span class="gn"> · ${esc(g.name)}</span>` : ''}</span>`;
       if (g) { el.classList.add('grouped'); el.style.setProperty('--gc', g.color); }
+      const tIdx = islTeam.get(it.id); if (tIdx != null) { el.classList.add('grouped', 'gwocc'); el.style.setProperty('--gc', teamColor(tIdx)); }
       it.seats.forEach((s, i) => {
         const sd = document.createElement('div');
         sd.dataset.seat = i;
@@ -1904,9 +1916,9 @@ function renderRoom(animate) {
   } else pv.hidden = true;
 
   document.body.classList.toggle('gwl', GW());
-  { const fr = stage.querySelector('.front'), a = GW() && items.find(i => i.type === 'area' && i.role === 'room1');
-    if (a) { fr.style.left = vx(a.x) + '%'; fr.style.width = (a.w * .55) + '%'; fr.style.bottom = 'auto'; const yb = a.y + a.h / 2; fr.style.top = (ui.flipped ? 100 - yb - 6 : yb + 1) + '%'; fr.dataset.gw = '1'; }
-    else if (fr.dataset.gw) { fr.style.left = fr.style.width = fr.style.top = fr.style.bottom = ''; delete fr.dataset.gw; } }
+  { const fr = stage.querySelector('.front'); if (!GW() && fr.dataset.gw) { fr.style.left = fr.style.width = ''; delete fr.dataset.gw; } if (GW()) fr.dataset.gw = '1'; }
+  renderIslandSigns(items);
+  $('dutyBtn').classList.toggle('on', !!c.showDuties);
   room.classList.toggle('has-picked', !!ui.pickedId && !!stage.querySelector('.seat.picked'));
   renderTeamsPanel(dn);
   layoutStage();
@@ -1916,8 +1928,9 @@ function renderRoom(animate) {
 }
 
 function applyGeom(el, it) {
-  el.style.left = vx(it.x) + '%';
-  el.style.top = vy(it.y) + '%';
+  const p = posOf(it);
+  el.style.left = vx(p.x) + '%';
+  el.style.top = vy(p.y) + '%';
   el.style.width = it.w + '%';
   el.style.height = it.h + '%';
   el.style.setProperty('--r', it.r + 'deg');
@@ -2656,22 +2669,39 @@ $('pickBanner').addEventListener('click', () => { ui.pickedId = null; $('pickBan
 const GW = () => cls().layout === 'gw';
 const inArea = (it, a) => Math.abs(it.x - a.x) <= a.w / 2 && Math.abs(it.y - a.y) <= a.h / 2;
 function makeGwLayout(c) {
-  const k = .6, ks = .75, sc = it => ({ x: 1 + it.x * k, y: 20 + it.y * k, w: it.w * ks, h: it.h * ks });
-  const items = [makeItem({ type: 'area', role: 'room1', label: 'Klassenzimmer', x: 31, y: 50, w: 60, h: 60 }), makeItem({ type: 'area', role: 'room2', label: 'Gruppenraum', x: 81, y: 50, w: 34, h: 60 })];
+  const k = .6, ks = .75, sc = it => ({ x: 20 + it.x * k, y: 1 + it.y * k, w: it.w * ks, h: it.h * ks });
+  const items = [makeItem({ type: 'area', role: 'room1', label: 'Klassenzimmer', x: 50, y: 31, w: 60, h: 60 }), makeItem({ type: 'area', role: 'room2', label: 'Gruppenraum', x: 50, y: 81, w: 60, h: 32 })];
   c.items.filter(i => i.type !== 'area').forEach(it => items.push(makeItem({ ...it, ...sc(it), id: null, groupId: null, seats: isDesk(it) ? it.seats.map(() => ({})) : [] })));
   const groups = [], gcol = ['#0ea5e9', '#f97316'];
-  [[37, 42.6], [59, 64.6]].forEach(([y1, y2], gi) => {
+  [35, 65].forEach((x, gi) => {
     const g = { id: newId('g'), name: 'Gruppenraum ' + (gi + 1), color: gcol[gi] }; groups.push(g);
-    [y1, y2].forEach(y => items.push(makeItem({ type: 'desk2', x: 81, y, w: 10.5, h: 5.6, groupId: g.id })));
+    [78, 83.6].forEach(y => items.push(makeItem({ type: 'desk2', x, y, w: 10.5, h: 5.6, groupId: g.id })));
   });
   return { items, groups };
 }
+// Bearbeiten: Räume untereinander (größer). Präsentation/Druck: Gruppenraum rechts neben dem Klassenzimmer.
+const gwAreas = items => ({ r1: items.find(i => i.type === 'area' && i.role === 'room1'), r2: items.find(i => i.type === 'area' && i.role === 'room2') });
+function normGw(c) {   // ältere Anordnung (Gruppenraum rechts) einmalig nach unten verschieben
+  const { r1, r2 } = gwAreas(c.items); if (!r1 || !r2) return;
+  if (r2.x - r2.w / 2 < r1.x + r1.w / 2 - 1) return;
+  const dx = r1.x - r2.x, dy = (r1.y + r1.h / 2 + 3 + r2.h / 2) - r2.y;
+  c.items.filter(i => i === r2 || (i.type !== 'area' && inArea(i, r2))).forEach(i => { i.x += dx; i.y += dy; });
+}
+let gwOff = null;
+function calcGwOff(items) {
+  gwOff = null;
+  if (!GW() || !(ui.present || ui.fit)) return;
+  const { r1, r2 } = gwAreas(items); if (!r1 || !r2) return;
+  gwOff = { a: { x: r2.x, y: r2.y, w: r2.w, h: r2.h }, dx: (r1.x + r1.w / 2 + 3) - (r2.x - r2.w / 2), dy: (r1.y - r1.h / 2) - (r2.y - r2.h / 2) };
+}
+const posOf = it => gwOff && (it.role === 'room2' || (it.type !== 'area' && inArea(it, gwOff.a))) ? { x: it.x + gwOff.dx, y: it.y + gwOff.dy } : { x: it.x, y: it.y };
 function setLayout(l) {
   const c = cls(); if ((c.layout || 'normal') === l) return;
   let made = false;
   change(() => {
     if (l === 'gw' && !c.altItems) { const g = makeGwLayout(c); c.altItems = g.items; c.altGroups = g.groups; made = true; }
     const ci = c.items, cg = c.groups; c.items = c.altItems || []; c.groups = c.altGroups || []; c.altItems = ci; c.altGroups = cg; c.layout = l;
+    if (l === 'gw') c.showDuties = false;
     ui.selectedId = null; ui.selSeat = null; ui.multi = new Set();
   }, { keepList: true });
   if (made) setResult('👥 Tischordnung „Gruppenarbeit“ angelegt: links das Klassenzimmer (gesperrte Tische sind frei), rechts der Gruppenraum. Unter „🪑 Raum einrichten“ Tische zu Inseln zusammenstellen und als Tischgruppe markieren.', 'ok');
@@ -2715,20 +2745,30 @@ function autoPlace() {
   ui.teams.place = place;
 }
 // Kinder der Gruppen auf ihre Tischinseln setzen (nur in der Tischordnung „Gruppenarbeit“)
+// Gruppenarbeit: an jeder Insel steht ein Namensschild mit allen Kindern der Gruppe (keine festen Stühle)
 function seatTeams() {
   if (!GW() || !ui.teams) return { over: [], none: [] };
-  const isl = new Map(islands().map(x => [x.key, x])), over = [], none = [];
-  change(() => {
-    cls().items.forEach(i => i.seats.forEach(st => { st.sid = null; st.pinned = false; }));
-    ui.teams.list.forEach((t, i) => {
-      const key = ui.teams.place && ui.teams.place[i], x = key && isl.get(key);
-      if (!x) { if (t.length) none.push(i); return; }
-      const seats = x.desks.flatMap(d => d.seats.filter(st => !st.blocked));
-      const R = ui.teams.roles || {}, mem = t.slice().sort((a, b) => ((R[b] || []).includes('lead') ? 1 : 0) - ((R[a] || []).includes('lead') ? 1 : 0));
-      mem.forEach((id, j) => { if (seats[j]) seats[j].sid = id; else over.push(id); });
-    });
-  }, { keepList: true });
-  return { over, none };
+  const isl = new Map(islands().map(x => [x.key, x])), none = [];
+  if (cls().items.some(i => i.seats.some(st => st.sid))) change(() => { cls().items.forEach(i => i.seats.forEach(st => { st.sid = null; st.pinned = false; })); }, { keepList: true });
+  ui.teams.list.forEach((t, i) => { const key = ui.teams.place && ui.teams.place[i]; if (t.length && !(key && isl.get(key))) none.push(i); });
+  renderRoom();
+  return { over: [], none };
+}
+function renderIslandSigns(items) {
+  stage.querySelectorAll('.isl-sign').forEach(x => x.remove());
+  if (!GW() || !ui.teams || !ui.teams.place || ui.preview) return;
+  const isl = new Map(islands().map(x => [x.key, x])), dn = displayNames(cls().students);
+  Object.entries(ui.teams.place).forEach(([t, key]) => {
+    const x = isl.get(key), mem = ui.teams.list[+t]; if (!x || !mem) return;
+    let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+    x.desks.forEach(d => { const p = posOf(d), r = Math.max(d.w, d.h) / 2; x0 = Math.min(x0, p.x - r); x1 = Math.max(x1, p.x + r); y0 = Math.min(y0, p.y - r); y1 = Math.max(y1, p.y + r); });
+    const R = ui.teams.roles || {}, sorted = mem.slice().sort((a, b) => ((R[b] || []).includes('lead') ? 1 : 0) - ((R[a] || []).includes('lead') ? 1 : 0));
+    const el = document.createElement('div'); el.className = 'isl-sign';
+    el.style.setProperty('--tc', teamColor(+t));
+    el.style.left = vx((x0 + x1) / 2) + '%'; el.style.top = vy((y0 + y1) / 2) + '%'; el.style.minWidth = Math.min(x1 - x0, 22) + '%'; el.style.maxWidth = Math.max(x1 - x0 + 10, 26) + '%';
+    el.innerHTML = `<b>${esc(teamTitle(+t))}</b><div class="nl">${sorted.map(id => `<span>${roleIcons(id) ? roleIcons(id) + ' ' : ''}${esc(dn.get(id) || '?')}</span>`).join('')}</div>`;
+    stage.appendChild(el);
+  });
 }
 function gwSync(reassign) {
   if (!GW() || !ui.teams) return;
@@ -2736,7 +2776,7 @@ function gwSync(reassign) {
   ui.teams.place = ui.teams.place || {};
   const r = seatTeams(), dn = displayNames(cls().students);
   renderTeams();
-  if (r.over.length || r.none.length) setResult((r.none.length ? `Noch ohne Tisch: ${r.none.map(teamTitle).join(', ')}. ` : '') + (r.over.length ? `Kein Platz mehr an der Insel für: ${r.over.map(x => dn.get(x)).join(', ')}.` : ''), 'warn');
+  if (r.none.length) setResult(`Noch ohne Tisch: ${r.none.map(teamTitle).join(', ')}.`, 'warn');
 }
 function placeTeam(t, key) {
   if (!ui.teams) return;
@@ -3148,6 +3188,7 @@ $('dutyDeal').addEventListener('click', () => {
 });
 $('dutyResetCount').addEventListener('click', () => change(() => { cls().dutyCount = {}; }, { keepList: true }));
 $('dutyIcons').addEventListener('change', e => change(() => { cls().dutyIcons = e.target.checked; }, { keepList: true }));
+$('dutyBtn').addEventListener('click', () => change(() => { cls().showDuties = !cls().showDuties; }, { keepList: true }));
 $('dutyShow').addEventListener('change', e => change(() => { cls().showDuties = e.target.checked; }, { keepList: true }));
 
 /* =====================================================================
@@ -3251,21 +3292,28 @@ function layoutStage() {
   let x0 = 100, y0 = 100, x1 = 0, y1 = 0;
   const add = (x, y) => { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); };
   items.forEach(d => {
-    const t = d.r * Math.PI / 180;
+    const t = d.r * Math.PI / 180, P = posOf(d);
     [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(([sx, sy]) => {
       const lx = sx * d.w / 2, ly = sy * d.h / 2;
-      add(vx(d.x + lx * Math.cos(t) - ly * Math.sin(t)), vy(d.y + lx * Math.sin(t) + ly * Math.cos(t)));
+      add(vx(P.x + lx * Math.cos(t) - ly * Math.sin(t)), vy(P.y + lx * Math.sin(t) + ly * Math.cos(t)));
     });
-    add(vx(d.x), vy(d.y) - d.h / 2 - 3);   // Platz für die Beschriftung „Tisch …“
+    add(vx(P.x), vy(P.y) - d.h / 2 - 3);   // Platz für die Beschriftung „Tisch …“
   });
   if (!items.length) { x0 = 20; y0 = 20; x1 = 80; y1 = 80; }
+  const r1 = GW() && gwAreas(items).r1;
+  if (r1) {   // Gruppenarbeit: Tafel bleibt am Klassenzimmer
+    const yb = r1.y + r1.h / 2; front.style.left = vx(r1.x) + '%'; front.style.width = (r1.w * .55) + '%'; front.style.bottom = 'auto';
+    front.style.top = (ui.flipped ? 100 - yb - 6 : yb + 1) + '%'; add(vx(r1.x), ui.flipped ? 100 - yb - 7 : yb + 7);
+  } else {
   // Tafel direkt an den Plan heranrücken statt an den Raumrand
   const tafelH = 5;
   if (ui.flipped) { front.style.top = (y0 - tafelH) + '%'; y0 -= tafelH + 1; }
   else { front.style.bottom = 'auto'; front.style.top = (y1 + 1.5) + '%'; y1 += tafelH + 1.5; }
   add(Math.min(x0, 30), y0); add(Math.max(x1, 70), y1);
+  }
   const m = 1.5; x0 -= m; y0 -= m; x1 += m; y1 += m;
   const bw = x1 - x0, bh = y1 - y0;
+  room.style.aspectRatio = GW() && !ui.present && !ui.fit ? (bw / bh).toFixed(3) : '';
   const R = room.getBoundingClientRect(), W = R.width, H = R.height;
   const vis = panels.filter(p => !p.hidden);
   vis.forEach(p => { p.style.left = '-9999px'; p.style.top = '0'; });
