@@ -266,8 +266,10 @@
   #pickBanner .pn { font-size: clamp(18px, 4.2cqw, 44px); font-weight: 800; color: #92400e; white-space: nowrap; }
   #pickBanner.rolling .pn { color: #b45309; opacity: .75; }
   #pickBanner button { border: none; color: var(--muted); padding: 2px 6px; }
-  #dutyBox { position: absolute; top: 1.5%; left: 1.5%; z-index: 6; background: rgba(255,255,255,.94); border: 1.5px solid #c7cbd4; border-radius: 10px; padding: 8px 14px; font-size: clamp(11px, 1.75cqw, 19px); line-height: 1.4; max-width: 46%; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+  #dutyBox { position: absolute; bottom: 1.5%; left: 1.5%; z-index: 6; background: rgba(255,255,255,.94); border: 1.5px solid #c7cbd4; border-radius: 10px; padding: 8px 14px; font-size: clamp(11px, 1.75cqw, 19px); line-height: 1.4; max-width: 46%; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
   #dutyBox[hidden] { display: none; }
+  .room.flipped #dutyBox { bottom: auto; top: 1.5%; left: auto; right: 1.5%; }   /* unten links ist die Tür – in der Schülersicht oben rechts */
+  body.present #dutyBox, body.print-fit #dutyBox, body.present .room.flipped #dutyBox, body.print-fit .room.flipped #dutyBox { bottom: auto; right: auto; }
   #dutyBox b { display: block; color: var(--line); margin-bottom: 3px; font-size: 1.05em; }
   #dutyBox div { font-weight: 600; }
   #dutyBox span { color: var(--muted); }
@@ -533,7 +535,7 @@
   .r2zone .r2b { position: absolute; right: 8px; top: 0; transform: translateY(-50%); display: flex; gap: 4px; pointer-events: auto; }
   .r2zone .r2b button { border: 1.5px solid #94a3b8; background: #fff; border-radius: 7px; font: inherit; font-size: 12px; font-weight: 700; padding: 1px 8px; cursor: pointer; color: #334155; }
   .r2zone .r2b button:hover { border-color: var(--accent); color: var(--accent); }
-  .isl-sign { position: absolute; transform: translate(-50%, -50%); z-index: 4; pointer-events: none; background: color-mix(in srgb, var(--tc) 14%, #fff); border: 3px solid var(--tc); border-radius: 12px; padding: .35em .6em; box-shadow: 0 2px 8px rgba(0,0,0,.15); font-size: clamp(9px, 1.45cqw, 26px); text-align: center; line-height: 1.25; }
+  .isl-sign { position: absolute; transform: translate(-50%, -50%); z-index: 4; cursor: grab; touch-action: none; background: color-mix(in srgb, var(--tc) 14%, #fff); border: 3px solid var(--tc); border-radius: 12px; padding: .35em .6em; box-shadow: 0 2px 8px rgba(0,0,0,.15); font-size: clamp(9px, 1.45cqw, 26px); text-align: center; line-height: 1.25; }
   .isl-sign b { display: block; color: var(--tc); font-size: .8em; text-transform: uppercase; letter-spacing: .04em; margin-bottom: .15em; }
   .isl-sign .nl { display: flex; flex-wrap: wrap; justify-content: center; gap: .1em .55em; font-weight: 700; color: var(--ink); }
   .isl-sign .nl span { white-space: nowrap; }
@@ -722,10 +724,10 @@
       <details class="card">
         <summary>🧩 Tischgruppen <span class="badge" id="groupBadge"></span></summary>
         <div class="cbody">
-          <button id="groupAuto">Gruppen aus aneinanderstehenden Tischen bilden</button>
-          <button id="groupClear" class="danger">Alle Gruppen auflösen</button>
+          <button id="groupAuto">Tischgruppen aus aneinanderstehenden Tischen bilden</button>
+          <button id="groupClear" class="danger">Alle Tischgruppen auflösen</button>
           <div class="glist" id="groupList"></div>
-          <p class="hint">Tische einer Gruppe werden in der Gruppenfarbe umrandet. Einzelne Tische ordnest du im Modus „Raum einrichten“ zu: Tisch anklicken → Gruppe wählen. Gruppennamen kannst du hier ändern.</p>
+          <p class="hint">Tische einer Tischgruppe werden in ihrer Farbe umrandet. Einzelne Tische ordnest du im Modus „Raum einrichten“ zu: Tisch anklicken → Tischgruppe wählen. Die Namen der Tischgruppen kannst du hier ändern.</p>
         </div>
       </details>
 
@@ -750,7 +752,7 @@
             <option value="arc">Bogen (Ausgangs-Anordnung, 10 Tische)</option>
           </select>
           <div class="row"><span class="hint" id="tplCountLbl" style="flex:none">Zweiertische:</span><input type="number" id="tplCount" value="12" min="1" max="36" style="width:70px"><button id="tplApply" style="flex:1">Vorlage anwenden</button></div>
-          <p class="hint">Im Modus „Raum einrichten“: Ziehen = verschieben · Anklicken = drehen, Platz sperren, Gruppe, entfernen · Doppelklick auf einen Platz = sperren/freigeben · Objekte über das Eck-Quadrat in der Größe ändern</p>
+          <p class="hint">Im Modus „Raum einrichten“: Ziehen = verschieben · Anklicken = drehen, Platz sperren, Tischgruppe, entfernen · Doppelklick auf einen Platz = sperren/freigeben · Objekte über das Eck-Quadrat in der Größe ändern</p>
           <p class="hint"><b>Mehrere Tische:</b> Shift- bzw. Strg-Klick fügt Tische zur Auswahl hinzu, oder auf freier Fläche einen Rahmen aufziehen · Strg+A = alle · dann gemeinsam ziehen, drehen, gruppieren oder entfernen</p>
         </div>
       </details>
@@ -783,7 +785,7 @@
           <select id="prView"><option value="teacher">Lehrersicht (Tafel unten)</option><option value="students">Schülersicht (Tafel oben)</option></select>
           <label class="chk"><input type="checkbox" id="prDate" checked> Datum drucken</label>
           <label class="chk"><input type="checkbox" id="prColors" checked> Farben drucken (so wie gerade angezeigt)</label>
-          <label class="chk"><input type="checkbox" id="prGroups" checked> Gruppen drucken</label>
+          <label class="chk"><input type="checkbox" id="prGroups" checked> Tischgruppen drucken</label>
           <label class="chk"><input type="checkbox" id="prGender"> Geschlecht drucken</label>
           <button class="primary" id="print">🖨 Sitzplan drucken</button>
           <div class="sub">Vertretungsblatt</div>
@@ -818,7 +820,7 @@
             <p class="hint" style="margin:2px 0 0">Jede Änderung wird sofort im Speicher dieser App auf dem iPad abgelegt und beim nächsten Start wieder geladen – ohne Datei. Die Daten verlassen das Gerät nicht. Mit „📤 Als Datei sichern“ machst du eine Sicherung (z. B. für den PC). Ausschalten löscht den Speicher der App auf diesem Gerät.</p>
           </div>
           <p class="hint">Eine Datei enthält alle Klassen mit Schülern, Regeln, Räumen, Verlauf und Diensten. Für „Zuletzt verwendet“ merkt sich der Browser nur die Verweise auf die Dateien, nicht deren Inhalt.</p>
-          <p class="hint" style="margin:0">Version 2026-10-27</p>
+          <p class="hint" style="margin:0">Version 2026-10-28</p>
         </div>
       </details>
 
@@ -1743,8 +1745,8 @@ function pruneGroups() {
 }
 function newGroup() {
   const c = cls();
-  let k = 1; while (c.groups.some(g => g.name === 'Gruppe ' + k)) k++;
-  const g = { id: newId('g'), name: 'Gruppe ' + k, color: GROUP_COLORS[(k - 1) % GROUP_COLORS.length] };
+  let k = 1; while (c.groups.some(g => g.name === 'Tischgruppe ' + k)) k++;
+  const g = { id: newId('g'), name: 'Tischgruppe ' + k, color: GROUP_COLORS[(k - 1) % GROUP_COLORS.length] };
   c.groups.push(g);
   return g;
 }
@@ -1766,7 +1768,7 @@ function autoGroups() {
       .sort((a, b) => Math.min(...a.map(d => d.x)) - Math.min(...b.map(d => d.x)))
       .forEach(cl => { const g = newGroup(); cl.forEach(d => d.groupId = g.id); count++; });
   }, { keepList: true });
-  setResult(count ? `${count} Gruppen gebildet.` : 'Keine aneinanderstehenden Tische gefunden. Schiebe Tische zusammen oder ordne sie einzeln zu (Tisch anklicken → Gruppe).', count ? 'ok' : 'warn');
+  setResult(count ? `${count} Tischgruppen gebildet.` : 'Keine aneinanderstehenden Tische gefunden. Schiebe Tische zusammen oder ordne sie einzeln zu (Tisch anklicken → Tischgruppe).', count ? 'ok' : 'warn');
 }
 
 /* =====================================================================
@@ -1868,6 +1870,11 @@ const vy = y => ui.flipped ? YMAX() - y : y;
 
 function renderRoom(animate) {
   const c = cls();
+  if (!c.tgNames) {   // ältere Dateien: „Gruppe 1“ der Tischgruppen → „Tischgruppe 1“ (Verwechslung mit der Gruppeneinteilung)
+    const rn = gs => (gs || []).forEach(g => { const m = /^Gruppe (\d+)$/.exec(g.name || ''); if (m) g.name = 'Tischgruppe ' + m[1]; });
+    rn(c.groups); rn(c.altGroups); if (c.gwR2) rn(c.gwR2.groups); if (c.gwOther) rn(c.gwOther.groups); (c.plans || []).forEach(p => rn(p.groups));
+    c.tgNames = true;
+  }
   if (c.roomH == null) { const d = autoRoomH(c); c.roomH = 100; if (d) { cropRoom(c, d); (c.items || []).forEach(fitIn); dirty = true; renderFileInfo(); } }
   if (GW()) migrateGw(c);
   const items = ui.preview ? ui.preview.items : c.items;
@@ -2003,7 +2010,7 @@ function buildItembar() {
       <button data-rot="-15" title="Alle 15° nach links drehen">⟲</button>
       <button data-rot="15" title="Alle 15° nach rechts drehen">⟳</button>
       <button data-rot="reset" title="Alle gerade ausrichten">0°</button>
-      <select id="deskGroup" title="Gruppe für alle"><option value="">Gruppe …</option><option value="__none">keine Gruppe</option>${gs.map(g => `<option value="${g.id}">${esc(g.name)}</option>`).join('')}<option value="__new">＋ neue Gruppe</option></select>
+      <select id="deskGroup" title="Tischgruppe für alle"><option value="">Tischgruppe …</option><option value="__none">keine Tischgruppe</option>${gs.map(g => `<option value="${g.id}">${esc(g.name)}</option>`).join('')}<option value="__new">＋ neue Tischgruppe</option></select>
       <button class="danger" data-del="1" title="Alle ausgewählten entfernen">✕</button>`;
   } else {
     const it = byId(ui.selectedId);
@@ -2020,7 +2027,7 @@ function buildItembar() {
     else if (it.type === 'desk1') { const b = it.seats[0].blocked; html += `<button class="${b ? 'on' : ''}" data-block="0">${b ? '🔓 freigeben' : '🔒 sperren'}</button>`; }
     if (isDesk(it)) {
       const gs = cls().groups;
-      html += `<select id="deskGroup" title="Gruppe"><option value="__none">keine Gruppe</option>${gs.map(g => `<option value="${g.id}" ${it.groupId === g.id ? 'selected' : ''}>${esc(g.name)}</option>`).join('')}<option value="__new">＋ neue Gruppe</option></select>`;
+      html += `<select id="deskGroup" title="Tischgruppe"><option value="__none">keine Tischgruppe</option>${gs.map(g => `<option value="${g.id}" ${it.groupId === g.id ? 'selected' : ''}>${esc(g.name)}</option>`).join('')}<option value="__new">＋ neue Tischgruppe</option></select>`;
     }
     html += `<button class="danger" data-del="1" title="Entfernen">✕</button>`;
     itembar.innerHTML = html;
@@ -2726,8 +2733,10 @@ function makeGwLayout(c) {
 // Standard-Gruppenraum: zwei Inseln aus je zwei Doppeltischen
 function defaultR2() {
   const items = [], groups = [], gcol = ['#0ea5e9', '#f97316'];
+  const taken = new Set(cls().groups.map(g => g.name)); let k = 1;
   [28, 72].forEach((x, gi) => {
-    const g = { id: newId('g'), name: 'Gruppentisch ' + (gi + 1), color: gcol[gi] }; groups.push(g);
+    while (taken.has('Tischgruppe ' + k)) k++; taken.add('Tischgruppe ' + k);
+    const g = { id: newId('g'), name: 'Tischgruppe ' + k, color: gcol[gi] }; groups.push(g);
     [9.5, 17].forEach(y => items.push(makeItem({ type: 'desk2', x, y: y + 0.5, groupId: g.id, r2: true })));
   });
   return { items, groups };
@@ -2883,7 +2892,7 @@ function renderIslandSigns(items) {
     let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
     x.desks.forEach(d => { const p = d, r = Math.max(d.w, d.h) / 2; x0 = Math.min(x0, p.x - r); x1 = Math.max(x1, p.x + r); y0 = Math.min(y0, p.y - r); y1 = Math.max(y1, p.y + r); });
     const R = ui.teams.roles || {}, sorted = mem.slice().sort((a, b) => ((R[b] || []).includes('lead') ? 1 : 0) - ((R[a] || []).includes('lead') ? 1 : 0));
-    const el = document.createElement('div'); el.className = 'isl-sign';
+    const el = document.createElement('div'); el.className = 'isl-sign'; el.dataset.tdrag = t; el.title = 'Ziehen: an einen anderen Tisch setzen (auf eine besetzte Insel = tauschen)';
     el.style.setProperty('--tc', teamColor(+t));
     el.style.left = vx((x0 + x1) / 2) + '%'; el.style.top = vy((y0 + y1) / 2) + '%'; el.dataset.cx = vx((x0 + x1) / 2); el.dataset.cy = vy((y0 + y1) / 2); el.style.minWidth = Math.min(x1 - x0, 22) + '%'; el.style.maxWidth = Math.max(x1 - x0 + 10, 26) + '%';
     el.innerHTML = `<b>${esc(teamTitle(+t))}</b><div class="nl">${sorted.map(id => `<span>${roleIcons(id) ? roleIcons(id) + ' ' : ''}${esc(dn.get(id) || '?')}</span>`).join('')}</div>`;
@@ -2935,8 +2944,9 @@ document.addEventListener('pointermove', e => {
   if (!pdrag.ghost) { if (Math.hypot(e.clientX - pdrag.x0, e.clientY - pdrag.y0) < 5) return; pdrag.ghost = document.createElement('div'); pdrag.ghost.className = 'ghost'; pdrag.ghost.textContent = '📍 ' + teamTitle(pdrag.t); pdrag.ghost.style.background = teamColor(pdrag.t); document.body.appendChild(pdrag.ghost); }
   pdrag.ghost.style.left = e.clientX + 'px'; pdrag.ghost.style.top = e.clientY + 'px';
   const under = document.elementsFromPoint(e.clientX, e.clientY), pk = under.find(x => x.dataset && x.dataset.pk);
+  const sg = under.find(x => x.classList && x.classList.contains('isl-sign') && +x.dataset.tdrag !== pdrag.t);
   const d = under.find(x => x.classList && x.classList.contains('desk'));
-  const key = pk ? pk.dataset.pk : d ? (() => { const it = byId(d.dataset.id); return it ? (it.groupId ? 'g:' + it.groupId : 'd:' + it.id) : null; })() : null;
+  const key = sg ? (ui.teams.place || {})[sg.dataset.tdrag] : pk ? pk.dataset.pk : d ? (() => { const it = byId(d.dataset.id); return it ? (it.groupId ? 'g:' + it.groupId : 'd:' + it.id) : null; })() : null;
   room.querySelectorAll('.isl-drop').forEach(x => x.classList.remove('isl-drop'));
   if (key) room.querySelectorAll('.item.desk').forEach(x => { const it = byId(x.dataset.id); if (it && (it.groupId ? 'g:' + it.groupId : 'd:' + it.id) === key) x.classList.add('isl-drop'); });
   pdrag.over = key;
@@ -2945,7 +2955,11 @@ document.addEventListener('pointerup', () => {
   if (!pdrag) return;
   const d = pdrag; pdrag = null; if (d.ghost) d.ghost.remove();
   room.querySelectorAll('.isl-drop').forEach(x => x.classList.remove('isl-drop'));
-  if (d.over) { placeTeam(d.t, d.over); setResult(`📍 ${teamTitle(d.t)} sitzt jetzt an ${(islands().find(x => x.key === d.over) || {}).name || 'der Insel'}.`, 'ok'); }
+  if (d.over && (ui.teams.place || {})[d.t] !== d.over) {
+    const other = Object.keys(ui.teams.place || {}).find(k => ui.teams.place[k] === d.over && +k !== d.t), had = (ui.teams.place || {})[d.t];
+    placeTeam(d.t, d.over);
+    setResult(other != null && had ? `🔄 ${teamTitle(d.t)} und ${teamTitle(+other)} haben die Tische getauscht.` : `📍 ${teamTitle(d.t)} sitzt jetzt an ${(islands().find(x => x.key === d.over) || {}).name || 'der Insel'}.`, 'ok');
+  }
 }, true);
 function placeCtl(i) {
   if (!GW()) return '';
@@ -3407,7 +3421,8 @@ ui.present = false;
 // Plan so vergrößern, dass möglichst wenig leere Fläche bleibt.
 // Timer und Dienste-Liste kommen in den freien Rand (rechts oder oben – je nachdem, wo der Plan größer bleibt).
 function layoutStage() {
-  const panels = ui.fit ? [$('dutyBox')] : [$('timerBox'), $('pickBanner'), $('teamsPanel'), $('dutyBox')];
+  const panels = ui.fit ? [$('dutyBox')] : [$('timerBox'), $('pickBanner'), $('teamsPanel')];
+  if (!ui.fit) { const db = $('dutyBox'); db.style.left = db.style.top = db.style.width = ''; }
   const front = stage.querySelector('.front');
   panels.forEach(p => { p.classList.remove('side'); p.style.left = p.style.top = p.style.right = p.style.transform = p.style.width = ''; });
   front.style.top = front.style.bottom = '';
@@ -3468,6 +3483,11 @@ function layoutStage() {
   }
   Object.assign(stage.style, { width: S + 'px', height: S + 'px', left: (offX - x0 * S / 100) + 'px', top: (offY - y0 * S / 100) + 'px' });
   fitNames(S);
+  const db = $('dutyBox');   // Dienste: unten links an der Tür (Schülersicht: oben rechts)
+  if (!ui.fit && !db.hidden) {
+    if (ui.flipped) { db.style.left = Math.max(14, offX + usedW - db.offsetWidth) + 'px'; db.style.top = Math.max(14, offY) + 'px'; }
+    else { db.style.left = Math.max(14, offX) + 'px'; db.style.top = Math.max(14, Math.min(H - db.offsetHeight - 14, offY + usedH - db.offsetHeight)) + 'px'; }
+  }
   if (!layoutStage.ext) {   // breite Namensschilder: Plan so weit verkleinern, dass sie ganz sichtbar sind
     const sg = [...stage.querySelectorAll('.isl-sign')];
     if (sg.length) {
