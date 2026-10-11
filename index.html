@@ -814,7 +814,7 @@
             <p class="hint" style="margin:2px 0 0">Jede Änderung wird sofort im Speicher dieser App auf dem iPad abgelegt und beim nächsten Start wieder geladen – ohne Datei. Die Daten verlassen das Gerät nicht. Mit „📤 Als Datei sichern“ machst du eine Sicherung (z. B. für den PC). Ausschalten löscht den Speicher der App auf diesem Gerät.</p>
           </div>
           <p class="hint">Eine Datei enthält alle Klassen mit Schülern, Regeln, Räumen, Verlauf und Diensten. Für „Zuletzt verwendet“ merkt sich der Browser nur die Verweise auf die Dateien, nicht deren Inhalt.</p>
-          <p class="hint" style="margin:0">Version 2026-10-25</p>
+          <p class="hint" style="margin:0">Version 2026-10-26</p>
         </div>
       </details>
 
@@ -1401,14 +1401,16 @@ function makeClass(name, items) {
 function halfExt(it) { const t = (it.r || 0) * Math.PI / 180, c = Math.abs(Math.cos(t)), s = Math.abs(Math.sin(t)); return { hx: Math.min(50, (it.w * c + it.h * s) / 2), hy: Math.min(50, (it.w * s + it.h * c) / 2) }; }
 // Gruppenraum: fester Bereich oben im Plan (nur Tischordnung „Gruppenarbeit“, wenn zugeschaltet)
 const ZONE = { x0: 2, x1: 98, y0: 1.5, y1: 22.5 };
-const EXT = 15;   // so viel wird der Plan mit Gruppenraum nach unten verlängert
-const YMAX = () => cls().layout === 'gw' && (cls().room2Off === false || cls().items.some(i => !i.r2 && i.y + halfExt(i).hy > 100.5)) ? 100 + EXT : 100;
+const EXT = ZONE.y1 + 1;   // um so viel rückt das Klassenzimmer (mit allen Möbeln und der Tafel) nach unten, wenn der Gruppenraum dazukommt
+const YMAX = () => zoneOn() ? 100 + EXT : 100;
+// Klassenzimmer-Möbel der Gruppenarbeit-Anordnung um dy verschieben (Gruppenraum-Tische bleiben)
+function shiftClass(items, dy) { (items || []).forEach(i => { if (!i.r2) i.y += dy; }); }
 const zoneOn = () => cls().layout === 'gw' && cls().room2Off === false;
 function bnd(it) {
   const { hx, hy } = halfExt(it);
   const lb = isDesk(it) ? 3 : 0;   // Platz für die Beschriftung „Tisch …“
   if (it.r2) return { x0: ZONE.x0 + hx, x1: ZONE.x1 - hx, y0: ZONE.y0 + hy + lb, y1: Math.max(ZONE.y0 + hy + lb, ZONE.y1 - hy) };
-  const ym = YMAX(); return { x0: hx, x1: 100 - hx, y0: hy, y1: ym - hy };
+  return zoneOn() ? { x0: hx, x1: 100 - hx, y0: EXT + hy, y1: 100 + EXT - hy } : { x0: hx, x1: 100 - hx, y0: hy, y1: 100 - hy };
 }
 function fitIn(it) { if (it.type === 'area') return; const b = bnd(it); it.x = Math.min(b.x1, Math.max(b.x0, it.x)); it.y = Math.min(b.y1, Math.max(b.y0, it.y)); }
 /* ---------- Rückgängig / Wiederholen ---------- */
@@ -2745,6 +2747,10 @@ function splitAreas(items, groups) {
   return { a: { items: A, groups: gA }, b: { items: B, groups: gB } };
 }
 function migrateGw(c) {
+  if (c.room2Off === false && !c.zoneShift && !c.gwOther) {   // Dateien der Vorversion: Klassenzimmer noch nicht nach unten gerückt
+    const gwCur = c.layout === 'gw', arr = gwCur ? c.items : c.altItems;
+    if (arr) { shiftClass(arr, EXT); c.zoneShift = true; if (gwCur) arr.forEach(fitIn); }
+  }
   const has = arr => (arr || []).some(i => i.type === 'area');
   const fix = (items, groups, extra) => {
     const sp = splitAreas(items, groups);
@@ -2767,7 +2773,7 @@ function migrateGw(c) {
     const mx = (x0 + x1) / 2, my = (y0 + y1) / 2, zx = (ZONE.x0 + ZONE.x1) / 2, zy = (ZONE.y0 + ZONE.y1) / 2 + 1;
     const moved = its.map(d => ({ ...d, r2: true, x: zx + (d.x - mx) * sc, y: zy + (d.y - my) * sc, w: d.w * sc, h: d.h * sc }));
     const items = (A.items || []).filter(i => !i.r2), groups = (A.groups || []).slice();
-    if (c.room2Off === false) { items.push(...moved); groups.push(...gs); } else c.gwR2 = { items: moved, groups: gs };
+    if (c.room2Off === false) { shiftClass(items, EXT); c.zoneShift = true; items.push(...moved); groups.push(...gs); } else c.gwR2 = { items: moved, groups: gs };
     if (gwCur) { c.items = items; c.groups = groups; } else { c.altItems = items; c.altGroups = groups; }
     delete c.gwOther; delete c.gwRoom;
     if (gwCur) items.forEach(fitIn);
@@ -2792,18 +2798,20 @@ function setRoom2(on) {
   change(() => {
     if (on) {
       const st = c.gwR2 && c.gwR2.items && c.gwR2.items.length ? c.gwR2 : defaultR2();
+      shiftClass(c.items, EXT); c.zoneShift = true;
       c.items.push(...st.items.map(i => ({ ...i, r2: true }))); c.groups.push(...(st.groups || [])); delete c.gwR2;
       c.room2Off = false;
     } else {
       const its = c.items.filter(i => i.r2), ids = new Set(its.map(i => i.groupId).filter(Boolean));
       c.gwR2 = { items: its, groups: c.groups.filter(g => ids.has(g.id)) };
       c.items = c.items.filter(i => !i.r2); c.groups = c.groups.filter(g => !ids.has(g.id));
+      if (c.zoneShift) shiftClass(c.items, -EXT); delete c.zoneShift;
       c.room2Off = true; ui.selectedId = null; ui.multi = new Set();
     }
   }, { keepList: true });
   if (ui.teams && ui.teams.place) Object.keys(ui.teams.place).forEach(t => { if (!islands().some(x => x.key === ui.teams.place[t])) delete ui.teams.place[t]; });
   gwSync(true); syncGwUi();
-  setResult(on ? '🚪 Gruppenraum oben im Plan dazugenommen – unter „🪑 Raum einrichten“ lassen sich dort Tische verschieben, hinzufügen und entfernen.' : '🚪 Gruppenraum ausgeblendet (seine Tische bleiben gespeichert).', 'ok');
+  setResult(on ? '🚪 Gruppenraum oben im Plan dazugenommen – das Klassenzimmer rückt nach unten. Unter „🪑 Raum einrichten“ lassen sich dort Tische verschieben, hinzufügen und entfernen.' : '🚪 Gruppenraum ausgeblendet (seine Tische bleiben gespeichert).', 'ok');
 }
 function islands() {
   const c = cls(), out = [];
