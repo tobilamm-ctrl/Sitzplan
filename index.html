@@ -88,6 +88,9 @@
   .topbar > button, .topbar .modes button, .topbar .tgroup button { padding: 6px 10px; font-size: .88rem; }
   .topbar .tgroup { display: flex; gap: 8px; margin-left: auto; }
   .topbar .spacer { flex: 1; }
+  #planView .topbar { gap: 4px; flex-wrap: nowrap; } #planView .topbar .tgroup { gap: 4px; } #planView .topbar .spacer { display: none; }
+  #planView .topbar > button, #planView .topbar .modes button, #planView .topbar .tgroup button { padding: 5px 6px; font-size: .78rem; white-space: nowrap; }
+  @media (max-width: 1330px) { #planView .topbar { flex-wrap: wrap; } }
   .modes { display: flex; background: #e9ebf0; border-radius: 10px; padding: 3px; gap: 3px; }
   .modes button { border: none; background: transparent; color: var(--muted); padding: 7px 10px; }
   .modes button.active { background: #fff; color: var(--accent); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
@@ -820,7 +823,7 @@
             <p class="hint" style="margin:2px 0 0">Jede Änderung wird sofort im Speicher dieser App auf dem iPad abgelegt und beim nächsten Start wieder geladen – ohne Datei. Die Daten verlassen das Gerät nicht. Mit „📤 Als Datei sichern“ machst du eine Sicherung (z. B. für den PC). Ausschalten löscht den Speicher der App auf diesem Gerät.</p>
           </div>
           <p class="hint">Eine Datei enthält alle Klassen mit Schülern, Regeln, Räumen, Verlauf und Diensten. Für „Zuletzt verwendet“ merkt sich der Browser nur die Verweise auf die Dateien, nicht deren Inhalt.</p>
-          <p class="hint" style="margin:0">Version 2026-10-28</p>
+          <p class="hint" style="margin:0">Version 2026-10-29</p>
         </div>
       </details>
 
@@ -885,13 +888,10 @@
           <button data-mode="room">🪑 Raum einrichten</button>
           <button data-mode="students">👤 Schüler setzen</button>
         </div>
-        <button id="flip" class="toggle" title="Plan um 180° drehen – Tafel oben">👁 Schülersicht</button>
-        <button id="colorBtn" class="toggle" title="Eigene Farben der Kinder vorübergehend anzeigen">🎨</button>
         <div class="modes" id="layoutSw" title="Tischordnung: normal oder für Gruppenarbeit"><button data-l="normal">🪑 Normal</button><button data-l="gw">👥 Gruppenarbeit</button></div>
         <button id="room2Btn" class="toggle" title="Gruppenraum dazunehmen oder weglassen" hidden>🚪</button>
-        <button id="genderBtn" class="toggle" title="Geschlechter vorübergehend farbig anzeigen (Mädchen rosa, Jungen blau, divers lila)">⚥</button>
         <span class="spacer"></span>
-        <span class="tgroup"><button id="timerBtn" title="Gruppenarbeits-Timer">⏱ Timer</button><button id="presentBtn" title="Präsentationsmodus – Plan bildschirmfüllend (Esc beendet)">⛶ Präsentieren</button></span>
+        <span class="tgroup"><button id="flip" class="toggle" title="Plan um 180° drehen – Tafel oben">👁 Schülersicht</button><button id="presentBtn" title="Präsentationsmodus – Plan bildschirmfüllend (Esc beendet)">⛶ Präsentieren</button></span>
       </div>
       <div class="topbar">
         <button id="undo" title="Rückgängig (Strg+Z)">↶</button>
@@ -899,7 +899,7 @@
         <button id="clear">Plätze leeren</button>
         <button class="primary" id="shuffle">🎲 Namen verteilen</button>
         <span class="spacer"></span>
-        <span class="tgroup"><button id="pickBtn2" title="Zufällig ein Kind auswählen">🎯 Wer ist dran?</button><button id="dutyBtn" class="toggle" title="Dienste im Plan ein- oder ausblenden">🧽 Dienste</button><button id="teamsBtn" title="Gruppeneinteilung">👥 Gruppeneinteilung ▾</button></span>
+        <span class="tgroup"><button id="pickBtn2" title="Zufällig ein Kind auswählen">🎯 Wer ist dran?</button><button id="dutyBtn" class="toggle" title="Dienste im Plan ein- oder ausblenden">🧽 Dienste</button><button id="timerBtn" title="Gruppenarbeits-Timer">⏱ Timer</button><button id="teamsBtn" title="Gruppeneinteilung">👥 Gruppeneinteilung ▾</button><button id="colorBtn" class="toggle" title="Eigene Farben der Kinder vorübergehend anzeigen">🎨</button><button id="genderBtn" class="toggle" title="Geschlechter vorübergehend farbig anzeigen (Mädchen rosa, Jungen blau, divers lila)">⚥</button></span>
       </div>
       <div class="print-header"><h2 id="phTitle"></h2><span id="phDate"></span></div>
       <div class="room" id="room">
