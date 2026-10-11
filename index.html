@@ -119,6 +119,11 @@
   .rolesel .rs { padding: 3px 9px; border-radius: 999px; font-size: .8rem; font-weight: 600; border: 1px solid var(--line); background: #fff; color: var(--muted); opacity: .75; }
   .rolesel .rs.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); opacity: 1; }
   .tren { cursor: pointer; }
+  .tsets { display: flex; flex-direction: column; gap: 4px; } #tsList, #pmTsList { display: flex; flex-direction: column; gap: 4px; }
+  .ts-it { display: flex; gap: 4px; } .ts-load { flex: 1; text-align: left; display: flex; flex-direction: column; gap: 0; padding: 5px 10px; min-width: 0; }
+  .ts-load b { font-size: .9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .ts-load small { font-weight: 500; color: var(--muted); font-size: .75rem; }
+  .ts-del { flex: 0 0 auto; padding: 2px 9px; color: var(--muted); }
+  #teamsMenu .tp-sub { font-weight: 700; font-size: .85rem; color: var(--muted); margin-top: 2px; } #pmTsList { max-height: 220px; overflow: auto; }
   .lfbar select { flex: 0 0 auto; width: auto; max-width: 260px; }
   .mx tbody td.nm[data-kid] { cursor: pointer; } .mx tbody td.nm[data-kid]:hover { color: var(--accent); text-decoration: underline; }
   .cdlg.kid-dlg { width: 820px; max-width: 100%; max-height: 92vh; display: flex; flex-direction: column; user-select: text; }
@@ -636,6 +641,7 @@
           <details class="rolebox"><summary>🎭 Rollen, die verteilt werden</summary><div class="rolesel" id="roleSel"></div></details>
           <div class="row fill" id="teamRoleRow"><button id="teamRoles" title="In jeder Gruppe die Rollen zufällig verteilen (Reihenfolge: Leitung, Zeit, Schrift, Sprecher, Material, Lautstärke, Qualität, Motivation)">🎭 Rollen verteilen</button><button id="teamRolesClear" title="Alle Rollen entfernen" style="flex:0 0 auto">✕ Rollen</button></div>
           <div class="teams" id="teamList"></div>
+          <div class="tsets" style="margin-top:6px"><div class="row fill"><button id="tsSave" title="Aktuelle Gruppeneinteilung mit Namen und Rollen in der Datei speichern">💾 Einteilung speichern</button></div><div id="tsList"></div></div>
           <p class="hint">Nur anwesende Kinder. Namen lassen sich per Ziehen umsetzen: auf einen anderen Namen = tauschen, auf eine Gruppe = dorthin verschieben (auch in der großen Ansicht). Bei ungerader Zahl entsteht eine Dreiergruppe.</p>
         </div>
       </details>
@@ -780,7 +786,7 @@
             <p class="hint" style="margin:2px 0 0">Jede Änderung wird sofort im Speicher dieser App auf dem iPad abgelegt und beim nächsten Start wieder geladen – ohne Datei. Die Daten verlassen das Gerät nicht. Mit „📤 Als Datei sichern“ machst du eine Sicherung (z. B. für den PC). Ausschalten löscht den Speicher der App auf diesem Gerät.</p>
           </div>
           <p class="hint">Eine Datei enthält alle Klassen mit Schülern, Regeln, Räumen, Verlauf und Diensten. Für „Zuletzt verwendet“ merkt sich der Browser nur die Verweise auf die Dateien, nicht deren Inhalt.</p>
-          <p class="hint" style="margin:0">Version 2026-10-18</p>
+          <p class="hint" style="margin:0">Version 2026-10-19</p>
         </div>
       </details>
 
@@ -966,6 +972,7 @@
       <label class="chk"><input type="checkbox" id="pmTeamRules"> Regeln beachten</label>
       <label class="chk"><input type="checkbox" id="pmTeamMix"> Jungen und Mädchen mischen</label>
       <button id="pmTeamMake" class="primary">🎲 Gruppen neu bilden</button>
+      <div id="pmTsBox"><div class="tp-sub">📂 Gespeicherte Einteilungen</div><div id="pmTsList"></div></div>
       <div class="row fill"><button id="pmTeamShow" class="not-present">⛶ Groß anzeigen</button><button id="pmTeamClear" class="danger" title="Gruppeneinteilung verwerfen">✕ Verwerfen</button></div>
 </div>
 
@@ -1164,7 +1171,7 @@
 
 <div class="cdlg-back" id="teamsDlg" hidden tabindex="-1">
   <div class="teams-big">
-    <div class="tb-head"><b>Gruppeneinteilung</b><span class="hint" style="margin-left:10px">Namen ziehen zum Umsetzen</span><span class="spacer"></span><label class="chk" style="font-size:.9rem"><input type="checkbox" id="teamColor2" checked> im Plan einfärben</label><button id="teamsRoles">🎭 Rollen verteilen</button><button id="teamsAgain">🎲 Neu bilden</button><button class="primary" id="teamsClose">Schließen</button></div>
+    <div class="tb-head"><b>Gruppeneinteilung</b><span class="hint" style="margin-left:10px">Namen ziehen zum Umsetzen</span><span class="spacer"></span><label class="chk" style="font-size:.9rem"><input type="checkbox" id="teamColor2" checked> im Plan einfärben</label><button id="teamsSave">💾 Speichern</button><button id="teamsRoles">🎭 Rollen verteilen</button><button id="teamsAgain">🎲 Neu bilden</button><button class="primary" id="teamsClose">Schließen</button></div>
     <div class="tgrid" id="teamsGrid"></div>
     <div class="role-legend" id="roleLegend"></div>
     <details class="rolebox big"><summary>🎭 Rollen, die verteilt werden</summary><div class="rolesel" id="roleSel2"></div></details>
@@ -2662,7 +2669,7 @@ function teamTitle(i) { return (ui.teams.names && ui.teams.names[i]) || (ui.team
 function renderTeams() {
   $('teamN').disabled = $('teamMode').value === 'pairs';
   const dn = displayNames(cls().students);
-  $('teamRoleRow').hidden = !ui.teams; renderRoleSel();
+  $('teamRoleRow').hidden = !ui.teams; renderRoleSel(); renderTeamSets();
   if (!ui.teams) { $('teamList').innerHTML = ''; $('teamShow').disabled = true; $('teamClear').disabled = true; return; }
   $('teamClear').disabled = false;
   $('teamShow').disabled = false;
@@ -2732,6 +2739,46 @@ document.addEventListener('pointerup', () => {
   renderTeams(); renderRoom();
 });
 $('teamMake').addEventListener('click', makeTeams);
+// Gruppeneinteilungen speichern und wieder aufrufen (in der Datei, pro Klasse)
+function renderTeamSets() {
+  const sets = cls().teamSets || [];
+  const item = (t, small) => `<div class="ts-it"><button class="ts-load" data-ts="${t.id}" title="Diese Einteilung aufrufen"><b>${esc(t.name)}</b><small>${t.list.length} ${t.mode === 'pairs' ? 'Paare' : 'Gruppen'}${Object.keys(t.roles || {}).length ? ' · mit Rollen' : ''} · ${fmtD(t.date)}</small></button>${small ? '' : `<button class="ts-del" data-tsdel="${t.id}" title="Löschen">✕</button>`}</div>`;
+  $('tsList').innerHTML = sets.map(t => item(t)).join('');
+  $('tsSave').disabled = $('teamsSave').disabled = !ui.teams;
+  $('pmTsList').innerHTML = sets.map(t => item(t, true)).join('') || '<span class="hint">Noch keine gespeichert – unter „Gruppeneinteilung“ mit „💾 Einteilung speichern“.</span>';
+}
+function saveTeamSet() {
+  if (!ui.teams) return;
+  const c = cls(), sets = c.teamSets || [], def = ui.teams.savedName || 'Einteilung ' + fmtD(todayStr());
+  const name = (window.prompt('Name der Gruppeneinteilung (z. B. „Stationenlernen Bruchrechnen“):', def) || '').trim(); if (!name) return;
+  const ex = sets.find(t => t.name.toLowerCase() === name.toLowerCase());
+  if (ex && !window.confirm(`„${ex.name}“ gibt es schon. Überschreiben?`)) return;
+  const data = JSON.parse(JSON.stringify({ mode: ui.teams.mode, list: ui.teams.list, names: ui.teams.names || [], roles: ui.teams.roles || {} }));
+  change(() => { const c2 = cls(); c2.teamSets = c2.teamSets || []; const t = ex ? c2.teamSets.find(x => x.id === ex.id) : null;
+    if (t) Object.assign(t, data, { name, date: todayStr() }); else c2.teamSets.push(Object.assign({ id: newId('ts'), name, date: todayStr() }, data)); }, { keepList: true });
+  ui.teams.savedName = name; renderTeamSets();
+  setResult(`💾 Gruppeneinteilung „${name}“ gespeichert – zum Behalten auch die Datei speichern.`, 'ok');
+}
+function loadTeamSet(id) {
+  const c = cls(), t = (c.teamSets || []).find(x => x.id === id); if (!t) return;
+  const have = new Set(c.students.map(s => s.id));
+  const list = t.list.map(g => g.filter(x => have.has(x)));
+  const inSet = new Set(list.flat()), missing = c.students.filter(s => !inSet.has(s.id));
+  const roles = {}; Object.entries(t.roles || {}).forEach(([k, v]) => { if (have.has(k)) roles[k] = v.slice(); });
+  ui.teams = { mode: t.mode, list, issues: 0, names: (t.names || []).slice(), roles, savedName: t.name };
+  $('teamColor').checked = $('teamColor2').checked = true;
+  renderTeams(); renderRoom(); if (typeof syncPresentBar === 'function') syncPresentBar();
+  const dn = displayNames(c.students), abs = list.flat().filter(x => { const s = c.students.find(y => y.id === x); return s && isAbsent(s); });
+  setResult(`📂 „${t.name}“ aufgerufen.` + (missing.length ? ` Noch in keiner Gruppe: ${missing.map(s => dn.get(s.id)).join(', ')}.` : '') + (abs.length ? ` Heute abwesend: ${abs.map(x => dn.get(x)).join(', ')}.` : ''), missing.length || abs.length ? 'warn' : 'ok');
+}
+$('tsSave').addEventListener('click', saveTeamSet);
+$('teamsSave').addEventListener('click', saveTeamSet);
+document.addEventListener('click', e => {
+  const l = e.target.closest('[data-ts]'); if (l) { const inMenu = !!l.closest('#teamsMenu'); if (inMenu) $('teamsMenu').hidden = true; loadTeamSet(l.dataset.ts); return; }
+  const d = e.target.closest('[data-tsdel]'); if (!d) return;
+  const t = (cls().teamSets || []).find(x => x.id === d.dataset.tsdel); if (!t || !window.confirm(`Gruppeneinteilung „${t.name}“ löschen?`)) return;
+  change(() => { cls().teamSets = (cls().teamSets || []).filter(x => x.id !== t.id); }, { keepList: true }); renderTeamSets();
+});
 // Gruppen umbenennen
 document.addEventListener('click', e => {
   const r = e.target.closest('[data-ren]'); if (!r || !ui.teams) return;
@@ -3163,6 +3210,7 @@ function openTeamsMenu(anchor) {
   $('pmTeamMode').value = $('teamMode').value; $('pmTeamN').value = $('teamN').value; $('pmTeamN').disabled = $('teamMode').value === 'pairs';
   $('pmTeamRules').checked = $('teamRules').checked; $('pmTeamMix').checked = $('teamMix').checked;
   $('pmTeamShow').disabled = $('pmTeamClear').disabled = !ui.teams;
+  renderTeamSets();
   m.hidden = false; m.anchor = anchor;
   const r = anchor.getBoundingClientRect(), h = m.offsetHeight, w = m.offsetWidth;
   m.style.left = clamp(r.right - w, 8, window.innerWidth - w - 8) + 'px';
