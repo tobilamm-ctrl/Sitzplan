@@ -528,6 +528,16 @@
   .obj { display: flex; align-items: center; justify-content: center; text-align: center; background: var(--obj); border: 2px solid var(--obj-line); border-radius: 3px; color: #57534e; font-size: clamp(8px, 1.4cqw, 14px); font-weight: 600; padding: 2px 4px; }
   .obj.round { border-radius: 50%; padding: 4px 8px; }
   .obj.round .size-handle { right: calc(14.6% - 9px); bottom: calc(14.6% - 9px); }
+  body.gwl:not(.present):not(.print-fit) main .room { width: 100%; aspect-ratio: 16 / 10; }
+  .item.area { background: transparent; border: 2px dashed #94a3b8; border-radius: 12px; align-items: flex-start; justify-content: flex-start; box-shadow: none; }
+  .item.area .lbl { font-size: clamp(9px, 1.5cqw, 17px); font-weight: 800; color: #64748b; margin: .4em .7em; text-transform: uppercase; letter-spacing: .06em; text-align: left; }
+  body.mode-students .item.area, body.present .item.area { pointer-events: none; }
+  .gwbar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; } .gwbar[hidden] { display: none; }
+  .gwbox { display: flex; flex-direction: column; gap: 6px; border: 1px dashed var(--line); border-radius: 10px; padding: 8px 10px; }
+  .gwbox .sub2 { font-weight: 800; font-size: .82rem; color: var(--muted); }
+  .tplace { margin-left: auto; font-size: .78rem; padding: 1px 4px; max-width: 120px; }
+  .tpdrag { cursor: grab; touch-action: none; user-select: none; font-size: .9rem; padding: 0 3px; }
+  .item.desk.isl-drop { outline: 4px dashed #16a34a; outline-offset: 3px; }
   .obj .lbl { max-width: 100%; max-height: 100%; overflow: hidden; overflow-wrap: break-word; pointer-events: none; }
 
   /* Gruppen: Tische in der Gruppenfarbe umrandet */
@@ -638,6 +648,14 @@
           <label class="chk"><input type="checkbox" id="teamMix"> Jungen und Mädchen mischen</label>
           <div class="row fill"><button class="primary" id="teamMake">🎲 Bilden</button><button id="teamShow" disabled>⛶ Groß anzeigen</button><button id="teamClear" disabled title="Gruppeneinteilung verwerfen" style="flex:0 0 auto">✕</button></div>
           <label class="chk"><input type="checkbox" id="teamColor" checked> Plätze im Sitzplan in Gruppenfarben anzeigen</label>
+          <div class="gwbox">
+            <div class="sub2">🪑 Tischordnung für Gruppenarbeit</div>
+            <label class="chk"><input type="checkbox" id="gwOn"> eigene Tischordnung „Gruppenarbeit“ verwenden</label>
+            <label class="chk" id="gwR2Row"><input type="checkbox" id="gwR2"> 🚪 Gruppenraum dazunehmen</label>
+            <div class="row" id="gwModeRow"><span class="hint" style="flex:none">Tische zuweisen:</span><label class="chk"><input type="radio" name="gwMode" id="gwAuto" checked> automatisch</label><label class="chk"><input type="radio" name="gwMode" id="gwHand"> von Hand</label></div>
+            <button id="gwSeat">📍 Gruppen an die Tische setzen</button>
+            <p class="hint" style="margin:0" id="gwHint">Tischinseln = Tischgruppen (unter „Raum einrichten“ Tische markieren → Tischgruppe). Bei jeder Gruppe unten mit 📍 auf eine Insel im Plan ziehen oder auswählen.</p>
+          </div>
           <details class="rolebox"><summary>🎭 Rollen, die verteilt werden</summary><div class="rolesel" id="roleSel"></div></details>
           <div class="row fill" id="teamRoleRow"><button id="teamRoles" title="In jeder Gruppe die Rollen zufällig verteilen (Reihenfolge: Leitung, Zeit, Schrift, Sprecher, Material, Lautstärke, Qualität, Motivation)">🎭 Rollen verteilen</button><button id="teamRolesClear" title="Alle Rollen entfernen" style="flex:0 0 auto">✕ Rollen</button></div>
           <div class="teams" id="teamList"></div>
@@ -786,7 +804,7 @@
             <p class="hint" style="margin:2px 0 0">Jede Änderung wird sofort im Speicher dieser App auf dem iPad abgelegt und beim nächsten Start wieder geladen – ohne Datei. Die Daten verlassen das Gerät nicht. Mit „📤 Als Datei sichern“ machst du eine Sicherung (z. B. für den PC). Ausschalten löscht den Speicher der App auf diesem Gerät.</p>
           </div>
           <p class="hint">Eine Datei enthält alle Klassen mit Schülern, Regeln, Räumen, Verlauf und Diensten. Für „Zuletzt verwendet“ merkt sich der Browser nur die Verweise auf die Dateien, nicht deren Inhalt.</p>
-          <p class="hint" style="margin:0">Version 2026-10-19</p>
+          <p class="hint" style="margin:0">Version 2026-10-20</p>
         </div>
       </details>
 
@@ -853,6 +871,8 @@
         </div>
         <button id="flip" class="toggle" title="Plan um 180° drehen – Tafel oben">👁 Schülersicht</button>
         <button id="colorBtn" class="toggle" title="Eigene Farben der Kinder vorübergehend anzeigen">🎨</button>
+        <div class="modes" id="layoutSw" title="Tischordnung: normal oder für Gruppenarbeit"><button data-l="normal">🪑 Normal</button><button data-l="gw">👥 Gruppenarbeit</button></div>
+        <button id="room2Btn" class="toggle" title="Gruppenraum dazunehmen" hidden>🚪 Gruppenraum</button>
         <button id="genderBtn" class="toggle" title="Geschlechter vorübergehend farbig anzeigen (Mädchen rosa, Jungen blau, divers lila)">⚥</button>
         <span class="spacer"></span>
         <span class="tgroup"><button id="timerBtn" title="Gruppenarbeits-Timer">⏱ Timer</button><button id="presentBtn" title="Präsentationsmodus – Plan bildschirmfüllend (Esc beendet)">⛶ Präsentieren</button></span>
@@ -972,6 +992,7 @@
       <label class="chk"><input type="checkbox" id="pmTeamRules"> Regeln beachten</label>
       <label class="chk"><input type="checkbox" id="pmTeamMix"> Jungen und Mädchen mischen</label>
       <button id="pmTeamMake" class="primary">🎲 Gruppen neu bilden</button>
+      <div class="gwbox"><label class="chk"><input type="checkbox" id="pmGwOn"> 🪑 Tischordnung Gruppenarbeit</label><label class="chk" id="pmGwR2Row"><input type="checkbox" id="pmGwR2"> 🚪 Gruppenraum dazunehmen</label><button id="pmGwSeat">📍 Gruppen an die Tische setzen</button></div>
       <div id="pmTsBox"><div class="tp-sub">📂 Gespeicherte Einteilungen</div><div id="pmTsList"></div></div>
       <div class="row fill"><button id="pmTeamShow" class="not-present">⛶ Groß anzeigen</button><button id="pmTeamClear" class="danger" title="Gruppeneinteilung verwerfen">✕ Verwerfen</button></div>
 </div>
@@ -1217,8 +1238,8 @@
 /* =====================================================================
    Grunddaten
    ===================================================================== */
-const SIZES = { desk2: { w: 14, h: 7.5 }, desk1: { w: 7, h: 7.5 }, obj: { w: 14, h: 5 }, round: { w: 8, h: 8 } };
-const SEATS_PER = { desk2: 2, desk1: 1, obj: 0, round: 0 };
+const SIZES = { desk2: { w: 14, h: 7.5 }, desk1: { w: 7, h: 7.5 }, obj: { w: 14, h: 5 }, round: { w: 8, h: 8 }, area: { w: 34, h: 60 } };
+const SEATS_PER = { desk2: 2, desk1: 1, obj: 0, round: 0, area: 0 };
 const NEAR = 8.6;   // Abstand (in % der Raumbreite), bis zu dem Plätze an verschiedenen Tischen als „nebeneinander“ gelten
 const COLORS = {
   red:    { n: 'Rot',        bg: '#fee2e2', fg: '#dc2626' },
@@ -1348,7 +1369,8 @@ function makeItem(d) {
   return {
     id: d.id || newId('i'), type, x: d.x, y: d.y, r: d.r || 0,
     w: d.w || SIZES[type].w, h: d.h || SIZES[type].h,
-    label: type === 'obj' ? (d.label ?? 'Schrank') : type === 'round' ? (d.label ?? 'Pflanze') : '',
+    label: type === 'obj' ? (d.label ?? 'Schrank') : type === 'round' ? (d.label ?? 'Pflanze') : type === 'area' ? (d.label ?? 'Gruppenraum') : '',
+    ...(type === 'area' ? { role: d.role || 'room2' } : {}),
     groupId: d.groupId || null,
     seats: Array.from({ length: SEATS_PER[type] }, (_, i) => ({
       sid: (src[i] && !src[i].blocked && src[i].sid) || null,
@@ -1814,13 +1836,13 @@ function renderRoom(animate) {
   const groupShown = new Set();   // Gruppenname nur am ersten Tisch einer Gruppe anzeigen
   items.forEach(it => {
     const el = document.createElement('div');
-    el.className = 'item ' + (isDesk(it) ? 'desk' : 'obj' + (it.type === 'round' ? ' round' : '')) + (ui.multi.has(it.id) && !studentMode() && !ui.preview ? ' selected' : '');
+    el.className = 'item ' + (isDesk(it) ? 'desk' : 'obj' + (it.type === 'round' ? ' round' : it.type === 'area' ? ' area' : '')) + (ui.multi.has(it.id) && !studentMode() && !ui.preview ? ' selected' : '');
     el.dataset.id = it.id;
     applyGeom(el, it);
     if (isDesk(it)) {
       const g = it.groupId && groups.find(g => g.id === it.groupId);
       const showGN = g && !groupShown.has(g.id); if (g) groupShown.add(g.id);
-      el.innerHTML = `<span class="nr">Tisch ${++nr}${showGN ? `<span class="gn"> · ${esc(g.name)}</span>` : ''}</span>`;
+      ++nr; el.innerHTML = g && !showGN ? '' : `<span class="nr">Tisch ${nr}${showGN ? `<span class="gn"> · ${esc(g.name)}</span>` : ''}</span>`;
       if (g) { el.classList.add('grouped'); el.style.setProperty('--gc', g.color); }
       it.seats.forEach((s, i) => {
         const sd = document.createElement('div');
@@ -1881,6 +1903,10 @@ function renderRoom(animate) {
     pv.hidden = false;
   } else pv.hidden = true;
 
+  document.body.classList.toggle('gwl', GW());
+  { const fr = stage.querySelector('.front'), a = GW() && items.find(i => i.type === 'area' && i.role === 'room1');
+    if (a) { fr.style.left = vx(a.x) + '%'; fr.style.width = (a.w * .55) + '%'; fr.style.bottom = 'auto'; const yb = a.y + a.h / 2; fr.style.top = (ui.flipped ? 100 - yb - 6 : yb + 1) + '%'; fr.dataset.gw = '1'; }
+    else if (fr.dataset.gw) { fr.style.left = fr.style.width = fr.style.top = fr.style.bottom = ''; delete fr.dataset.gw; } }
   room.classList.toggle('has-picked', !!ui.pickedId && !!stage.querySelector('.seat.picked'));
   renderTeamsPanel(dn);
   layoutStage();
@@ -2624,6 +2650,146 @@ $('pickBanner').addEventListener('click', () => { ui.pickedId = null; $('pickBan
 /* =====================================================================
    Partner- und Gruppengenerator
    ===================================================================== */
+/* =====================================================================
+   Tischordnung „Gruppenarbeit“: eigene Anordnung (Klassenzimmer + Gruppenraum), Gruppen auf Tischinseln
+   ===================================================================== */
+const GW = () => cls().layout === 'gw';
+const inArea = (it, a) => Math.abs(it.x - a.x) <= a.w / 2 && Math.abs(it.y - a.y) <= a.h / 2;
+function makeGwLayout(c) {
+  const k = .6, ks = .75, sc = it => ({ x: 1 + it.x * k, y: 20 + it.y * k, w: it.w * ks, h: it.h * ks });
+  const items = [makeItem({ type: 'area', role: 'room1', label: 'Klassenzimmer', x: 31, y: 50, w: 60, h: 60 }), makeItem({ type: 'area', role: 'room2', label: 'Gruppenraum', x: 81, y: 50, w: 34, h: 60 })];
+  c.items.filter(i => i.type !== 'area').forEach(it => items.push(makeItem({ ...it, ...sc(it), id: null, groupId: null, seats: isDesk(it) ? it.seats.map(() => ({})) : [] })));
+  const groups = [], gcol = ['#0ea5e9', '#f97316'];
+  [[37, 42.6], [59, 64.6]].forEach(([y1, y2], gi) => {
+    const g = { id: newId('g'), name: 'Gruppenraum ' + (gi + 1), color: gcol[gi] }; groups.push(g);
+    [y1, y2].forEach(y => items.push(makeItem({ type: 'desk2', x: 81, y, w: 10.5, h: 5.6, groupId: g.id })));
+  });
+  return { items, groups };
+}
+function setLayout(l) {
+  const c = cls(); if ((c.layout || 'normal') === l) return;
+  let made = false;
+  change(() => {
+    if (l === 'gw' && !c.altItems) { const g = makeGwLayout(c); c.altItems = g.items; c.altGroups = g.groups; made = true; }
+    const ci = c.items, cg = c.groups; c.items = c.altItems || []; c.groups = c.altGroups || []; c.altItems = ci; c.altGroups = cg; c.layout = l;
+    ui.selectedId = null; ui.selSeat = null; ui.multi = new Set();
+  }, { keepList: true });
+  if (made) setResult('👥 Tischordnung „Gruppenarbeit“ angelegt: links das Klassenzimmer (gesperrte Tische sind frei), rechts der Gruppenraum. Unter „🪑 Raum einrichten“ Tische zu Inseln zusammenstellen und als Tischgruppe markieren.', 'ok');
+  else setResult(l === 'gw' ? '👥 Tischordnung „Gruppenarbeit“' : '🪑 Normale Tischordnung', 'ok');
+  if (l === 'gw') gwSync(false);
+  syncGwUi();
+}
+function setRoom2(on) {
+  const c = cls(); if (!GW() || !!on === !c.room2Off) return;
+  change(() => {
+    if (!on) {
+      const a = c.items.find(i => i.type === 'area' && i.role === 'room2'); if (!a) { c.room2Off = true; return; }
+      const mv = c.items.filter(i => i === a || (i.type !== 'area' && inArea(i, a)));
+      mv.forEach(i => i.seats.forEach(st => { st.sid = null; st.pinned = false; }));
+      const rest = c.items.filter(i => !mv.includes(i)), gids = new Set(mv.map(i => i.groupId).filter(Boolean));
+      const gm = c.groups.filter(g => gids.has(g.id) && !rest.some(i => i.groupId === g.id));
+      c.room2 = { items: mv, groups: gm }; c.items = rest; c.groups = c.groups.filter(g => !gm.includes(g)); c.room2Off = true;
+    } else {
+      if (c.room2) { const ar = c.room2.items.filter(i => i.type === 'area'); c.items = [...c.items.filter(i => i.type === 'area'), ...ar, ...c.items.filter(i => i.type !== 'area'), ...c.room2.items.filter(i => i.type !== 'area')]; c.groups.push(...c.room2.groups); }
+      c.room2 = null; c.room2Off = false;
+    }
+  }, { keepList: true });
+  if (ui.teams && ui.teams.place) Object.keys(ui.teams.place).forEach(t => { if (!islands().some(x => x.key === ui.teams.place[t])) delete ui.teams.place[t]; });
+  gwSync(true); syncGwUi();
+}
+function islands() {
+  const c = cls(), desks = c.items.filter(isDesk), out = [], nr = new Map(desks.map((d, i) => [d.id, i + 1]));
+  c.groups.forEach(g => { const ds = desks.filter(d => d.groupId === g.id); if (ds.length) out.push({ key: 'g:' + g.id, name: g.name, desks: ds }); });
+  desks.filter(d => !d.groupId).forEach(d => out.push({ key: 'd:' + d.id, name: 'Tisch ' + nr.get(d.id), desks: [d] }));
+  out.forEach(o => o.cap = o.desks.reduce((n, d) => n + d.seats.filter(x => !x.blocked).length, 0));
+  return out;
+}
+function autoPlace() {
+  if (!ui.teams) return;
+  const isl = islands(), used = new Set(), place = {};
+  ui.teams.list.map((t, i) => ({ i, n: t.length })).sort((a, b) => b.n - a.n).forEach(({ i, n }) => {
+    const free = isl.filter(x => !used.has(x.key));
+    const best = free.filter(x => x.cap >= n).sort((a, b) => a.cap - b.cap)[0] || free.sort((a, b) => b.cap - a.cap)[0];
+    if (best) { place[i] = best.key; used.add(best.key); }
+  });
+  ui.teams.place = place;
+}
+// Kinder der Gruppen auf ihre Tischinseln setzen (nur in der Tischordnung „Gruppenarbeit“)
+function seatTeams() {
+  if (!GW() || !ui.teams) return { over: [], none: [] };
+  const isl = new Map(islands().map(x => [x.key, x])), over = [], none = [];
+  change(() => {
+    cls().items.forEach(i => i.seats.forEach(st => { st.sid = null; st.pinned = false; }));
+    ui.teams.list.forEach((t, i) => {
+      const key = ui.teams.place && ui.teams.place[i], x = key && isl.get(key);
+      if (!x) { if (t.length) none.push(i); return; }
+      const seats = x.desks.flatMap(d => d.seats.filter(st => !st.blocked));
+      const R = ui.teams.roles || {}, mem = t.slice().sort((a, b) => ((R[b] || []).includes('lead') ? 1 : 0) - ((R[a] || []).includes('lead') ? 1 : 0));
+      mem.forEach((id, j) => { if (seats[j]) seats[j].sid = id; else over.push(id); });
+    });
+  }, { keepList: true });
+  return { over, none };
+}
+function gwSync(reassign) {
+  if (!GW() || !ui.teams) return;
+  if (cls().gwMode !== 'manual' && (reassign || !ui.teams.place || !Object.keys(ui.teams.place).length)) autoPlace();
+  ui.teams.place = ui.teams.place || {};
+  const r = seatTeams(), dn = displayNames(cls().students);
+  renderTeams();
+  if (r.over.length || r.none.length) setResult((r.none.length ? `Noch ohne Tisch: ${r.none.map(teamTitle).join(', ')}. ` : '') + (r.over.length ? `Kein Platz mehr an der Insel für: ${r.over.map(x => dn.get(x)).join(', ')}.` : ''), 'warn');
+}
+function placeTeam(t, key) {
+  if (!ui.teams) return;
+  const P = ui.teams.place = ui.teams.place || {};
+  const other = Object.keys(P).find(k => P[k] === key && +k !== t);
+  if (other != null) { if (P[t]) P[other] = P[t]; else delete P[other]; }   // Plätze tauschen
+  if (key) P[t] = key; else delete P[t];
+  gwSync(false);
+}
+function syncGwUi() {
+  const c = cls(), gw = GW();
+  document.querySelectorAll('#layoutSw button').forEach(b => b.classList.toggle('active', b.dataset.l === (gw ? 'gw' : 'normal')));
+  $('room2Btn').hidden = !gw; $('room2Btn').classList.toggle('on', gw && !c.room2Off);
+  $('gwOn').checked = $('pmGwOn').checked = gw; $('gwR2').checked = $('pmGwR2').checked = gw && !c.room2Off;
+  $('gwR2Row').hidden = $('pmGwR2Row').hidden = $('gwModeRow').hidden = $('gwHint').hidden = !gw;
+  $('gwSeat').hidden = $('pmGwSeat').hidden = !gw || !ui.teams;
+  $('gwAuto').checked = c.gwMode !== 'manual'; $('gwHand').checked = c.gwMode === 'manual';
+}
+$('layoutSw').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setLayout(b.dataset.l); });
+$('room2Btn').addEventListener('click', () => setRoom2(!!cls().room2Off));
+['gwOn', 'pmGwOn'].forEach(id => $(id).addEventListener('change', e => setLayout(e.target.checked ? 'gw' : 'normal')));
+['gwR2', 'pmGwR2'].forEach(id => $(id).addEventListener('change', e => setRoom2(e.target.checked)));
+['gwAuto', 'gwHand'].forEach(id => $(id).addEventListener('change', () => { cls().gwMode = $('gwHand').checked ? 'manual' : 'auto'; dirty = true; renderFileInfo(); }));
+['gwSeat', 'pmGwSeat'].forEach(id => $(id).addEventListener('click', () => { if (id === 'pmGwSeat') $('teamsMenu').hidden = true; if (cls().gwMode !== 'manual') autoPlace(); gwSync(false); setResult('📍 Gruppen sitzen an ihren Tischen.', 'ok'); }));
+document.addEventListener('change', e => { const sel = e.target.closest && e.target.closest('select.tplace'); if (sel) placeTeam(+sel.dataset.t, sel.value); });
+// 📍 einer Gruppe auf eine Tischinsel im Plan ziehen
+let pdrag = null;
+document.addEventListener('pointerdown', e => {
+  const h = e.target.closest('[data-tdrag]'); if (!h || !ui.teams || !GW()) return;
+  pdrag = { t: +h.dataset.tdrag, ghost: null, over: null, x0: e.clientX, y0: e.clientY };
+  h.setPointerCapture(e.pointerId); e.preventDefault(); e.stopPropagation();
+}, true);
+document.addEventListener('pointermove', e => {
+  if (!pdrag) return;
+  if (!pdrag.ghost) { if (Math.hypot(e.clientX - pdrag.x0, e.clientY - pdrag.y0) < 5) return; pdrag.ghost = document.createElement('div'); pdrag.ghost.className = 'ghost'; pdrag.ghost.textContent = '📍 ' + teamTitle(pdrag.t); pdrag.ghost.style.background = teamColor(pdrag.t); document.body.appendChild(pdrag.ghost); }
+  pdrag.ghost.style.left = e.clientX + 'px'; pdrag.ghost.style.top = e.clientY + 'px';
+  const d = document.elementsFromPoint(e.clientX, e.clientY).find(x => x.classList && x.classList.contains('desk'));
+  const key = d ? (() => { const it = byId(d.dataset.id); return it ? (it.groupId ? 'g:' + it.groupId : 'd:' + it.id) : null; })() : null;
+  room.querySelectorAll('.isl-drop').forEach(x => x.classList.remove('isl-drop'));
+  if (key) room.querySelectorAll('.item.desk').forEach(x => { const it = byId(x.dataset.id); if (it && (it.groupId ? 'g:' + it.groupId : 'd:' + it.id) === key) x.classList.add('isl-drop'); });
+  pdrag.over = key;
+}, true);
+document.addEventListener('pointerup', () => {
+  if (!pdrag) return;
+  const d = pdrag; pdrag = null; if (d.ghost) d.ghost.remove();
+  room.querySelectorAll('.isl-drop').forEach(x => x.classList.remove('isl-drop'));
+  if (d.over) { placeTeam(d.t, d.over); setResult(`📍 ${teamTitle(d.t)} sitzt jetzt an ${(islands().find(x => x.key === d.over) || {}).name || 'der Insel'}.`, 'ok'); }
+}, true);
+function placeCtl(i) {
+  if (!GW()) return '';
+  const isl = islands(), cur = ui.teams.place && ui.teams.place[i];
+  return `<span class="tpdrag" data-tdrag="${i}" title="Auf eine Tischinsel im Plan ziehen">📍</span><select class="tplace" data-t="${i}" title="Tischinsel für diese Gruppe"><option value="">– Tisch –</option>${isl.map(x => `<option value="${x.key}"${x.key === cur ? ' selected' : ''}>${esc(x.name)} (${x.cap})</option>`).join('')}</select>`;
+}
 function makeTeams() {
   const c = cls();
   const pres = shuffle(present().map(s => s.id));
@@ -2662,14 +2828,14 @@ function makeTeams() {
     if (nc <= cur) cur = nc; else [A[g1][i1], A[g2][i2]] = [A[g2][i2], A[g1][i1]];
   }
   ui.teams = { mode, list: A, issues: cur, names: [], roles: {} };
-  renderTeams(); renderRoom();
+  renderTeams(); renderRoom(); gwSync(true);
   setResult(cur && useRules ? '⚠ Nicht alle Regeln ließen sich bei den Gruppen erfüllen.' : `✓ ${k} ${mode === 'pairs' ? 'Paare' : 'Gruppen'} gebildet.`, cur && useRules ? 'warn' : 'ok');
 }
 function teamTitle(i) { return (ui.teams.names && ui.teams.names[i]) || (ui.teams.mode === 'pairs' ? 'Paar ' : 'Gruppe ') + (i + 1); }
 function renderTeams() {
   $('teamN').disabled = $('teamMode').value === 'pairs';
   const dn = displayNames(cls().students);
-  $('teamRoleRow').hidden = !ui.teams; renderRoleSel(); renderTeamSets();
+  $('teamRoleRow').hidden = !ui.teams; renderRoleSel(); renderTeamSets(); syncGwUi();
   if (!ui.teams) { $('teamList').innerHTML = ''; $('teamShow').disabled = true; $('teamClear').disabled = true; return; }
   $('teamClear').disabled = false;
   $('teamShow').disabled = false;
@@ -2677,7 +2843,7 @@ function renderTeams() {
     return `<span class="tm" data-t="${i}" data-k="${k}" title="${rn ? esc(rn) + ' · ' : ''}Klick = Rolle festlegen · Ziehen = umsetzen">${ri ? `<span class="ri">${ri}</span>` : ''}${esc(dn.get(id) || '?')}${big && rn ? `<small class="rn">${esc(rn)}</small>` : ''}</span>`; };
   const ttl = i => `<span class="tren" data-ren="${i}" title="Klick = umbenennen">${esc(teamTitle(i))} ✎</span>`;
   $('teamList').innerHTML = ui.teams.list.map((t, i) =>
-    `<div class="team" data-t="${i}" style="--tc:${teamColor(i)}"><b>${ttl(i)}</b>${t.map((id, k) => tm(id, i, k)).join('') || '<i class="hint">leer</i>'}</div>`).join('');
+    `<div class="team" data-t="${i}" style="--tc:${teamColor(i)}"><div class="row" style="gap:4px;flex-wrap:nowrap"><b>${ttl(i)}</b>${placeCtl(i)}</div>${t.map((id, k) => tm(id, i, k)).join('') || '<i class="hint">leer</i>'}</div>`).join('');
   $('teamsGrid').innerHTML = ui.teams.list.map((t, i) =>
     `<div class="tcard" data-t="${i}" style="--tc:${teamColor(i)}"><h3>${ttl(i)} <small>(${t.length})</small></h3>${t.map((id, k) => tm(id, i, k, true)).join('') || '<i class="hint">leer</i>'}</div>`).join('');
   const used = new Set(Object.values(ui.teams.roles || {}).flat());
@@ -2736,13 +2902,13 @@ document.addEventListener('pointerup', () => {
     L[d.t].splice(d.k, 1); L[t2].push(id);
     if (RO[id] && RO[id].length) { setResult(`Rolle ${roleIcons(id)} ist in ${teamTitle(d.t)} jetzt frei.`, 'warn'); delete RO[id]; }
   }
-  renderTeams(); renderRoom();
+  renderTeams(); renderRoom(); gwSync(false);
 });
 $('teamMake').addEventListener('click', makeTeams);
 // Gruppeneinteilungen speichern und wieder aufrufen (in der Datei, pro Klasse)
 function renderTeamSets() {
   const sets = cls().teamSets || [];
-  const item = (t, small) => `<div class="ts-it"><button class="ts-load" data-ts="${t.id}" title="Diese Einteilung aufrufen"><b>${esc(t.name)}</b><small>${t.list.length} ${t.mode === 'pairs' ? 'Paare' : 'Gruppen'}${Object.keys(t.roles || {}).length ? ' · mit Rollen' : ''} · ${fmtD(t.date)}</small></button>${small ? '' : `<button class="ts-del" data-tsdel="${t.id}" title="Löschen">✕</button>`}</div>`;
+  const item = (t, small) => `<div class="ts-it"><button class="ts-load" data-ts="${t.id}" title="Diese Einteilung aufrufen"><b>${esc(t.name)}</b><small>${t.list.length} ${t.mode === 'pairs' ? 'Paare' : 'Gruppen'}${Object.keys(t.roles || {}).length ? ' · mit Rollen' : ''}${t.gw ? ' · mit Tischen' + (t.room2 ? ' + Gruppenraum' : '') : ''} · ${fmtD(t.date)}</small></button>${small ? '' : `<button class="ts-del" data-tsdel="${t.id}" title="Löschen">✕</button>`}</div>`;
   $('tsList').innerHTML = sets.map(t => item(t)).join('');
   $('tsSave').disabled = $('teamsSave').disabled = !ui.teams;
   $('pmTsList').innerHTML = sets.map(t => item(t, true)).join('') || '<span class="hint">Noch keine gespeichert – unter „Gruppeneinteilung“ mit „💾 Einteilung speichern“.</span>';
@@ -2753,7 +2919,7 @@ function saveTeamSet() {
   const name = (window.prompt('Name der Gruppeneinteilung (z. B. „Stationenlernen Bruchrechnen“):', def) || '').trim(); if (!name) return;
   const ex = sets.find(t => t.name.toLowerCase() === name.toLowerCase());
   if (ex && !window.confirm(`„${ex.name}“ gibt es schon. Überschreiben?`)) return;
-  const data = JSON.parse(JSON.stringify({ mode: ui.teams.mode, list: ui.teams.list, names: ui.teams.names || [], roles: ui.teams.roles || {} }));
+  const data = JSON.parse(JSON.stringify({ mode: ui.teams.mode, list: ui.teams.list, names: ui.teams.names || [], roles: ui.teams.roles || {}, gw: GW(), room2: GW() && !cls().room2Off, place: GW() ? (ui.teams.place || {}) : {} }));
   change(() => { const c2 = cls(); c2.teamSets = c2.teamSets || []; const t = ex ? c2.teamSets.find(x => x.id === ex.id) : null;
     if (t) Object.assign(t, data, { name, date: todayStr() }); else c2.teamSets.push(Object.assign({ id: newId('ts'), name, date: todayStr() }, data)); }, { keepList: true });
   ui.teams.savedName = name; renderTeamSets();
@@ -2765,9 +2931,11 @@ function loadTeamSet(id) {
   const list = t.list.map(g => g.filter(x => have.has(x)));
   const inSet = new Set(list.flat()), missing = c.students.filter(s => !inSet.has(s.id));
   const roles = {}; Object.entries(t.roles || {}).forEach(([k, v]) => { if (have.has(k)) roles[k] = v.slice(); });
-  ui.teams = { mode: t.mode, list, issues: 0, names: (t.names || []).slice(), roles, savedName: t.name };
+  ui.teams = { mode: t.mode, list, issues: 0, names: (t.names || []).slice(), roles, savedName: t.name, place: Object.assign({}, t.place || {}) };
+  if (t.gw) { setLayout('gw'); setRoom2(!!t.room2); const keys = new Set(islands().map(x => x.key)); Object.keys(ui.teams.place).forEach(k => { if (!keys.has(ui.teams.place[k])) delete ui.teams.place[k]; }); }
   $('teamColor').checked = $('teamColor2').checked = true;
   renderTeams(); renderRoom(); if (typeof syncPresentBar === 'function') syncPresentBar();
+  if (GW()) gwSync(false);
   const dn = displayNames(c.students), abs = list.flat().filter(x => { const s = c.students.find(y => y.id === x); return s && isAbsent(s); });
   setResult(`📂 „${t.name}“ aufgerufen.` + (missing.length ? ` Noch in keiner Gruppe: ${missing.map(s => dn.get(s.id)).join(', ')}.` : '') + (abs.length ? ` Heute abwesend: ${abs.map(x => dn.get(x)).join(', ')}.` : ''), missing.length || abs.length ? 'warn' : 'ok');
 }
@@ -2849,12 +3017,13 @@ $('planSave').addEventListener('click', () => {
   change(() => {
     const c = cls();
     c.plans = c.plans || [];
-    c.plans.push({ id: newId('p'), date, note, saved: Date.now(), items: JSON.parse(JSON.stringify(c.items)), groups: JSON.parse(JSON.stringify(c.groups)) });
+    c.plans.push({ id: newId('p'), layout: c.layout || 'normal', date, note, saved: Date.now(), items: JSON.parse(JSON.stringify(c.items)), groups: JSON.parse(JSON.stringify(c.groups)) });
   }, { keepList: true });
   $('planNote').value = '';
   setResult(`Sitzplan „ab ${fmtDate(date)}“ im Verlauf festgehalten.`, 'ok');
 });
 function restorePlan(p) {
+  if ((p.layout || 'normal') !== (cls().layout || 'normal')) setLayout(p.layout || 'normal');
   if (!window.confirm(`Den Sitzplan „ab ${fmtDate(p.date)}“ wiederherstellen?\nDer aktuelle Plan wird ersetzt (mit ↶ rückgängig zu machen).`)) return;
   ui.preview = null;
   change(() => {
@@ -3077,7 +3246,7 @@ function layoutStage() {
   const front = stage.querySelector('.front');
   panels.forEach(p => { p.classList.remove('side'); p.style.left = p.style.top = p.style.right = p.style.transform = p.style.width = ''; });
   front.style.top = front.style.bottom = '';
-  if (!ui.present && !ui.fit) { Object.assign(stage.style, { left: '0', top: '0', width: '100%', height: '100%' }); fitNames(0); return; }
+  if (!ui.present && !ui.fit && !GW()) { Object.assign(stage.style, { left: '0', top: '0', width: '100%', height: '100%' }); fitNames(0); return; }
   const items = ui.preview ? ui.preview.items : cls().items;
   let x0 = 100, y0 = 100, x1 = 0, y1 = 0;
   const add = (x, y) => { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); };
@@ -3166,7 +3335,7 @@ function renderTeamsPanel(dn) {
   if (!ui.teams) { p.innerHTML = '<b>Gruppeneinteilung</b><div class="empty-hint">Noch keine Gruppen gebildet – über 👥 → „Gruppen neu bilden“.</div>'; return; }
   const L = ui.teams.list, cols = L.length > 6 ? 2 : 1;
   p.innerHTML = `<b>Gruppeneinteilung</b><div class="tgrid2" style="grid-template-columns:repeat(${cols}, auto)">` +
-    L.map((t, i) => `<div class="team" data-t="${i}" style="--tc:${teamColor(i)}"><b>${teamShort(i)}</b>${t.map((id, k) => `<span class="tm" data-t="${i}" data-k="${k}">${roleIcons(id) ? `<span class="ri">${roleIcons(id)}</span>` : ''}${esc(dn.get(id) || '?')}</span>`).join('') || '<i class="empty-hint">leer</i>'}</div>`).join('') + '</div>';
+    L.map((t, i) => `<div class="team" data-t="${i}" style="--tc:${teamColor(i)}"><b>${teamShort(i)}${GW() ? ` <span class="tpdrag" data-tdrag="${i}" title="Auf eine Tischinsel ziehen">📍</span>` : ''}</b>${t.map((id, k) => `<span class="tm" data-t="${i}" data-k="${k}">${roleIcons(id) ? `<span class="ri">${roleIcons(id)}</span>` : ''}${esc(dn.get(id) || '?')}</span>`).join('') || '<i class="empty-hint">leer</i>'}</div>`).join('') + '</div>';
 }
 function syncPresentBar() {
   const set = (k, on) => { const b = document.querySelector(`#presentBar [data-p="${k}"]`); if (b) b.classList.toggle('on', on); };
@@ -3210,7 +3379,7 @@ function openTeamsMenu(anchor) {
   $('pmTeamMode').value = $('teamMode').value; $('pmTeamN').value = $('teamN').value; $('pmTeamN').disabled = $('teamMode').value === 'pairs';
   $('pmTeamRules').checked = $('teamRules').checked; $('pmTeamMix').checked = $('teamMix').checked;
   $('pmTeamShow').disabled = $('pmTeamClear').disabled = !ui.teams;
-  renderTeamSets();
+  renderTeamSets(); syncGwUi();
   m.hidden = false; m.anchor = anchor;
   const r = anchor.getBoundingClientRect(), h = m.offsetHeight, w = m.offsetWidth;
   m.style.left = clamp(r.right - w, 8, window.innerWidth - w - 8) + 'px';
