@@ -5024,6 +5024,7 @@ async function odLogin(after, silent) {
   const q = { client_id: OD.client, response_type: 'code', redirect_uri: odRedirect(), scope: OD.scope, state: st, code_challenge: ch, code_challenge_method: 'S256', response_mode: 'query' };
   if (user && user.upn) q.login_hint = user.upn;
   if (silent) q.prompt = 'none';   // ohne Rückfrage, wenn das Microsoft-Konto auf dem Gerät noch angemeldet ist
+  else if (!(user && user.upn)) q.prompt = 'select_account';   // erstes Mal: Konto bewusst auswählen lassen
   location.assign(`https://login.microsoftonline.com/${OD.tenant}/oauth2/v2.0/authorize?` + new URLSearchParams(q));
 }
 async function odTokenReq(params) {
