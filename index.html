@@ -840,7 +840,7 @@
             <p class="hint" style="margin:2px 0 0">Jede Änderung wird sofort im Speicher dieser App auf dem iPad abgelegt und beim nächsten Start wieder geladen – ohne Datei. Die Daten verlassen das Gerät nicht. Mit „📤 Als Datei sichern“ machst du eine Sicherung (z. B. für den PC). Ausschalten löscht den Speicher der App auf diesem Gerät.</p>
           </div>
           <p class="hint">Eine Datei enthält alle Klassen mit Schülern, Regeln, Räumen, Verlauf und Diensten. Für „Zuletzt verwendet“ merkt sich der Browser nur die Verweise auf die Dateien, nicht deren Inhalt.</p>
-          <p class="hint" style="margin:0">Version 2026-11-03</p>
+          <p class="hint" style="margin:0">Version 2026-11-04</p>
         </div>
       </details>
 
@@ -5403,7 +5403,8 @@ renderRecent();
 odStart().then(done => { if (!done) { autoOpenLast(); loadDevice(); } renderRecent(); }).catch(() => { autoOpenLast(); loadDevice(); });
 /* ---------- An die Schüler-iPads senden (QR-Code, ohne Schülernamen) ---------- */
 function buildPayload(o, c = cls()) {
-  const today = todayStr(), P = { app: 'jpw', v: 1, cls: c.name, d: today };
+  if (!c.uid) c.uid = Math.random().toString(36).slice(2, 10);   // Kennung dieser Klasse/Lehrkraft – damit gelöschte Einträge nur bei den eigenen verschwinden
+  const today = todayStr(), P = { app: 'jpw', v: 1, cls: c.name, d: today, tid: c.uid };
   if (o.tt && c.tt) {
     const tt = c.tt, used = new Set(), sl = tt.slots.map(s => [s.label, s.start || '', s.end || '', s.pause ? 1 : 0]), cells = {};
     Object.keys(tt.cells).forEach(k => {
