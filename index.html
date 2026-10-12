@@ -840,7 +840,7 @@
             <p class="hint" style="margin:2px 0 0">Jede Änderung wird sofort im Speicher dieser App auf dem iPad abgelegt und beim nächsten Start wieder geladen – ohne Datei. Die Daten verlassen das Gerät nicht. Mit „📤 Als Datei sichern“ machst du eine Sicherung (z. B. für den PC). Ausschalten löscht den Speicher der App auf diesem Gerät.</p>
           </div>
           <p class="hint">Eine Datei enthält alle Klassen mit Schülern, Regeln, Räumen, Verlauf und Diensten. Für „Zuletzt verwendet“ merkt sich der Browser nur die Verweise auf die Dateien, nicht deren Inhalt.</p>
-          <p class="hint" style="margin:0">Version 2026-11-02</p>
+          <p class="hint" style="margin:0">Version 2026-11-03</p>
         </div>
       </details>
 
@@ -5196,7 +5196,9 @@ function renderOdBox() {
   const user = lsGet('km-od-user', null), tok = lsGet('km-od-tok', null);
   const on = !!(tok && (tok.rt || tok.at));
   $('odAuto').checked = odAuto();
-  $('odState').innerHTML = (od ? `☁️ Geöffnet: <b>${esc(od.name)}</b> <small>${esc(od.path || '')}</small><br>` : '') +
+  const pc = (state.classes || []).filter(c => c.pub && c.pub.id), lt = Math.max(0, ...pc.map(c => pubTime[c.id] || 0));
+  const pubLine = pc.length ? `📤 Für die Klasse${pc.length > 1 ? 'n' : ''} ${pc.map(c => esc(c.name)).join(', ')} veröffentlicht – Änderungen werden automatisch übertragen${lt ? ` (zuletzt ${new Date(lt).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })})` : ''}.${pubErr ? ` <span class="unsaved">Fehler: ${esc(pubErr)}</span>` : ''}<br>` : '';
+  $('odState').innerHTML = (od ? `☁️ Geöffnet: <b>${esc(od.name)}</b> <small>${esc(od.path || '')}</small><br>` : '') + pubLine +
     (on && user ? `Angemeldet als ${esc(user.name || user.upn)} · <button class="linkbtn" id="odLogout">Abmelden</button>` : on ? 'Angemeldet · <button class="linkbtn" id="odLogout">Abmelden</button>' : 'Noch nicht bei Microsoft angemeldet – die Anmeldung startet beim ersten Öffnen.');
 }
 $('odBox').addEventListener('click', e => {
@@ -5349,9 +5351,9 @@ async function odPubTick() {
       if (pubKey(P) === pubSent[c.id]) continue;
       try { await odPublish(c, false); } catch (e) { pubErr = e.message; }
     }
-  } finally { pubBusy = false; if (!$('qrDlg').hidden) renderPubBox(); }
+  } finally { pubBusy = false; if (!$('qrDlg').hidden) renderPubBox(); renderOdBox(); }
 }
-setInterval(odPubTick, 15000);
+setInterval(odPubTick, 5000);   // Änderungen für die Kinder spätestens nach wenigen Sekunden übertragen
 function renderPubBox() {
   const box = $('pubBox'); if (!box) return;
   box.hidden = !OD_OK; if (!OD_OK) return;
