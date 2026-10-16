@@ -11,7 +11,179 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Klassenmanager">
-<style id="pageStyle">@page { size: A4 portrait; margin: 10mm; }</style>
+<style id="pageStyle">@page { size: A4 portrait; margin: 10mm; }/* Tafel-Abstimmung (km_vote) */
+
+/* ---- Overlay ---- */
+#voteFull {
+  position: fixed; inset: 0; z-index: 3960;
+  background: #fff; color: #111;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  display: flex; flex-direction: column; overflow: hidden;
+}
+#voteFull[hidden] { display: none; }
+#voteFull .vt-top { padding: 3vh 4vw 0; text-align: center; }
+.vt-q {
+  font-size: clamp(1.8rem, 6vh, 8vh); font-weight: 800; line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+/* Mitmach-Hinweis */
+.vt-join {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
+  gap: 1vh 2vw; margin: 2vh 4vw 0; padding: 1.5vh 2vw;
+  border: 2px solid #dde1e8; border-radius: 16px; background: #f6f7f9;
+}
+.vt-join.vt-done { font-size: clamp(16px, 3.2vh, 4vh); font-weight: 700; color: #555; }
+.vt-jt { font-size: clamp(18px, 3.6vh, 4.4vh); font-weight: 700; }
+.vt-sym { font-size: 9vh; line-height: 1.1; letter-spacing: 0.4vw; }
+.vt-cnt { flex-basis: 100%; text-align: center; font-size: clamp(16px, 3.2vh, 4vh); font-weight: 700; color: #444; }
+
+/* Inhalt */
+.vt-body {
+  flex: 1; overflow: auto; padding: 3vh 4vw 14vh;
+}
+.vt-hid {
+  text-align: center; padding: 8vh 0; color: #666;
+  font-size: clamp(22px, 4.5vh, 6vh); font-weight: 600;
+}
+.vt-hid small { font-size: 0.6em; font-weight: 500; }
+
+/* Balken */
+.vt-bars { display: grid; gap: 1.8vh; max-width: 1100px; margin: 0 auto; }
+.vt-row {
+  display: grid; grid-template-columns: minmax(9vh, 18vh) 1fr minmax(12vw, 22vh);
+  align-items: center; gap: 1.5vw;
+}
+.vt-lab {
+  font-size: clamp(24px, 5.5vh, 8vh); text-align: center; line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+.vt-track {
+  height: clamp(28px, 6.5vh, 10vh); background: #eceef2;
+  border-radius: 12px; overflow: hidden;
+}
+.vt-fill {
+  height: 100%; background: #2563eb; border-radius: 12px;
+  transition: width 0.4s ease;
+}
+.vt-fill.ok { background: #16a34a; }
+.vt-fill.dim { background: #b5bac4; }
+.vt-num {
+  font-size: clamp(18px, 3.8vh, 5.5vh); font-weight: 700; text-align: right; white-space: nowrap;
+}
+.vt-num small { font-size: 0.7em; font-weight: 500; color: #666; }
+.vt-avg {
+  text-align: center; margin-top: 3vh;
+  font-size: clamp(26px, 6.5vh, 9vh); font-weight: 800;
+}
+
+/* Wortwolke */
+.vt-cloud {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
+  gap: 1vh 2.5vw; min-height: 50vh; line-height: 1.1; font-weight: 800;
+}
+.vt-w { white-space: nowrap; }
+.vt-pend {
+  text-align: center; margin-top: 2vh; font-weight: 700; color: #b45309;
+  font-size: clamp(16px, 3.2vh, 4.5vh);
+}
+
+/* Steuerleiste */
+.vt-ctl { position: absolute; right: 2vw; bottom: 2vh; }
+.vt-bar {
+  display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.6vw;
+  padding: 1vh 0.8vw; border-radius: 14px; background: rgba(20, 22, 30, 0.72);
+}
+.vt-bar button {
+  font: inherit; font-size: clamp(14px, 2.4vh, 2.8vh); font-weight: 600;
+  padding: 1vh 1.2vw; border: 0; border-radius: 10px; cursor: pointer;
+  background: rgba(255, 255, 255, 0.16); color: #fff;
+}
+.vt-bar button:hover { background: rgba(255, 255, 255, 0.28); }
+.vt-bar button:disabled { opacity: 0.4; cursor: default; }
+
+/* Freigabe-Popup */
+.vt-pop {
+  position: absolute; right: 0; bottom: calc(100% + 1vh);
+  width: min(460px, 92vw); max-height: 60vh; overflow: auto;
+  padding: 1.5vh 1.2vw; border-radius: 14px; background: #fff;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+}
+.vt-pop-h {
+  display: flex; justify-content: space-between; align-items: center;
+  font-weight: 800; font-size: clamp(16px, 2.8vh, 3.4vh); margin-bottom: 1vh;
+}
+.vt-pi {
+  display: flex; align-items: center; gap: 0.6vw;
+  padding: 0.8vh 0; border-bottom: 1px solid #eceef2;
+}
+.vt-pi span {
+  flex: 1; font-size: clamp(16px, 2.8vh, 3.4vh); overflow-wrap: anywhere;
+}
+.vt-pop button {
+  font: inherit; min-width: 2.6em; padding: 0.6vh 0.6em; border: 0;
+  border-radius: 8px; cursor: pointer; color: #fff; font-weight: 700;
+}
+.vt-pop .vt-ok { background: #16a34a; }
+.vt-pop .vt-no { background: #dc2626; }
+.vt-pop .vt-x { background: #e5e7eb; color: #111; min-width: 0; }
+.vt-pop .vt-hid { padding: 3vh 0; font-size: 2.6vh; }
+
+/* ---- Einrichtungsdialog (Grundlook kommt aus .cdlg der Host-App) ---- */
+#voteSetup {
+  position: fixed; inset: 0; z-index: 3970;
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px; background: rgba(0, 0, 0, 0.4);
+}
+#voteSetup[hidden], #voteSetup [hidden] { display: none !important; }
+#voteSetup .cdlg {
+  width: min(580px, 100%); max-height: 92vh; overflow: auto;
+  background: #fff; color: #111; border-radius: 14px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+#voteSetup .cdlg-title { font-size: 20px; font-weight: 700; padding: 16px 20px 0; }
+#voteSetup .nc-body { padding: 14px 20px 20px; font-size: 15px; }
+#voteSetup .vt-types {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px; margin-bottom: 14px;
+}
+#voteSetup .vt-type {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 14px 8px; font: inherit; color: #111; cursor: pointer;
+  border: 2px solid #d7dbe3; border-radius: 12px; background: #fafbfc;
+}
+#voteSetup .vt-type.on { border-color: #2563eb; background: #eff6ff; }
+#voteSetup .vt-ico { font-size: 30px; line-height: 1.1; }
+#voteSetup .vt-field { display: block; margin: 10px 0; }
+#voteSetup input,
+#voteSetup select {
+  font: inherit; width: 100%; box-sizing: border-box; margin-top: 4px;
+  padding: 8px 10px; border: 1px solid #c9ced8; border-radius: 8px;
+}
+#voteSetup .vt-tx { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
+#voteSetup .vt-tx span { font-weight: 700; width: 1.4em; }
+#voteSetup .vt-tx input { flex: 1; margin-top: 0; }
+#voteSetup .vt-foot { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+#voteSetup .vt-foot button {
+  font: inherit; padding: 9px 16px; cursor: pointer;
+  border: 1px solid #c9ced8; border-radius: 9px; background: #fff; color: #111;
+}
+#voteSetup .vt-foot .vt-go { background: #2563eb; border-color: #2563eb; color: #fff; font-weight: 700; }
+
+  .rc-vt button.on { outline: 3px solid var(--accent, #2563eb); }
+  .rc-vbar { display: grid; grid-template-columns: minmax(60px, auto) 1fr auto; gap: 6px; align-items: center; font-size: .9rem; margin: 3px 0; }
+  .rc-vbar i { display: block; height: 14px; border-radius: 7px; background: #3b82f6; min-width: 2px; }
+  .rc-vbar i.ok { background: #16a34a; }
+  .rc-vsym { font-size: 1.6rem; letter-spacing: .1em; }
+  .rc-vw { display: inline-flex; align-items: center; gap: 4px; margin: 2px 6px 2px 0; padding: 2px 4px 2px 10px; border-radius: 14px; background: #fef3c7; }
+  .ghbox { border-color: #d1d5db; background: #f9fafb; }
+  .ghbox .gh-steps { margin: 0; padding-left: 1.3em; }
+  .ghbox .gh-form { display: grid; grid-template-columns: 1fr 140px; gap: 6px 10px; }
+  .ghbox .gh-form label, .ghbox .gh-url { display: flex; flex-direction: column; gap: 2px; font-weight: 600; font-size: .82rem; }
+  .ghbox .gh-form label.w { grid-column: 1 / -1; }
+  .ghbox input { font: inherit; font-weight: 400; padding: 5px 8px; border: 1px solid #cbd5e1; border-radius: 8px; min-width: 0; }
+  .ghbox .gh-url .row { flex-wrap: nowrap; } .ghbox .gh-url input { flex: 1; font-family: ui-monospace, monospace; font-size: .8rem; }
+</style>
 <style>
   :root {
     --bg: #f6f5f1; --panel: #ffffff; --ink: #1f2937; --muted: #6b7280;
@@ -759,7 +931,7 @@
   #bdMenu button { text-align: left; border-color: #e5e7eb; color: var(--ink); } #bdMenu button.cur { border-color: var(--accent); background: var(--accent-soft); }
   #bdMenu .mt { font-size: .75rem; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); padding: 2px 4px; }
   #bdMenu .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
-  #bdPhasePop { position: fixed; z-index: 3100; background: #fff; border-radius: 12px; box-shadow: 0 8px 26px rgba(0,0,0,.25); padding: 8px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+  #bdPhasePop { position: fixed; z-index: 4200; background: #fff; border-radius: 12px; box-shadow: 0 8px 26px rgba(0,0,0,.25); padding: 8px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
   #bdPhasePop[hidden] { display: none; }
   #bdPhasePop button { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: .85rem; padding: 8px 14px; border: 2px solid var(--pc); color: var(--pc); background: #fff; }
   #bdPhasePop button span { font-size: 2rem; line-height: 1; }
@@ -908,6 +1080,67 @@
   #rcPanel .rc-lampb.on { opacity: 1; box-shadow: 0 0 0 4px #fff, 0 0 0 6px #334155; }
   .rc-lamp { width: 26px; height: 26px; border-radius: 50%; display: inline-block; }
   .rc-team { border-left: 5px solid var(--tc); padding-left: 6px; font-weight: 700; min-width: 90px; }
+  .bw-clock.an { gap: 1cqh; padding: 3cqmin; } .bw-clock.an svg { flex: 1 1 0; min-height: 0; width: 100%; height: 100%; }
+  .aclk .fc { fill: #fff; stroke: #1f2937; stroke-width: 2; } .aclk line.h { stroke: #1f2937; stroke-width: 2; stroke-linecap: round; } .aclk line.m { stroke: #94a3b8; stroke-width: .8; }
+  .aclk text { font-size: 9px; text-anchor: middle; font-weight: 800; fill: #1f2937; font-family: inherit; }
+  .aclk .hh { stroke: #1f2937; stroke-width: 4.2; stroke-linecap: round; } .aclk .mh { stroke: #1f2937; stroke-width: 2.8; stroke-linecap: round; }
+  .aclk .sh line { stroke: #dc2626; stroke-width: 1.1; stroke-linecap: round; } .aclk .sh circle { fill: #dc2626; } .aclk .cc { fill: #fff; }
+  .aclk.nosec .sh { display: none; }
+  #clkFull { position: fixed; inset: 0; z-index: 3950; background: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2vh; }
+  #clkFull[hidden] { display: none; }
+  #clkFull .cf-a svg { height: 74vh; width: 74vh; max-width: 92vw; }
+  #clkFull .cf-d { font-size: min(34vh, 24vw); font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; color: var(--ink); }
+  #clkFull.analog .cf-d { display: none; } #clkFull.digital .cf-a { display: none; }
+  #clkFull .cf-dt { font-size: clamp(18px, 3.4vh, 40px); color: var(--muted); font-weight: 700; }
+  #clkFull .cf-x { position: absolute; right: 12px; bottom: 12px; opacity: .5; } #clkFull .cf-x:hover { opacity: 1; }
+  #phFloat { position: fixed; left: 14px; top: 14px; z-index: 4100; display: flex; align-items: center; gap: .35em; border: 4px solid var(--pc); color: var(--pc); background: color-mix(in srgb, var(--pc) 10%, #fff); font-weight: 900; text-transform: uppercase; letter-spacing: .03em; padding: .2em .55em; border-radius: 16px; font-size: clamp(20px, 2.6vw, 50px); box-shadow: 0 6px 20px rgba(0,0,0,.18); cursor: grab; touch-action: none; user-select: none; }
+  #phFloat[hidden] { display: none; } #phFloat .ic { font-size: 1.5em; line-height: 1; }
+  #phFloat button { font-size: .4em; border: none; background: none; color: inherit; opacity: .35; padding: 0 0 0 .4em; align-self: flex-start; } #phFloat:hover button { opacity: 1; }
+  #rcBadge { position: fixed; left: 10px; bottom: 10px; z-index: 3800; border-radius: 999px; padding: 4px 12px; font-size: .8rem; font-weight: 700; background: #fff; border: 1.5px solid #cbd5e1; color: var(--muted); box-shadow: 0 2px 8px rgba(0,0,0,.12); opacity: .75; }
+  #rcBadge[hidden] { display: none; } #rcBadge.on { border-color: #16a34a; color: #166534; background: #f0fdf4; }
+  body.present #rcBadge, body.board-present #rcBadge { opacity: .45; } #rcBadge:hover { opacity: 1; }
+  .rc-sub { font-size: .8rem; font-weight: 800; color: var(--muted); margin: 10px 0 4px; }
+  .rc-small select { font: inherit; font-size: 1rem; padding: 6px 8px; border: 1px solid #d1d5db; border-radius: 8px; }
+  .rc-dv { font-size: 1.3rem; font-weight: 800; }
+  #vpBar { display: none; position: fixed; right: 10px; bottom: 10px; z-index: 60; gap: 4px; background: rgba(255,255,255,.94); padding: 5px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,.2); opacity: .45; transition: opacity .2s; }
+  #vpBar:hover { opacity: 1; } body.vpresent #vpBar { display: flex; }
+  body.vpresent .headrow, body.vpresent .sidebar, body.vpresent .result, body.vpresent main > .hint, body.vpresent #rcBadge.on { display: none !important; }
+  body.vpresent .layout { display: block; }
+  body.vpresent main { position: fixed; inset: 0; z-index: 50; max-height: none; overflow: auto; background: var(--bg, #f5f6f3); padding: 14px 18px 60px; }
+  body.vpresent #ttView { max-height: none; font-size: 1.12rem; }
+  body.vpresent #ttView .topbar > *:not(.tt-week):not(#ttTitle) { display: none; } body.vpresent #ttTitle { display: inline !important; font-size: 1.4rem !important; }
+  body.vpresent .cal-top > *:not([data-cm]):not(h2) { display: none; } body.vpresent .cal .add, body.vpresent .cal-leg { display: none !important; }
+  body.vpresent .cal .cd { min-height: 13vh; } body.vpresent .cal .ce { font-size: .95rem; } body.vpresent .cal .dn { font-size: 1.05rem; }
+  .rc-form { border: 1.5px solid #e5e7eb; border-radius: 12px; padding: 10px; margin-top: 10px; display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; }
+  .rc-form label { display: flex; flex-direction: column; gap: 3px; font-size: .85rem; font-weight: 700; color: var(--muted); } .rc-form label.w { flex: 1 1 260px; }
+  .rc-form input, .rc-form select { font: inherit; font-size: 1.05rem; padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 8px; color: var(--ink); }
+  .rc-form .rc-row { flex-basis: 100%; }
+  .rc-ack { position: sticky; top: 40px; z-index: 3; background: #dcfce7; border: 1.5px solid #16a34a; color: #166534; border-radius: 10px; padding: 8px 12px; font-weight: 800; margin-top: 6px; }
+  .rc-ink { aspect-ratio: 16 / 9; width: 100%; border: 2px solid #cbd5e1; border-radius: 10px; background: #fff; margin-top: 8px; overflow: hidden; touch-action: none; }
+  .rc-ink canvas { width: 100%; height: 100%; display: block; touch-action: none; }
+  #rcPanel .rc-pc { width: 40px; height: 40px; min-height: 0; padding: 0; border-radius: 50%; background: var(--c) !important; border: 2px solid #cbd5e1; } #rcPanel .rc-pc.on { box-shadow: 0 0 0 3px #fff, 0 0 0 5px var(--accent); }
+  #rcPanel .rc-pw { width: 44px; padding: 0; display: flex; align-items: center; justify-content: center; } .rc-pw i { background: #111827; border-radius: 50%; display: block; }
+  body.vpresent main { display: flex; flex-direction: column; }
+  body.vpresent.view-tt #ttView { flex: 1; min-height: 0; display: flex !important; flex-direction: column; }
+  body.vpresent #ttView .tt-wrap { flex: 1; min-height: 0; align-items: stretch; }
+  body.vpresent #ttView .tt-main { align-items: stretch; height: 100%; }
+  body.vpresent #ttView .tt-grid { height: 100%; } body.vpresent #ttView table.tt { height: 100%; }
+  body.vpresent #ttView table.tt tr:first-child { height: 1px; } body.vpresent #ttView table.tt td { font-size: 1.05em; }
+  body.vpresent #ttView .tt-main .agenda { max-height: none; }
+  body.vpresent.view-cal #calView { flex: 1; min-height: 0; display: flex !important; flex-direction: column; }
+  body.vpresent .cal { flex: 1; min-height: 0; grid-template-rows: auto; grid-auto-rows: 1fr; }
+  body.vpresent .cal .cd { min-height: 0; overflow: hidden; }
+  .rc-code span { font-size: 3rem; width: 1.6em; padding: .1em 0; }
+  #rcBadge .rb-s { letter-spacing: .15em; }
+  .rc-slots { display: flex; gap: 8px; align-items: center; } .rc-slots span { width: 54px; height: 54px; border: 2px dashed #cbd5e1; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 2rem; background: #f8fafc; }
+  .rc-slots button { font-size: 1.3rem; padding: 6px 14px; }
+  .rc-symgrid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; } .rc-symgrid button { font-size: 2.1rem; padding: 10px 0; background: #fff; }
+  .rc-known { display: flex; flex-direction: column; gap: 6px; } .rc-known span { display: flex; gap: 6px; } .rc-known span > button:first-child { flex: 1; text-align: left; font-size: 1.05rem; padding: 10px 12px; } .rc-known small { margin-left: 8px; letter-spacing: .1em; }
+  .rc-trust { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: .85rem; } .rc-trust span { background: #f1f5f9; border-radius: 999px; padding: 2px 4px 2px 10px; display: inline-flex; align-items: center; gap: 4px; } .rc-trust button { border: none; background: none; padding: 0 4px; }
+  #rcAsk { position: fixed; inset: 0; z-index: 4500; background: rgba(15,23,42,.45); display: flex; align-items: center; justify-content: center; }
+  #rcAsk[hidden] { display: none; }
+  #rcAsk .ra-box { background: #fff; border-radius: 16px; padding: 18px 22px; max-width: 420px; box-shadow: 0 12px 40px rgba(0,0,0,.35); display: flex; flex-direction: column; gap: 10px; font-size: 1.05rem; }
+  #rcAsk .ra-t { font-weight: 900; font-size: 1.25rem; } #rcAsk p { margin: 0; } #rcAsk .row button { font-size: 1.05rem; padding: 10px 18px; }
   /* Zeichnen */
   .bd-ink { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 30; pointer-events: none; }
   body.bd-drawing .bd-ink { pointer-events: auto; cursor: crosshair; touch-action: none; }
@@ -1161,7 +1394,7 @@
             <p class="hint" style="margin:2px 0 0">Jede Änderung wird sofort im Speicher dieser App auf dem iPad abgelegt und beim nächsten Start wieder geladen – ohne Datei. Die Daten verlassen das Gerät nicht. Mit „📤 Als Datei sichern“ machst du eine Sicherung (z. B. für den PC). Ausschalten löscht den Speicher der App auf diesem Gerät.</p>
           </div>
           <p class="hint">Eine Datei enthält alle Klassen mit Schülern, Regeln, Räumen, Verlauf und Diensten. Für „Zuletzt verwendet“ merkt sich der Browser nur die Verweise auf die Dateien, nicht deren Inhalt.</p>
-          <p class="hint" style="margin:0">Version 2026-11-12</p>
+          <p class="hint" style="margin:0">Version 2026-11-17</p>
         </div>
       </details>
 
@@ -1320,7 +1553,7 @@
           <button id="ttRaster" title="Stundenraster bearbeiten">⚙ Raster</button>
           <button id="ttHwAdd" class="primary" title="Neue Hausaufgabe eintragen">＋ Hausaufgabe</button>
           <button id="ttExamAdd" class="primary" title="Probe oder Termin (Ausflug, Elternabend …) eintragen">＋ Probe/Termin</button>
-          <button id="ttSend" title="Stundenplan, Hausaufgaben und Proben per QR-Code an die Schüler-iPads">📲 An Schüler</button>
+          <button id="ttSend" title="Stundenplan, Hausaufgaben und Proben per QR-Code an die Schüler-iPads">📲 An Schüler</button><button id="ttPresent" title="Stundenplan bildschirmfüllend zeigen">⛶ Präsentieren</button>
           <label class="chk"><input type="checkbox" id="ttSat"> Samstag</label>
           <span class="tt-week"><button id="ttPrev" title="Woche zurück">◀</button><button id="ttThis" title="Zur aktuellen Woche"></button><button id="ttNext" title="Woche vor">▶</button></span>
           <span class="spacer"></span>
@@ -1360,6 +1593,7 @@
   <button data-p="teams" class="toggle" title="Gruppeneinteilung">👥</button>
   <button data-p="duties" class="toggle" title="Dienste-Liste ein/aus">🧽</button>
   <button data-p="flip" class="toggle" title="Schülersicht (Tafel oben)">👁</button>
+  <button data-p="vote" title="Abstimmung starten">📊</button>
   <button data-p="rc" class="toggle" title="Fernbedienung (iPad)">📡</button>
   <button data-p="board" title="Zur Tafel">🖥 Tafel</button>
   <button data-p="exit" class="primary" title="Präsentation beenden (Esc)">✕ Beenden</button>
@@ -1370,6 +1604,7 @@
   <button data-b="add" title="Baustein hinzufügen">＋ Baustein</button>
   <button data-b="edit" class="toggle" title="Bausteine verschieben und in der Größe ändern">✏️ Anordnen</button>
   <button data-b="draw" class="toggle" title="Auf das Tafelbild zeichnen">🖊 Zeichnen</button>
+  <button data-b="vote" title="Abstimmung starten">📊 Abstimmung</button>
   <button data-b="rc" class="toggle" title="Fernbedienung (iPad)">📡</button>
   <button data-b="plan" title="Zum Sitzplan (Präsentation)">🪑 Sitzplan</button>
   <button data-b="exit" class="primary" title="Präsentation beenden (Esc)">✕ Beenden</button>
@@ -1444,7 +1679,50 @@
     </div>
   </div>
 </div>
+<div id="voteFull" hidden></div>
+
+<div id="voteSetup" class="cdlg-back" hidden>
+  <div class="cdlg nc" role="dialog" aria-modal="true" aria-labelledby="voteSetupT">
+    <div class="cdlg-title" id="voteSetupT">Abstimmung starten</div>
+    <div class="nc-body">
+      <div class="vt-types">
+        <button type="button" class="vt-type on" data-vt="type" data-type="thumbs"><span class="vt-ico">👍</span>Daumen</button>
+        <button type="button" class="vt-type" data-vt="type" data-type="mood"><span class="vt-ico">😀</span>Blitzlicht</button>
+        <button type="button" class="vt-type" data-vt="type" data-type="abcd"><span class="vt-ico">🅰</span>A/B/C/D</button>
+        <button type="button" class="vt-type" data-vt="type" data-type="yn"><span class="vt-ico">✔</span>Ja/Nein</button>
+        <button type="button" class="vt-type" data-vt="type" data-type="scale5"><span class="vt-ico">5</span>1–5 Skala</button>
+        <button type="button" class="vt-type" data-vt="type" data-type="grade6"><span class="vt-ico">6</span>1–6 Noten</button>
+        <button type="button" class="vt-type" data-vt="type" data-type="words"><span class="vt-ico">☁</span>Wortwolke</button>
+      </div>
+      <label class="vt-field">Frage (optional)
+        <input id="voteQ" maxlength="200" placeholder="z. B. Hast du die Aufgabe verstanden?">
+      </label>
+      <div id="voteAbcd" class="vt-field" hidden>
+        <label>Anzahl Antworten
+          <select id="voteN">
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4" selected>4</option>
+          </select>
+        </label>
+        <div id="voteTexts"></div>
+        <label>Richtige Antwort (optional)
+          <select id="voteCorr"><option value="">keine</option></select>
+        </label>
+      </div>
+      <div class="vt-foot">
+        <button type="button" data-vt="cancel">Abbrechen</button>
+        <button type="button" class="vt-go" data-vt="go">▶ Starten</button>
+      </div>
+    </div>
+  </div>
+</div>
 <div id="rcPanel" hidden></div>
+<div id="vpBar"><button data-vp="board" title="Zur Tafel">🖥 Tafel</button><button data-vp="plan" title="Zum Sitzplan">🪑 Sitzplan</button><button data-vp="exit" class="primary" title="Präsentation beenden (Esc)">✕ Beenden</button></div>
+<button id="rcBadge" hidden title="Fernbedienung – antippen für Symbole und Einstellungen"></button>
+<div id="rcAsk" hidden></div>
+<div id="phFloat" hidden></div>
+<div id="clkFull" hidden><div class="cf-a"></div><div class="cf-d"></div><div class="cf-dt"></div><button data-cf="close" class="cf-x">✕ Schließen</button></div>
 <div id="ovMenu" hidden>
   <div class="tp-title">🧩 Einblenden</div>
   <label class="chk"><input type="checkbox" data-ovk="phase"> 🤫 Arbeitsphase</label>
@@ -1640,6 +1918,7 @@
       <div id="qrBox"></div>
       <div class="row qr-nav" id="qrNav" hidden><button id="qrPrev">◀</button><span id="qrPartTxt" class="hint"></span><button id="qrNext">▶</button></div>
       <div class="pubbox" id="pubBox" hidden></div>
+      <div class="pubbox ghbox" id="ghBox"></div>
       <div class="hint">Die Schüler tippen in der App <b>„Hausaufgabenheft“</b> auf <b>„📷 Empfangen“</b> und halten das iPad auf den Code. Bei mehreren Codes einfach weiter draufhalten, bis alle empfangen sind.</div>
       <div class="row" style="justify-content:flex-end"><button id="qrBig">⛶ Groß anzeigen</button><button class="primary" id="qrClose">Schließen</button></div>
     </div>
@@ -2386,7 +2665,7 @@ function renderRoom(animate) {
 
   let nr = 0;
   const islTeam = new Map();   // Tisch → Gruppe (Tischordnung Gruppenarbeit)
-  if (GW() && ui.teams && ui.teams.place) { const isl = new Map(islands().map(x => [x.key, x])); Object.entries(ui.teams.place).forEach(([t, key]) => { const x = isl.get(key); if (x) x.desks.forEach(d => islTeam.set(d.id, +t)); }); }
+  if (GW() && ui.teams && ui.teams.place && $('teamColor').checked) { const isl = new Map(islands().map(x => [x.key, x])); Object.entries(ui.teams.place).forEach(([t, key]) => { const x = isl.get(key); if (x) x.desks.forEach(d => islTeam.set(d.id, +t)); }); }
   const groupShown = new Set();   // Gruppenname nur am ersten Tisch einer Gruppe anzeigen
   let nr2 = 0;
   items.forEach(it => {
@@ -4094,6 +4373,7 @@ $('presentBar').addEventListener('click', e => {
   if (k === 'timer') openTimerPop(b);
   if (k === 'rnd') { openRnd(b); return; }
   if (k === 'rc') { openRc(); syncPresentBar(); syncRcBtns(); return; }
+  if (k === 'vote') { openVoteSetup(); return; }
   if (k === 'ov') { openOvMenu(b); return; }
   if (k === 'colors') setColors(!$('optColors').checked);
   if (k === 'gender') setGenderView(!ui.genderView);
@@ -4415,6 +4695,7 @@ function setView(v) {
   document.body.classList.toggle('view-start', v === 'start');
   document.body.classList.toggle('view-board', v === 'board');
   document.body.classList.toggle('view-cal', v === 'cal');
+  if (ui.vPresent && v !== 'tt' && v !== 'cal') setVPresent(false);
   if (v !== 'board' && ui.bdDraw) { ui.bdDraw = false; document.body.classList.remove('bd-drawing'); renderPen(); }
   $('setBtn').classList.toggle('active', v === 'set');
   try { if (v !== 'set') localStorage.setItem('km-lastview', v); } catch {}
@@ -6007,6 +6288,139 @@ $('pubBox').addEventListener('click', async e => {
   }
 });
 
+/* ---------- 🌐 Klasse über GitHub veröffentlichen – die iPads lesen ohne Anmeldung ----------
+   Die Datei klassen/<schlüssel>.json liegt in einem öffentlichen Repository. Das Hausaufgabenheft holt sie über
+   raw.githubusercontent.com. Der Zugangsschlüssel (Token) bleibt nur auf diesem Gerät (localStorage km-gh). */
+const GH_API = 'https://api.github.com';
+const ghCfg = () => lsGet('km-gh', null);
+const ghOk = () => { const g = ghCfg(); return !!(g && g.repo && g.token); };
+const ghBr = () => (ghCfg() || {}).branch || 'main';
+let ghSent = lsGet('km-gh-sent', {}), ghTime = {}, ghErr = '', ghBusy = false, ghSha = {}, ghEdit = false, ghCopied = 0;
+const ghK = c => `${ghCfg().repo}/${ghBr()}/${c.gh.key}`;
+const ghUrl = c => { const g = ghCfg(); return g && g.hh ? g.hh.replace(/[?#].*$/, '') + '?k=' + ghK(c) : ''; };
+const ghFetch = (path, opt = {}) => fetch(GH_API + path, { ...opt, cache: 'no-store', headers: { Authorization: 'Bearer ' + ghCfg().token, Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28', ...(opt.body ? { 'Content-Type': 'application/json' } : {}) } });
+async function ghE(r) {
+  let m = ''; try { m = (await r.json()).message || ''; } catch {}
+  return new Error({ 401: 'Zugangsschlüssel ungültig oder abgelaufen', 403: 'keine Schreibberechtigung für das Repository (Token: „Contents – Read and write“)', 404: 'Repository nicht gefunden (Name? Zugriff des Tokens?)' }[r.status] || `GitHub ${r.status}${m ? ': ' + m : ''}`);
+}
+function ghB64(str) {
+  const u = new TextEncoder().encode(str); let s = '';
+  for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000));
+  return btoa(s);
+}
+const ghNewKey = () => Array.from(crypto.getRandomValues(new Uint8Array(16)), b => '0123456789abcdefghijklmnopqrstuvwxyz'[b % 36]).join('');
+async function ghPublish(c) {
+  const P = buildPayload((c.gh && c.gh.opt) || ui.qrOpts || { tt: true, hw: true, ex: true, ms: true }, c); P.pub = 1;
+  const url = `/repos/${ghCfg().repo}/contents/klassen/${c.gh.key}.json`, content = ghB64(JSON.stringify(P));
+  for (let t = 0; t < 3; t++) {
+    if (ghSha[c.id] == null) {
+      const r = await ghFetch(url + '?ref=' + encodeURIComponent(ghBr()));
+      if (r.status === 200) ghSha[c.id] = (await r.json()).sha; else if (r.status === 404) ghSha[c.id] = ''; else throw await ghE(r);
+    }
+    const r = await ghFetch(url, { method: 'PUT', body: JSON.stringify({ message: 'Klasse ' + (c.name || '') + ' aktualisiert', content, branch: ghBr(), ...(ghSha[c.id] ? { sha: ghSha[c.id] } : {}) }) });
+    if (r.ok) { ghSha[c.id] = (await r.json()).content.sha; ghSent[c.id] = pubKey(P); lsSet('km-gh-sent', ghSent); ghTime[c.id] = Date.now(); ghErr = ''; return true; }
+    if (r.status === 409 || r.status === 422) { ghSha[c.id] = null; continue; }   // Datei wurde inzwischen (z. B. von einem anderen Gerät) geändert
+    throw await ghE(r);
+  }
+  throw new Error('Speichern auf GitHub kollidiert – gleich nochmal');
+}
+// alle 10 Sekunden nachsehen; neu übertragen nur bei Änderungen und höchstens alle 15 Sekunden
+async function ghTick(force) {
+  if (!ghOk() || ghBusy || navigator.onLine === false) return;
+  ghBusy = true;
+  try {
+    for (const c of state.classes) {
+      if (!c.gh || !c.gh.key) continue;
+      const P = buildPayload(c.gh.opt || {}, c); P.pub = 1;
+      if (pubKey(P) === ghSent[c.id] && !force) continue;
+      if (!force && Date.now() - (ghTime[c.id] || 0) < 15000) continue;
+      try { await ghPublish(c); } catch (e) { ghErr = e.message; }
+    }
+  } finally { ghBusy = false; if (!$('qrDlg').hidden) renderGhBox(); }
+}
+setInterval(() => ghTick(false), 10000);
+function renderGhBox() {
+  const box = $('ghBox'); if (!box) return;
+  const c = cls(), g = ghCfg() || {}, t = c.gh && ghTime[c.id];
+  if (!ghOk() || ghEdit) {
+    box.innerHTML = `<div><b>🌐 Ohne Anmeldung der Kinder: Klasse über GitHub veröffentlichen</b></div>
+      <div class="hint">Gut für iPads, die ihren Speicher löschen (z. B. Wechsel Schul-/Privatmodus): Die Klasse steckt in der App-Adresse (Webclip) und ist bei jedem Start sofort wieder da. Die Datei ist <b>öffentlich lesbar</b> für jeden, der die Adresse kennt – sie enthält keine Schülernamen; bitte auch in Mitteilungen keine Namen verwenden.</div>
+      <ol class="hint gh-steps"><li>Auf github.com ein neues <b>öffentliches</b> Repository anlegen, z. B. „klassendaten“ (Häkchen „Add a README“).</li><li>Settings → Developer settings → Personal access tokens → <b>Fine-grained tokens</b> → „Generate new token“: nur dieses Repository, Berechtigung <b>Contents: Read and write</b>.</li><li>Hier eintragen – der Schlüssel bleibt nur auf diesem Gerät.</li></ol>
+      <div class="gh-form"><label>Repository<input id="ghRepo" value="${esc(g.repo || '')}" placeholder="benutzername/klassendaten" autocomplete="off" spellcheck="false"></label>
+      <label>Zweig<input id="ghBranch" value="${esc(g.branch || '')}" placeholder="main" autocomplete="off" spellcheck="false"></label>
+      <label class="w">Zugangsschlüssel (Token)<input id="ghToken" type="password" value="${esc(g.token || '')}" placeholder="github_pat_…" autocomplete="off"></label>
+      <label class="w">Adresse des Hausaufgabenhefts<input id="ghHH" value="${esc(g.hh || '')}" placeholder="https://benutzername.github.io/hausaufgabenheft/" autocomplete="off" spellcheck="false"></label></div>
+      <div class="row"><button id="ghSave" class="primary">✓ Speichern &amp; prüfen</button>${ghOk() ? '<button id="ghCancel">Abbrechen</button><button id="ghForget" class="danger">Zugang von diesem Gerät löschen</button>' : ''}</div>${ghErr ? `<div class="unsaved">Fehler: ${esc(ghErr)}</div>` : ''}`;
+    return;
+  }
+  if (!c.gh) {
+    box.innerHTML = `<div><b>🌐 Ohne Anmeldung der Kinder: Klasse über GitHub veröffentlichen</b> <small class="hint">(${esc(g.repo)})</small></div>
+      <div class="hint">Die Klasse wird als Datei im Repository abgelegt (Inhalt wie oben ausgewählt, ohne Schülernamen). Danach bekommst du eine App-Adresse für den Webclip und einen Verbindungs-Code.</div>
+      <div class="row"><button id="ghOn" class="primary">🌐 Über GitHub veröffentlichen</button><button id="ghCfgBtn">⚙ GitHub-Zugang</button></div>${ghErr ? `<div class="unsaved">Fehler: ${esc(ghErr)}</div>` : ''}`;
+    return;
+  }
+  const u = ghUrl(c);
+  box.innerHTML = `<div><b>🌐 Über GitHub verbunden</b> – Änderungen kommen ohne Anmeldung bei den Kindern an (beim Öffnen der App, sonst nach wenigen Minuten).${t ? ` Zuletzt übertragen: ${new Date(t).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}.` : ''}${ghErr ? ` <span class="unsaved">Fehler: ${esc(ghErr)}</span>` : ''}</div>
+    ${u ? `<label class="gh-url">App-Adresse für den Webclip (Jamf)<span class="row"><input id="ghUrlIn" readonly value="${esc(u)}"><button id="ghCopy">${Date.now() - ghCopied < 3000 ? '✓ Kopiert' : '📋 Kopieren'}</button></span></label>` : '<div class="hint">Für die Webclip-Adresse unter „⚙ GitHub-Zugang“ die Adresse des Hausaufgabenhefts eintragen.</div>'}
+    <div class="row"><button id="ghQr" class="primary">🔗 Verbindungs-Code zeigen</button><button id="ghNow">🔄 Jetzt übertragen</button><button id="ghOff" class="danger">Verbindung beenden</button><button id="ghCfgBtn">⚙ GitHub-Zugang</button></div>
+    <div class="hint">Webclip mit dieser Adresse: Die Klasse ist bei jedem Start da – auch nach dem Löschen des Speichers. Alternativ scannen die Kinder einmal den Verbindungs-Code.</div>`;
+}
+function ghShowQr() {
+  const c = cls(); if (!c.gh || !ghOk()) return;
+  clearInterval(qrState.timer);
+  qrState.parts = payloadParts({ app: 'jpw', v: 1, cls: c.name, gh: ghK(c) }); qrState.i = 0;
+  $('qrNav').hidden = qrState.parts.length < 2; drawQr();
+  $('qrInfo').innerHTML = `<b>Verbindungs-Code (GitHub) für Klasse ${esc(c.name)}</b> – einmal scannen, danach aktualisiert sich das Hausaufgabenheft selbst, ohne Anmeldung.`;
+}
+async function ghSaveCfg() {
+  const v = id => $(id).value.trim();
+  let repo = v('ghRepo').replace(/^https?:\/\/github\.com\//i, '').replace(/\.git$/, '').replace(/\/+$/, '');
+  const g = { repo, branch: v('ghBranch'), token: v('ghToken'), hh: v('ghHH') };
+  if (!/^[\w.-]+\/[\w.-]+$/.test(repo)) { ghErr = 'Repository bitte als „benutzername/name“ eintragen'; renderGhBox(); return; }
+  if (!g.token) { ghErr = 'Zugangsschlüssel fehlt'; renderGhBox(); return; }
+  if (g.hh && !/^https:\/\//i.test(g.hh)) { ghErr = 'Die Adresse des Hausaufgabenhefts muss mit https:// beginnen'; renderGhBox(); return; }
+  lsSet('km-gh', g);
+  try {
+    const r = await ghFetch('/repos/' + repo);
+    if (!r.ok) throw await ghE(r);
+    const j = await r.json();
+    if (j.private) throw new Error('Das Repository ist privat – die iPads können die Datei dann nicht lesen. Auf GitHub unter Settings → „Change visibility“ auf Public stellen.');
+    if (!g.branch) { g.branch = j.default_branch || 'main'; lsSet('km-gh', g); }
+    ghErr = ''; ghEdit = false; ghSha = {}; setResult('🌐 GitHub-Zugang gespeichert.', 'ok');
+  } catch (e) { ghErr = e.message; ghEdit = true; }
+  renderGhBox();
+}
+$('ghBox').addEventListener('click', async e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const c = cls();
+  if (b.id === 'ghSave') ghSaveCfg();
+  if (b.id === 'ghCancel') { ghEdit = false; ghErr = ''; renderGhBox(); }
+  if (b.id === 'ghCfgBtn') { ghEdit = true; ghErr = ''; renderGhBox(); }
+  if (b.id === 'ghForget') { if (!window.confirm('GitHub-Zugang (Token) von diesem Gerät löschen? Die veröffentlichten Klassen bleiben bestehen, werden von hier aus aber nicht mehr aktualisiert.')) return; lsSet('km-gh', null); ghEdit = false; ghErr = ''; renderGhBox(); }
+  if (b.id === 'ghOn') {
+    change(() => { c.gh = { key: ghNewKey(), opt: { ...(ui.qrOpts || { tt: true, hw: true, ex: true, ms: true }) } }; }, { keepList: true });
+    setResult('🌐 Wird veröffentlicht …', 'ok');
+    try { await ghPublish(c); renderGhBox(); ghShowQr(); setResult(`🌐 Klasse ${c.name} ist über GitHub veröffentlicht. Webclip-Adresse kopieren oder Verbindungs-Code scannen lassen.`, 'ok'); }
+    catch (er) { ghErr = er.message; change(() => { delete c.gh; }, { keepList: true }); renderGhBox(); setResult('🌐 Veröffentlichen hat nicht geklappt: ' + er.message, 'warn'); }
+  }
+  if (b.id === 'ghQr') ghShowQr();
+  if (b.id === 'ghNow') { delete ghSent[c.id]; ghTime[c.id] = 0; await ghTick(true); renderGhBox(); if (!ghErr) setResult('🌐 Übertragen.', 'ok'); }
+  if (b.id === 'ghCopy') { const i = $('ghUrlIn'); try { await navigator.clipboard.writeText(i.value); } catch { i.select(); document.execCommand('copy'); } ghCopied = Date.now(); renderGhBox(); setTimeout(renderGhBox, 3100); }
+  if (b.id === 'ghOff') {
+    if (!c.gh || !window.confirm(`GitHub-Verbindung für Klasse ${c.name} beenden?\nDie Datei wird aus dem Repository gelöscht. Hausaufgabenhefte mit dieser Adresse bekommen dann keine Änderungen mehr.`)) return;
+    if (ghOk()) {
+      try {
+        const url = `/repos/${ghCfg().repo}/contents/klassen/${c.gh.key}.json`;
+        const r = await ghFetch(url + '?ref=' + encodeURIComponent(ghBr()));
+        if (r.ok) { const sha = (await r.json()).sha; const d = await ghFetch(url, { method: 'DELETE', body: JSON.stringify({ message: 'Klasse ' + (c.name || '') + ' entfernt', sha, branch: ghBr() }) }); if (!d.ok) throw await ghE(d); }
+      } catch (er) { ghErr = er.message; renderGhBox(); return; }
+    }
+    change(() => { delete c.gh; }, { keepList: true }); delete ghSent[c.id]; delete ghSha[c.id]; lsSet('km-gh-sent', ghSent); ghErr = '';
+    renderGhBox(); renderSend();
+  }
+});
+$('ghBox').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.closest('.gh-form')) ghSaveCfg(); });
+
 
 /* =====================================================================
    🏠 Startseite und 🖥 Tafel (Tafelbilder mit verschieb- und vergrößerbaren Bausteinen)
@@ -6112,7 +6526,7 @@ function renderStart() {
   html += `<div class="st-grid"><div class="st-col">${left}</div><div class="st-col">${right}</div></div>`;
   // Schnellzugriff
   html += `<div class="st-card" style="margin-top:14px"><div class="st-tiles"><button data-go="plan"><span>🪑</span>Sitzplan</button><button data-go="board"><span>🖥</span>Tafel</button><button data-go="list"><span>📋</span>Klassenliste</button><button data-go="tt"><span>🗓</span>Stundenplan</button></div>
-    <div class="st-acts"><button data-act="hw">＋ Hausaufgabe</button><button data-act="ex">＋ Probe/Termin</button><button data-act="present">⛶ Sitzplan präsentieren</button><button data-act="board">🖥 Tafel präsentieren</button><button data-act="send">📲 An Schüler</button><button data-act="rc">📡 Fernbedienung</button></div></div>`;
+    <div class="st-acts"><button data-act="hw">＋ Hausaufgabe</button><button data-act="ex">＋ Probe/Termin</button><button data-act="present">⛶ Sitzplan präsentieren</button><button data-act="board">🖥 Tafel präsentieren</button><button data-act="send">📲 An Schüler</button><button data-act="vote">📊 Abstimmung</button><button data-act="rc">📡 Fernbedienung</button></div></div>`;
   // Status
   const st = [];
   if (od) st.push(snap() !== odLast ? (odNeedLogin ? '<span class="warn">☁️ Nicht gespeichert – Anmeldung bei Microsoft abgelaufen</span>' : `☁️ ${esc(od.name)} – wird gespeichert …`) : `☁️ ${esc(od.name)} – in OneDrive gespeichert`);
@@ -6135,6 +6549,7 @@ $('startView').addEventListener('click', e => {
   if (act === 'board') { setView('board'); bdPresent(true); }
   if (act === 'send') openSend();
   if (act === 'rc') openRc();
+  if (act === 'vote') openVoteSetup();
   if (act === 'open') openFile();
   if (act === 'odopen') odPick('open');
 });
@@ -6208,6 +6623,7 @@ const bdItem = id => { const b = curBoard(); return b ? b.items.find(i => i.id =
 /* ---------- Bausteine darstellen ---------- */
 function bwHtml(it) {
   const p = it.p || {};
+  if (it.t === 'clock' && p.analog) return `<div class="bw-clock an">${aClockSvg()}${p.date ? '<small data-live="date"></small>' : ''}</div>`;
   if (it.t === 'clock') return `<div class="bw-clock"><b data-live="time"></b>${p.date ? '<small data-live="date"></small>' : ''}</div>`;
   if (it.t === 'count') { const c = countdownInfo(p); return `<div class="bw-count${c.fe ? ' fe' : ''}" data-live="count">${c.top ? `<small>${esc(c.top)}</small>` : ''}<b${c.word ? ' style="font-size:min(26cqh,14cqw)"' : ''}>${esc(c.big)}</b><span>${esc(c.sub)}</span></div>`; }
   if (it.t === 'text') return `<div class="bw-text" style="background:${p.bg || '#fff'}">${p.title ? `<h4>${esc(p.title)}</h4>` : ''}<div class="tx">${esc(p.text || '') || '<span class="hint">Text eingeben (⚙)</span>'}</div></div>`;
@@ -6277,11 +6693,25 @@ function bdFitText() {
     const sc = bw.querySelector('.bw-score'); if (sc) { const n = Math.max(1, sc.children.length); bw.style.setProperty('--fs', Math.max(10, Math.min(H / n * 0.32, W * 0.07)) + 'px'); }
   });
 }
+// analoge Uhr (Zifferblatt mit Stunden-, Minuten- und Sekundenzeiger)
+function aClockSvg(big) {
+  let t = '';
+  for (let i = 0; i < 60; i++) { const a = i * 6 * Math.PI / 180, r0 = i % 5 ? 44 : 39, r1 = 47; t += `<line x1="${(50 + r0 * Math.sin(a)).toFixed(2)}" y1="${(50 - r0 * Math.cos(a)).toFixed(2)}" x2="${(50 + r1 * Math.sin(a)).toFixed(2)}" y2="${(50 - r1 * Math.cos(a)).toFixed(2)}" class="${i % 5 ? 'm' : 'h'}"/>`; }
+  for (let h = 1; h <= 12; h++) { const a = h * 30 * Math.PI / 180; t += `<text x="${(50 + 31 * Math.sin(a)).toFixed(2)}" y="${(50 - 31 * Math.cos(a) + 3.6).toFixed(2)}">${h}</text>`; }
+  return `<svg class="aclk${big ? ' big' : ''}" viewBox="0 0 100 100"><circle cx="50" cy="50" r="49" class="fc"/>${t}<line x1="50" y1="56" x2="50" y2="25" class="hh"/><line x1="50" y1="58" x2="50" y2="13" class="mh"/><g class="sh"><line x1="50" y1="62" x2="50" y2="10"/><circle cx="50" cy="50" r="2.6"/></g><circle cx="50" cy="50" r="1.4" class="cc"/></svg>`;
+}
+function aClockSet(svg, now) {
+  if (!svg) return;
+  const h = now.getHours() % 12, m = now.getMinutes(), sec = now.getSeconds();
+  const set = (sel, deg) => { const e = svg.querySelector(sel); if (e) e.setAttribute('transform', `rotate(${deg.toFixed(2)} 50 50)`); };
+  set('.hh', h * 30 + m * 0.5); set('.mh', m * 6 + sec * 0.1); set('.sh', sec * 6);
+}
 // Uhr und Countdown laufen lassen
 function bdLive() {
   if (ui.view !== 'board') return;
   const now = new Date();
   document.querySelectorAll('#bdStage [data-live="time"]').forEach(el => { const it = bdItem(el.closest('.bw').dataset.id); el.textContent = now.toLocaleTimeString('de-DE', it && it.p.sec ? { hour: '2-digit', minute: '2-digit', second: '2-digit' } : { hour: '2-digit', minute: '2-digit' }); });
+  document.querySelectorAll('#bdStage svg.aclk').forEach(sv => { const it = bdItem(sv.closest('.bw').dataset.id); sv.classList.toggle('nosec', !(it && it.p.sec)); aClockSet(sv, now); });
   document.querySelectorAll('#bdStage [data-live="date"]').forEach(el => { el.textContent = now.toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' }); });
 }
 setInterval(bdLive, 1000);
@@ -6382,7 +6812,7 @@ function bdSettings(id) {
   const p = it.p, T = BD_TYPES[it.t];
   let f = '';
   const sel = (name, opts, v) => `<select data-k="${name}">${opts.map(([k, l]) => `<option value="${k}"${v === k ? ' selected' : ''}>${esc(l)}</option>`).join('')}</select>`;
-  if (it.t === 'clock') f = `<label class="chk"><input type="checkbox" data-k="sec"${p.sec ? ' checked' : ''}> Sekunden anzeigen</label><label class="chk"><input type="checkbox" data-k="date"${p.date ? ' checked' : ''}> Datum anzeigen</label>`;
+  if (it.t === 'clock') f = `<label class="nc-name">Anzeige${sel('kind', [['d', '🔢 digital'], ['a', '🕒 analog (Zeiger)']], p.analog ? 'a' : 'd')}</label><label class="chk"><input type="checkbox" data-k="sec"${p.sec ? ' checked' : ''}> Sekunden anzeigen</label><label class="chk"><input type="checkbox" data-k="date"${p.date ? ' checked' : ''}> Datum anzeigen</label>`;
   if (it.t === 'count') f = `<label class="nc-name">Countdown bis${sel('mode', [['ferien', 'zu den nächsten Ferien (automatisch)'], ['date', 'zu einem eigenen Termin']], p.mode)}</label>
     <div class="row"><label class="nc-name" style="flex:1">Datum<input type="date" data-k="date" value="${esc(p.date || '')}"></label><label class="nc-name" style="flex:2">Bezeichnung<input data-k="label" value="${esc(p.label || '')}" placeholder="z. B. zum Wandertag"></label></div>
     <label class="nc-name">Zählen in${sel('unit', [['school', 'Schultagen (ohne Wochenende, Ferien, Feiertage)'], ['days', 'Tagen']], p.unit)}</label>`;
@@ -6439,7 +6869,7 @@ $('bdDlgOk').addEventListener('click', () => {
   const v = {}; $('bdForm').querySelectorAll('[data-k]').forEach(el => { const k = el.dataset.k; v[k] = el.classList.contains('bd-colors') ? (el.querySelector('.cur') || {}).dataset?.c : el.type === 'checkbox' ? el.checked : el.value; });
   change(() => {
     const p = it.p;
-    if (it.t === 'clock') { p.sec = v.sec; p.date = v.date; }
+    if (it.t === 'clock') { p.sec = v.sec; p.date = v.date; p.analog = v.kind === 'a'; }
     if (it.t === 'count') { p.mode = v.mode; p.date = v.date; p.label = v.label.trim(); p.unit = v.unit; if (p.mode === 'date' && !p.date) p.mode = 'ferien'; }
     if (it.t === 'text') { p.title = v.title.trim(); p.text = v.text; if (v.bg) p.bg = v.bg; }
     if (it.t === 'img') { if (bdImg) p.src = bdImg; p.cap = v.cap.trim(); }
@@ -6499,6 +6929,7 @@ $('bdBar').addEventListener('click', e => {
   if (k === 'edit') { ui.bdEdit = !ui.bdEdit; ui.bdSel = null; if (ui.bdEdit && ui.bdDraw) setBdDraw(false); renderBoard(); }
   if (k === 'draw') { $('bdMenu').hidden = true; setBdDraw(!ui.bdDraw); }
   if (k === 'rc') openRc();
+  if (k === 'vote') openVoteSetup();
   if (k === 'exit') bdPresent(false);
   if (k === 'plan') { ui.keepFs = true; bdPresent(false); setView('plan'); setPresent(true); ui.keepFs = false; }
 });
@@ -6875,7 +7306,7 @@ function inkDraw() {
   const W = cv.parentElement.clientWidth, H = cv.parentElement.clientHeight, dpr = window.devicePixelRatio || 1;
   if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
   const g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
-  const strokes = ((b && b.ink) || []).filter(s => !(inkErase && inkErase.has(s))).concat(inkCur ? [inkCur] : []);
+  const strokes = ((b && b.ink) || []).filter(s => !(inkErase && inkErase.has(s))).concat(inkCur ? [inkCur] : [], typeof rcInkLive !== 'undefined' && rcInkLive ? [rcInkLive] : []);
   g.lineCap = g.lineJoin = 'round';
   strokes.forEach(s => {
     const p = s.p; if (!p || p.length < 2) return;
@@ -6999,7 +7430,7 @@ function renderCal() {
       <span class="spacer"></span>
       <label class="chk" style="font-size:.85rem"><input type="checkbox" id="calHw"${lim.hw ? ' checked' : ''}> Hausaufgaben &amp; Abhaklisten</label>
       <span class="lim" title="Ab wann der Kalender warnt">⚠ Warnung ab mehr als <input type="number" id="calDay" min="1" max="5" value="${lim.day}"> Probe(n) pro Tag oder <input type="number" id="calWeek" min="1" max="10" value="${lim.week}"> pro Woche</span>
-      <button class="primary" id="calAdd">＋ Probe / Termin</button></div>` +
+      <button class="primary" id="calAdd">＋ Probe / Termin</button><button id="calPresent" title="Kalender bildschirmfüllend zeigen">⛶ Präsentieren</button></div>` +
     (warns.length ? `<div class="cal-warn"><b>⚠ Zu viele Proben:</b>${warns.map(w => `<span>${esc(w)}</span>`).join('')}</div>` : '') +
     `<div class="cal" style="grid-template-columns:56px repeat(${nd}, minmax(0, 1fr))">${html}</div>
     <div class="cal-leg"><span>📝 Probe</span><span>📌 Termin</span><span>📚 Hausaufgabe fällig</span><span>📋 Abhakliste fällig</span><span>Schraffiert: Ferien / Feiertag</span><span>Tage antippen: ＋📝 / ＋📌 trägt direkt an diesem Tag ein.</span></div>`;
@@ -7011,6 +7442,7 @@ $('calView').addEventListener('click', e => {
   const k = e.target.closest('[data-chk]'); if (k) { openChk(k.dataset.chk); return; }
   const a = e.target.closest('[data-add]'); if (a) { const ds = a.closest('[data-ds]').dataset.ds; openExam(null, a.dataset.add === 'ev' ? 'ev' : ''); $('exDate').value = ds; return; }
   if (e.target.id === 'calAdd') openExam(null);
+  if (e.target.id === 'calPresent') setVPresent(true);
 });
 $('calView').addEventListener('change', e => {
   const l = calLim();
@@ -7034,68 +7466,143 @@ function loadPeer() {
 }
 const RC = { host: null, code: '', conns: [], hostSt: '', remote: null, last: '' };
 
+/* ---------- Kopplung: 3 Symbole · Bestätigung an der Tafel · Verbindung merken ---------- */
+const lsGetKm = k => { try { return localStorage.getItem(k) || ''; } catch { return ''; } };
+const RC_SYM = ['🍎', '🚀', '⭐', '🐟', '🌻', '🎈', '🐢', '⚽', '🔔', '🌙'];
+const RC_SYMN = ['Apfel', 'Rakete', 'Stern', 'Fisch', 'Sonnenblume', 'Ballon', 'Schildkröte', 'Ball', 'Glocke', 'Mond'];
+const rcSyms = code => String(code || '').split('').map(d => RC_SYM[+d] || '?').join(' ');
+const rcPid = code => RC_PREFIX + 's3-' + code;
+const lsJ = (k, d) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } };
+const lsS = (k, v) => { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, typeof v === 'string' ? v : JSON.stringify(v)); } catch {} };
+const rcRoom = () => lsGetKm('km-rc-room') || 'Tafel';
+const rcOk = () => RC.conns.filter(c => c.ok);
+const rcDevGuess = () => { const u = navigator.userAgent; return /iPad/.test(u) || (/Macintosh/.test(u) && navigator.maxTouchPoints > 1) ? 'iPad' : /iPhone/.test(u) ? 'iPhone' : /Android/.test(u) ? 'Android-Gerät' : /Windows/.test(u) ? 'Windows-PC' : /Macintosh/.test(u) ? 'Mac' : 'Gerät'; };
+const rcDev = () => { let id = lsGetKm('km-rc-dev'); if (!id) { id = 'd' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36); lsS('km-rc-dev', id); } return { id, name: lsGetKm('km-rc-devname') || rcDevGuess() }; };
+RC.asks = [];
+
 /* ---------- Tafel (Gastgeber) ---------- */
-function rcHostStart() {
-  if (RC.host && !RC.host.destroyed) return;
+function rcHostStart(newCode) {
+  if (RC.host && !RC.host.destroyed && !newCode) return;
+  if (RC.host) { RC.host.destroy(); RC.host = null; RC.conns = []; }
   let P; try { P = loadPeer(); } catch (e) { RC.hostSt = 'err'; renderRcDlg(); return; }
-  try { RC.code = sessionStorage.getItem('km-rc-code') || ''; } catch {}
-  if (!/^\d{4}$/.test(RC.code)) RC.code = String(1000 + Math.floor(Math.random() * 9000));
-  try { sessionStorage.setItem('km-rc-code', RC.code); } catch {}
-  RC.hostSt = 'wait'; try { sessionStorage.setItem('km-rc-host', '1'); } catch {}
-  const peer = RC.host = new P(RC_PREFIX + RC.code, rcOpts());
-  peer.on('open', () => { RC.hostSt = 'ready'; renderRcDlg(); syncRcBtns(); });
+  RC.code = newCode ? '' : lsGetKm('km-rc-code3');
+  if (!/^\d{3}$/.test(RC.code)) RC.code = Array.from({ length: 3 }, () => Math.floor(Math.random() * 10)).join('');
+  lsS('km-rc-code3', RC.code); lsS('km-rc-host', '1');
+  RC.hostSt = 'wait';
+  const peer = RC.host = new P(rcPid(RC.code), rcOpts());
+  peer.on('open', () => { RC.hostSt = 'ready'; RC.idTries = 0; renderRcDlg(); syncRcBtns(); });
   peer.on('error', e => {
-    if (e.type === 'unavailable-id') { try { sessionStorage.removeItem('km-rc-code'); } catch {} peer.destroy(); RC.host = null; RC.code = ''; setTimeout(rcHostStart, 300); return; }
+    if (e.type === 'unavailable-id') {   // Kennung gerade belegt: nach dem Neuladen noch kurz vom alten Fenster – oder die Tafel ist in einem zweiten Fenster offen
+      peer.destroy(); RC.host = null;
+      if (!lsGetKm('km-rc-paired') && !RC.idTries) { lsS('km-rc-code3', null); setTimeout(() => rcHostStart(true), 300); return; }   // noch nie gekoppelt: einfach andere Symbole
+      RC.idTries = (RC.idTries || 0) + 1;
+      if (RC.idTries <= 8) { RC.hostSt = 'wait'; renderRcDlg(); setTimeout(() => rcHostStart(false), 5000); return; }
+      RC.idTries = 0; RC.hostSt = 'dup'; renderRcDlg(); syncRcBtns(); return;
+    }
     if (['network', 'server-error', 'socket-error', 'socket-closed', 'browser-incompatible'].includes(e.type)) { RC.hostSt = 'noserver'; renderRcDlg(); }
   });
   peer.on('disconnected', () => { if (!peer.destroyed) setTimeout(() => { if (!peer.destroyed) peer.reconnect(); }, 2000); });
   peer.on('connection', conn => {
-    conn.on('open', () => { RC.conns.push(conn); RC.last = ''; setResult('📡 Fernbedienung verbunden.', 'ok'); renderRcDlg(); syncRcBtns(); rcBroadcast(true); });
-    conn.on('data', d => { try { rcHandle(d); } catch (err) { console.warn(err); } setTimeout(() => rcBroadcast(true), 60); });
-    conn.on('close', () => { RC.conns = RC.conns.filter(c => c !== conn); renderRcDlg(); syncRcBtns(); });
+    conn.ok = false;
+    conn.on('open', () => { RC.conns.push(conn); });
+    conn.on('data', d => {
+      if (!conn.ok) { if (d && d.c === 'hello') rcHello(conn, d); return; }   // erst nach Freigabe werden Befehle angenommen
+      const before = $('result').textContent;
+      try { if (d && d.c === 'ink') rcInkHost(d); else rcHandle(d); } catch (err) { console.warn(err); }
+      const after = $('result').textContent;
+      if (d && d.c !== 'add' && d.c !== 'ink' && after && after !== before) RC.ack = { n: Date.now(), t: after.replace(/^✓\s*/, '') };
+      setTimeout(() => rcBroadcast(true), 60);
+    });
+    conn.on('close', () => { RC.conns = RC.conns.filter(c => c !== conn); RC.asks = RC.asks.filter(a => a.conn !== conn); renderRcAsk(); renderRcDlg(); syncRcBtns(); });
     conn.on('error', () => {});
   });
   renderRcDlg(); syncRcBtns();
 }
-function rcHostStop() {
-  try { sessionStorage.removeItem('km-rc-host'); } catch {}
-  if (RC.host) RC.host.destroy();
-  RC.host = null; RC.conns = []; RC.hostSt = ''; renderRcDlg(); syncRcBtns();
+function rcHello(conn, d) {
+  const dev = String(d.dev || '').slice(0, 40), name = String(d.name || 'Gerät').slice(0, 40);
+  conn.dev = dev; conn.devName = name;
+  const trust = lsJ('km-rc-trust', []);
+  if (dev && trust.some(t => t.id === dev)) { rcAccept(conn); return; }
+  try { conn.send({ t: 'wait' }); } catch {}
+  RC.asks = RC.asks.filter(a => a.conn !== conn).concat([{ conn, dev, name }]);
+  renderRcAsk();
 }
-function syncRcBtns() { document.querySelectorAll('[data-b="rc"], [data-p="rc"], #bdRcBtn').forEach(b => b.classList.toggle('on', !!(RC.host && RC.conns.length))); }
+function rcAccept(conn) {
+  conn.ok = true;
+  const trust = lsJ('km-rc-trust', []).filter(t => t.id !== conn.dev);
+  if (conn.dev) trust.push({ id: conn.dev, name: conn.devName || 'Gerät', t: Date.now() });
+  lsS('km-rc-trust', trust.slice(-20)); lsS('km-rc-paired', '1');
+  RC.last = ''; setResult(`📡 Fernbedienung „${conn.devName || 'Gerät'}“ verbunden.`, 'ok');
+  renderRcDlg(); syncRcBtns(); rcBroadcast(true);
+}
+function renderRcAsk() {
+  const el = $('rcAsk'), a = RC.asks[0];
+  el.hidden = !a; if (!a) return;
+  el.innerHTML = `<div class="ra-box"><div class="ra-t">📡 Neue Fernbedienung</div><p>„<b>${esc(a.name)}</b>“ möchte diese Tafel steuern.</p><p class="hint" style="margin:0">Nur zulassen, wenn es dein Gerät ist. Danach verbindet es sich ohne Nachfrage.</p><div class="row"><button class="primary" data-ra="yes">✓ Zulassen</button><button data-ra="no">Ablehnen</button></div></div>`;
+}
+$('rcAsk').addEventListener('click', e => {
+  const b = e.target.closest('[data-ra]'), a = RC.asks[0]; if (!b || !a) return;
+  RC.asks.shift();
+  if (b.dataset.ra === 'yes') rcAccept(a.conn);
+  else { try { a.conn.send({ t: 'denied' }); } catch {} setTimeout(() => { try { a.conn.close(); } catch {} }, 400); }
+  renderRcAsk();
+});
+function rcHostStop() {
+  lsS('km-rc-host', null);
+  if (RC.host) RC.host.destroy();
+  RC.host = null; RC.conns = []; RC.asks = []; RC.hostSt = ''; renderRcAsk(); renderRcDlg(); syncRcBtns();
+}
+function syncRcBtns() {
+  const n = rcOk().length, on = !!(RC.host && n);
+  document.querySelectorAll('[data-b="rc"], [data-p="rc"], #bdRcBtn').forEach(b => b.classList.toggle('on', on));
+  const bd = $('rcBadge'); bd.hidden = !RC.host; bd.classList.toggle('on', on);
+  bd.innerHTML = on ? `📡 Fernbedienung verbunden${n > 1 ? ' (' + n + ')' : ''}` : `📡 ${esc(rcRoom())}: <span class="rb-s">${rcSyms(RC.code)}</span>`;
+}
+$('rcBadge').addEventListener('click', () => openRc());
+
 // Was die Fernbedienung anzeigt
 function rcItem(it) {
   const p = it.p || {};
-  if (it.t === 'timer') { const t = bdTm(it); return { id: it.id, t: 'timer', txt: tmText(t), run: t.running, mode: t.mode, done: t.done }; }
+  if (it.t === 'timer') { const t = bdTm(it); return { id: it.id, t: 'timer', txt: tmText(t), run: t.running, mode: t.mode, done: t.done, min: p.min ?? 5, vis: p.vis || 'ring' }; }
   if (it.t === 'phase') return { id: it.id, t: 'phase', ph: p.ph };
   if (it.t === 'light') return { id: it.id, t: 'light', s: p.mic ? micS(it.id) : p.s, mic: !!p.mic, meter: !!p.meter, db: p.mic && MIC.an ? Math.round(MIC.db) : null };
-  if (it.t === 'dice') { const d = ui.dice[it.id]; return { id: it.id, t: 'dice', n: p.n, sides: p.sides, vals: d ? d.vals : [] }; }
+  if (it.t === 'dice') { const d = ui.dice[it.id]; return { id: it.id, t: 'dice', n: p.n || 1, sides: p.sides || 6, vals: d ? d.vals : [] }; }
   if (it.t === 'score') return { id: it.id, t: 'score', teams: (p.teams || []).map(x => ({ n: x.n, c: x.c, s: x.s || 0 })) };
-  if (it.t === 'due') return { id: it.id, t: 'due' };
+  if (it.t === 'clock') return { id: it.id, t: 'clock', analog: !!p.analog };
   return null;
 }
 function rcState() {
-  const b = curBoard(), ban = $('pickBanner');
-  return { t: 'state', cls: cls().name, view: ui.view, present: !!ui.present, bdPresent: !!ui.bdPresent,
+  const b = curBoard(), ban = $('pickBanner'), c = cls(), ft = tmFullRef === timer;
+  return { t: 'state', room: rcRoom(), cls: c.name, view: ui.view, present: !!ui.present, bdPresent: !!ui.bdPresent,
     boards: boardsVis().map(x => ({ id: x.id, name: x.name })), board: b ? b.id : null,
     items: b ? b.items.map(rcItem).filter(Boolean) : [],
-    timer: $('timerBox').hidden ? null : { txt: tmText(timer), run: timer.running, done: timer.done, mode: timer.mode },
+    timer: $('timerBox').hidden || ft ? null : { txt: tmText(timer), run: timer.running, done: timer.done, mode: timer.mode },
+    full: ft ? { txt: tmText(timer), run: timer.running, done: timer.done, mode: timer.mode } : null,
+    clk: ui.clkShow || '', phs: ui.phShow || '',
     pickN: $('pickN').value, pick: !ban.hidden && !ban.classList.contains('rolling') ? ban.querySelector('.pn') && ban.querySelector('.pn').textContent : '',
-    teams: !!ui.teams, ph: ui.ov.phase };
+    flip: !!ui.flipped, gw: GW(), room2: GW() && c.room2Off === false, big: !$('teamsDlg').hidden,
+    teams: ui.teams ? { n: ui.teams.list.length, mode: ui.teams.mode, list: !!ui.showTeamList, col: $('teamColor').checked, roles: Object.keys(ui.teams.roles || {}).length > 0, name: ui.teams.savedName || '' } : null,
+    tmode: $('teamMode').value, tn: $('teamN').value,
+    sets: (c.teamSets || []).map(t => ({ id: t.id, name: t.name })),
+    cur: ui.bdPresent ? 'board' : ui.present ? 'plan' : ui.vPresent ? ui.view : '',
+    layout: ui.bdPresent && b ? b.items.map(i => [i.x, i.y, i.w, i.h, (BD_TYPES[i.t] || {}).i || '']) : null, ink: ui.bdPresent && b ? (b.ink || []) : null,
+    subj: ((c.tt && c.tt.subjects) || []).map(x => x.name), ttW: ui.ttWeek || 0, calM: ui.calMon || todayStr().slice(0, 7), ack: RC.ack || null, vote: voteState() };
 }
 function rcBroadcast(force) {
-  if (!RC.conns.length) return;
+  if (!rcOk().length) return;
   const st = rcState(), j = JSON.stringify(st);
   if (!force && j === RC.last) return;
   RC.last = j;
-  RC.conns.forEach(c => { try { if (c.open) c.send(st); } catch {} });
+  rcOk().forEach(c => { try { if (c.open) c.send(st); } catch {} });
 }
 setInterval(() => rcBroadcast(false), 500);
-try { if (sessionStorage.getItem('km-rc-host') === '1') setTimeout(rcHostStart, 800); } catch {}   // nach Neuladen der Tafel weiter erreichbar
+if (lsGetKm('km-rc-host') === '1') setTimeout(() => rcHostStart(), 800);   // Tafel bleibt erreichbar – auch nach Neuladen oder Neustart
 function rcShow(v) {   // Ansicht an der Tafel umschalten (Vollbild bleibt erhalten)
+  if (ui.vPresent && v !== 'tt' && v !== 'cal') { ui.keepFs = true; setVPresent(false); ui.keepFs = false; if (v === 'exit') { if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); return; } }
   if (v === 'board') { if (ui.present) { ui.keepFs = true; setPresent(false); setView('board'); bdPresent(true); ui.keepFs = false; } else { if (ui.view !== 'board') setView('board'); if (!ui.bdPresent) bdPresent(true); } }
   if (v === 'plan') { if (ui.bdPresent) { ui.keepFs = true; bdPresent(false); setView('plan'); setPresent(true); ui.keepFs = false; } else { if (ui.view !== 'plan') setView('plan'); if (!ui.present) setPresent(true); } }
   if (v === 'exit') { if (ui.bdPresent) bdPresent(false); if (ui.present) setPresent(false); }
+  if (v === 'tt' || v === 'cal') { ui.keepFs = true; if (ui.bdPresent) bdPresent(false); if (ui.present) setPresent(false); if (ui.view !== v) setView(v); setVPresent(true); ui.keepFs = false; }
 }
 function rcHandle(d) {
   if (!d || typeof d !== 'object') return;
@@ -7105,12 +7612,16 @@ function rcHandle(d) {
   if (d.c === 'item') {
     const it = bdItem(d.id); if (!it) return;
     const bw = document.querySelector(`#bdStage .bw[data-id="${d.id}"]`);
-    if (it.t === 'timer') { const t = bdTm(it); if (d.a === 'go') tmToggle(t); if (d.a === 'reset') tmReset(t, (it.p.min || 0) * 60 + (it.p.sec || 0) || 300); if (d.a === 'm') tmAdd(t, -60); if (d.a === 'p') tmAdd(t, 60); if (bw) bw.querySelector('.bx').innerHTML = bwHtml(it); }
+    if (it.t === 'timer') {
+      if (d.a === 'cfg') { change(() => { if (d.mode) it.p.mode = d.mode; if (d.min) { it.p.min = +d.min; it.p.sec = 0; } if (d.vis) it.p.vis = d.vis; }, { keepList: true }); return; }
+      const t = bdTm(it); if (d.a === 'go') tmToggle(t); if (d.a === 'reset') tmReset(t, (it.p.min || 0) * 60 + (it.p.sec || 0) || 300); if (d.a === 'm') tmAdd(t, -60); if (d.a === 'p') tmAdd(t, 60); if (d.a === 'full') { tmFull(t); return; }
+      if (bw) bw.querySelector('.bx').innerHTML = bwHtml(it);
+    }
     if (it.t === 'phase' && PHASES[d.v]) change(() => { it.p.ph = d.v; }, { keepList: true });
     if (it.t === 'light' && !it.p.mic && ['r', 'y', 'g'].includes(d.v)) change(() => { it.p.s = d.v; }, { keepList: true });
-    if (it.t === 'dice' && bw) diceRoll(it.id, bw);
+    if (it.t === 'dice') { if (d.a === 'n') change(() => { it.p.n = clamp(+d.v || 1, 1, 6); }, { keepList: true }); else if (d.a === 'sides') change(() => { it.p.sides = +d.v || 6; }, { keepList: true }); else if (bw) diceRoll(it.id, bw); }
     if (it.t === 'score') change(() => { const tm = (it.p.teams || [])[d.i]; if (tm) tm.s = Math.max(0, (tm.s || 0) + (d.d > 0 ? 1 : -1)); }, { keepList: true });
-    if (it.t === 'due' && bw) { const b2 = bw.querySelector(`[data-due="${d.d > 0 ? 1 : -1}"]`); if (b2) bdCtl(it, b2, bw); }
+    if (it.t === 'clock') change(() => { it.p.analog = !!d.v; }, { keepList: true });
   }
   if (d.c === 'pick') { if (d.n) $('pickN').value = d.n; if (ui.view !== 'plan' || !ui.present) { rcShow('plan'); setTimeout(pickSomeone, 400); } else pickSomeone(); }
   if (d.c === 'pickN') $('pickN').value = d.v;
@@ -7121,55 +7632,234 @@ function rcHandle(d) {
     if (d.a === 'reset' && !$('timerBox').hidden) { tmReset(timer); tickTimer(); }
     if (d.a === 'close') { timer.running = false; $('timerBox').hidden = true; if (ui.present) layoutStage(); }
   }
-  if (d.c === 'ovph' && PHASES[d.v]) { ui.ov.phase = d.v; ovRefresh(); }
+  if (d.c === 'ft') {   // Vollbild-Timer
+    if (d.a === 'start') { if (tmFullRef && tmFullRef !== timer) tmFullClose(); Object.assign(timer, { mode: d.mode === 'up' ? 'up' : 'down', vis: d.mode === 'up' && TM_PREF.vis === 'sand' ? 'ring' : (TM_PREF.vis === 'bar' ? 'ring' : TM_PREF.vis), sound: TM_PREF.sound, vol: TM_PREF.vol || 5 }); tmReset(timer, d.sec || 0); $('timerBox').hidden = true; tmToggle(timer); tmFull(timer); }
+    const t = tmFullRef;
+    if (t) { if (d.a === 'go') tmToggle(t); if (d.a === 'reset') tmReset(t); if (d.a === 'm') tmAdd(t, -60); if (d.a === 'p') tmAdd(t, 60); if (d.a === 'close') { t.running = false; tmFullClose(); } else renderTmFull(); }
+  }
+  if (d.c === 'ttw') { ui.ttWeek = d.d ? (ui.ttWeek || 0) + d.d : 0; renderTimetable(); }
+  if (d.c === 'calm') { const cur = ui.calMon || todayStr().slice(0, 7); if (!d.d) ui.calMon = null; else { let [y, mo] = cur.split('-').map(Number); mo += d.d; if (mo < 1) { mo = 12; y--; } if (mo > 12) { mo = 1; y++; } ui.calMon = y + '-' + String(mo).padStart(2, '0'); } renderCal(); }
+  if (d.c === 'add') {   // Eintrag von der Fernbedienung
+    const title = String(d.title || '').trim().slice(0, 200), subj = String(d.subject || '').slice(0, 60);
+    if (d.kind === 'hw') {
+      if (!title) return;
+      const due = /^\d{4}-\d{2}-\d{2}$/.test(d.due || '') ? d.due : (subj ? nextLessonDate(subj) : '') || '';
+      change(() => { const c = cls(); c.checks = c.checks || []; c.checks.push({ id: newId('k'), kind: 'hw', title, subject: subj, given: todayStr(), due, note: '', status: {}, created: new Date().toISOString() }); }, { keepList: true });
+      RC.ack = { n: Date.now(), t: `📚 Hausaufgabe eingetragen${due ? ' – bis ' + fmtDW(due) : ''}` };
+      setResult('📡 Hausaufgabe über die Fernbedienung eingetragen.', 'ok');
+    } else {
+      const date = /^\d{4}-\d{2}-\d{2}$/.test(d.date || '') ? d.date : ''; if (!date) return;
+      const ev = d.kind === 'ev'; if (ev && !title) return;
+      change(() => { const c = cls(); c.exams = c.exams || []; const x = { id: newId('e'), date, subject: ev ? '' : subj, title: title || 'Probe', note: '' }; if (ev) Object.assign(x, { kind: 'ev', end: d.end && d.end > date ? d.end : '', time: String(d.time || '').slice(0, 20) }); c.exams.push(x); }, { keepList: true });
+      RC.ack = { n: Date.now(), t: (ev ? '📌 Termin' : '📝 Probe') + ' eingetragen – ' + fmtDW(date) };
+      setResult('📡 ' + (ev ? 'Termin' : 'Probe') + ' über die Fernbedienung eingetragen.', 'ok');
+    }
+  }
+  if (d.c === 'vote') rcVoteCmd(d);
+  if (d.c === 'clk') setClkShow(d.v === 'off' ? '' : d.v);
+  if (d.c === 'phs') setPhShow(d.v === 'off' ? '' : d.v);
+  if (d.c === 'flip') { ui.flipped = !ui.flipped; renderAll({ keepList: true }); syncPresentBar(); }
+  if (d.c === 'layout') setLayout(d.v === 'gw' ? 'gw' : 'normal');
+  if (d.c === 'room2' && GW()) setRoom2(cls().room2Off !== false);
+  if (d.c === 'teams') {
+    if (d.a === 'make') { if (d.mode) $('teamMode').value = d.mode; if (d.n) $('teamN').value = d.n; $('pmTeamMode').value = $('teamMode').value; $('pmTeamN').value = $('teamN').value; makeTeams(); if (GW()) gwSync(true); ui.showTeamList = ui.present; renderRoom(); syncPresentBar(); }
+    if (d.a === 'list' && ui.teams) { ui.showTeamList = !ui.showTeamList; renderRoom(); syncPresentBar(); }
+    if (d.a === 'col' && ui.teams) { $('teamColor').checked = $('teamColor2').checked = !$('teamColor').checked; renderRoom(); syncPresentBar(); setResult($('teamColor').checked ? '🎨 Gruppenfarben im Plan an.' : '🎨 Gruppenfarben im Plan aus.', 'ok'); }
+    if (d.a === 'big' && ui.teams) { $('teamsDlg').hidden = !$('teamsDlg').hidden; if (!$('teamsDlg').hidden) renderTeams(); }
+    if (d.a === 'roles' && ui.teams) dealRoles();
+    if (d.a === 'seat' && ui.teams && GW()) {   // Gruppen zufällig neu auf die Tischinseln verteilen
+      const isl = shuffle(islands()), used = new Set(), place = {};
+      ui.teams.list.map((t, i) => ({ i, n: t.length })).sort((a, b) => b.n - a.n).forEach(({ i, n }) => { const free = isl.filter(x => !used.has(x.key)); const best = free.find(x => x.cap >= n) || free.sort((a, b) => b.cap - a.cap)[0]; if (best) { place[i] = best.key; used.add(best.key); } });
+      ui.teams.place = place; gwSync(false); setResult('📍 Gruppen neu an die Tische gesetzt.', 'ok');
+    }
+    if (d.a === 'clear') { ui.teams = null; ui.showTeamList = false; $('teamsDlg').hidden = true; renderTeams(); renderRoom(); syncPresentBar(); }
+    if (d.a === 'load' && d.id) { loadTeamSet(d.id); if (ui.present) { ui.showTeamList = true; renderRoom(); syncPresentBar(); } }
+  }
 }
+// ⛶ Stundenplan und Kalender bildschirmfüllend (wie Tafel und Sitzplan)
+ui.vPresent = false;
+function setVPresent(on) {
+  if (on && ui.view !== 'tt' && ui.view !== 'cal') return;
+  ui.vPresent = on; document.body.classList.toggle('vpresent', on);
+  if (on) { if (!document.fullscreenElement && document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {}); }
+  else if (document.fullscreenElement && !ui.keepFs && !ui.present && !ui.bdPresent) document.exitFullscreen().catch(() => {});
+  if (ui.view === 'tt') renderTimetable(); else renderCal();
+}
+$('ttPresent').addEventListener('click', () => setVPresent(true));
+$('vpBar').addEventListener('click', e => { const b = e.target.closest('[data-vp]'); if (!b) return; if (b.dataset.vp === 'exit') setVPresent(false); else rcShow(b.dataset.vp); });
+document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && ui.vPresent && !ui.keepFs) setVPresent(false); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && ui.vPresent && document.querySelector('.cdlg-back:not([hidden])') == null) setVPresent(false); });
+// 🕒 Uhr bildschirmfüllend · 🤫 Arbeitsphase dauerhaft eingeblendet (bis wieder abgeschaltet)
+ui.clkShow = ''; ui.phShow = '';
+function setClkShow(v) {
+  ui.clkShow = v; const el = $('clkFull'); el.hidden = !v;
+  if (v) { el.className = v; el.querySelector('.cf-a').innerHTML = v === 'analog' ? aClockSvg(true) : ''; clkFullTick(); }
+}
+function clkFullTick() {
+  if (!ui.clkShow) return;
+  const el = $('clkFull'), now = new Date();
+  if (ui.clkShow === 'analog') aClockSet(el.querySelector('svg'), now);
+  else el.querySelector('.cf-d').textContent = now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+  el.querySelector('.cf-dt').textContent = now.toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
+}
+setInterval(clkFullTick, 1000);
+$('clkFull').addEventListener('click', e => { if (e.target.closest('[data-cf="close"]')) setClkShow(''); });
+function setPhShow(v) {
+  ui.phShow = PHASES[v] ? v : ''; if (ui.phShow) ui.ov.phase = ui.phShow;
+  const el = $('phFloat'); el.hidden = !ui.phShow;
+  if (ui.phShow) { const ph = PHASES[ui.phShow]; el.style.setProperty('--pc', ph[2]); el.innerHTML = `<span class="ic">${ph[0]}</span><span>${esc(ph[1])}</span><button data-pf="x" title="Ausblenden">✕</button>`; }
+  if (ui.present) ovRefresh();
+}
+$('phFloat').addEventListener('click', e => { if (phDrag && phDrag.moved) return; if (e.target.closest('[data-pf="x"]')) setPhShow(''); else { const el = $('phFloat'); bdPhasePop({ p: { ph: ui.phShow } }, el, k => setPhShow(k)); } });
+// Einblendung verschiebbar (Position wird gemerkt)
+let phDrag = null;
+(() => { try { const p = JSON.parse(localStorage.getItem('km-phpos') || 'null'); if (p) { $('phFloat').style.left = p.x + '%'; $('phFloat').style.top = p.y + '%'; } } catch {} })();
+$('phFloat').addEventListener('pointerdown', e => { if (e.target.closest('button')) return; const r = $('phFloat').getBoundingClientRect(); phDrag = { dx: e.clientX - r.left, dy: e.clientY - r.top, x0: e.clientX, y0: e.clientY, moved: false }; $('phFloat').setPointerCapture(e.pointerId); });
+$('phFloat').addEventListener('pointermove', e => { if (!phDrag) return; if (Math.hypot(e.clientX - phDrag.x0, e.clientY - phDrag.y0) > 5) phDrag.moved = true; if (!phDrag.moved) return; const el = $('phFloat'); el.style.left = clamp((e.clientX - phDrag.dx) / innerWidth * 100, 0, 95) + '%'; el.style.top = clamp((e.clientY - phDrag.dy) / innerHeight * 100, 0, 95) + '%'; });
+$('phFloat').addEventListener('pointerup', () => { if (phDrag && phDrag.moved) { try { localStorage.setItem('km-phpos', JSON.stringify({ x: parseFloat($('phFloat').style.left), y: parseFloat($('phFloat').style.top) })); } catch {} setTimeout(() => { phDrag = null; }, 0); } else phDrag = null; });
+window.addEventListener('keydown', e => { if (e.key === 'Escape' && ui.clkShow) { e.stopImmediatePropagation(); setClkShow(''); } }, true);
+
+/* ---------- 🖊 Zeichnen über die Fernbedienung ---------- */
+let rcInkLive = null;   // gerade am iPad gezeichneter Strich (Vorschau an der Tafel)
+function rcInkHost(d) {
+  const b = curBoard(); if (!b) return;
+  if (d.a === 'live') { rcInkLive = d.s && Array.isArray(d.s.p) ? d.s : null; inkDraw(); return; }
+  if (d.a === 'add' && d.s && Array.isArray(d.s.p) && d.s.p.length >= 2) { rcInkLive = null; const s = { c: String(d.s.c || '#111827').slice(0, 9), w: clamp(+d.s.w || 0.5, 0.1, 3), p: d.s.p.slice(0, 4000).map(v => clamp(+v || 0, 0, 100)) }; change(() => { b.ink = (b.ink || []).concat([s]); }, { keepList: true }); }
+  if (d.a === 'del' && Array.isArray(d.idx)) { const del = new Set(d.idx.map(Number)); change(() => { b.ink = (b.ink || []).filter((_, i) => !del.has(i)); }, { keepList: true }); }
+  if (d.a === 'undo' && b.ink && b.ink.length) change(() => { b.ink = b.ink.slice(0, -1); }, { keepList: true });
+  if (d.a === 'clear' && b.ink && b.ink.length) change(() => { b.ink = []; }, { keepList: true });
+}
+// Fernbedienung: Zeichenfläche im Seitenverhältnis der Tafel, Bausteine als Umrisse
+const RCPEN = { c: '#dc2626', w: 1, er: false };
+let rcInkCur = null, rcInkErase = null, rcInkT = 0;
+function rcInkHtml(s) {
+  return `<div class="rc-sec"><h3>🖊 Zeichnen auf dem Tafelbild</h3>
+    <div class="rc-row rc-wrap">${PEN_COL.map(c => `<button class="rc-pc${!RCPEN.er && RCPEN.c === c ? ' on' : ''}" data-rpcol="${c}" style="--c:${c}"></button>`).join('')}
+      ${PEN_W.map((w, i) => `<button class="rc-pw${!RCPEN.er && RCPEN.w === i ? ' on' : ''}" data-rpw="${i}"><i style="width:${5 + i * 6}px;height:${5 + i * 6}px"></i></button>`).join('')}
+      <button data-rpe="1"${RCPEN.er ? ' class="on"' : ''}>🧽 Radierer</button><button data-rink="undo">↶ Strich</button><button data-rink="clear">🗑 Alles</button></div>
+    <div class="rc-ink"><canvas id="rcInk"></canvas></div><p class="hint" style="margin:4px 0 0">Mit dem Finger oder Stift zeichnen – erscheint sofort an der Tafel. Graue Kästen = Bausteine.</p></div>`;
+}
+function rcInkDraw() {
+  const cv = $('rcInk'), r = RC.remote; if (!cv || !r || !r.state) return;
+  const s = r.state, W = cv.clientWidth, H = cv.clientHeight, dpr = window.devicePixelRatio || 1;
+  if (!W) return;
+  cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+  const g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
+  g.fillStyle = '#f1f5f9'; g.strokeStyle = '#cbd5e1'; g.lineWidth = 1; g.font = `${Math.max(12, W / 40)}px sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle';
+  (s.layout || []).forEach(([x, y, w, h, ic]) => { const X = x / 100 * W, Y = y / 100 * H, ww = w / 100 * W, hh = h / 100 * H; g.fillRect(X, Y, ww, hh); g.strokeRect(X, Y, ww, hh); g.fillStyle = '#94a3b8'; g.fillText(ic || '', X + ww / 2, Y + hh / 2); g.fillStyle = '#f1f5f9'; });
+  g.lineCap = g.lineJoin = 'round';
+  (s.ink || []).filter((_, i) => !(rcInkErase && rcInkErase.has(i))).concat(rcInkCur ? [rcInkCur] : []).forEach(st => {
+    const p = st.p; if (!p || p.length < 2) return;
+    g.strokeStyle = st.c; g.lineWidth = Math.max(1.5, st.w / 100 * W);
+    g.beginPath(); g.moveTo(p[0] / 100 * W, p[1] / 100 * H); if (p.length === 2) g.lineTo(p[0] / 100 * W + .1, p[1] / 100 * H);
+    for (let i = 2; i < p.length; i += 2) g.lineTo(p[i] / 100 * W, p[i + 1] / 100 * H);
+    g.stroke();
+  });
+}
+const rcInkPos = e => { const R = $('rcInk').getBoundingClientRect(); return [clamp((e.clientX - R.left) / R.width * 100, 0, 100), clamp((e.clientY - R.top) / R.height * 100, 0, 100), R]; };
+function rcInkHit(x, y, R) {
+  const s = RC.remote.state, px = x / 100 * R.width, py = y / 100 * R.height;
+  (s.ink || []).forEach((st, i) => {
+    if (rcInkErase.has(i)) return;
+    const P = st.p; for (let k = 0; k < P.length; k += 2) if (Math.hypot(P[k] / 100 * R.width - px, P[k + 1] / 100 * R.height - py) < 16) { rcInkErase.add(i); return; }
+  });
+}
+$('rcPanel').addEventListener('pointerdown', e => {
+  if (e.target.id !== 'rcInk') return;
+  e.preventDefault(); e.target.setPointerCapture(e.pointerId);
+  const [x, y, R] = rcInkPos(e);
+  if (RCPEN.er) { rcInkErase = new Set(); rcInkHit(x, y, R); } else rcInkCur = { c: RCPEN.c, w: PEN_W[RCPEN.w] || 0.5, p: [+x.toFixed(1), +y.toFixed(1)] };
+  RC.remote.drawing = true; rcInkDraw();
+});
+$('rcPanel').addEventListener('pointermove', e => {
+  if (e.target.id !== 'rcInk' || (!rcInkCur && !rcInkErase)) return;
+  (e.getCoalescedEvents ? e.getCoalescedEvents() : [e]).forEach(ev => {
+    const [x, y, R] = rcInkPos(ev);
+    if (rcInkErase) { rcInkHit(x, y, R); return; }
+    const p = rcInkCur.p; if (Math.hypot((x - p[p.length - 2]) / 100 * R.width, (y - p[p.length - 1]) / 100 * R.height) >= 2) p.push(+x.toFixed(1), +y.toFixed(1));
+  });
+  rcInkDraw();
+  if (rcInkCur && Date.now() - rcInkT > 120) { rcInkT = Date.now(); rcSend({ c: 'ink', a: 'live', s: rcInkCur }); }
+});
+function rcInkEnd() {
+  const r = RC.remote; if (!r || (!rcInkCur && !rcInkErase)) return;
+  if (rcInkCur) { rcSend({ c: 'ink', a: 'add', s: rcInkCur }); r.state.ink = (r.state.ink || []).concat([rcInkCur]); }
+  if (rcInkErase && rcInkErase.size) { const idx = [...rcInkErase]; rcSend({ c: 'ink', a: 'del', idx }); r.state.ink = (r.state.ink || []).filter((_, i) => !rcInkErase.has(i)); }
+  rcInkCur = null; rcInkErase = null; r.drawing = false; rcInkDraw();
+  if (r.pend) setTimeout(renderRc, 30);
+}
+$('rcPanel').addEventListener('pointerup', rcInkEnd);
+$('rcPanel').addEventListener('pointercancel', rcInkEnd);
 
 /* ---------- Dialog (Tafel: Code zeigen · iPad: Code eingeben) ---------- */
-function openRc() { renderRcDlg(); $('rcDlg').hidden = false; }
+function openRc() { RC.pick = []; renderRcDlg(); $('rcDlg').hidden = false; }
 function renderRcDlg() {
   const d = $('rcDlg'); if (!d) return;
-  const st = { '': '', wait: '⏳ Verbinde mit dem Vermittlungsdienst …', ready: '🟢 Bereit – warte auf die Fernbedienung', noserver: '🔴 Vermittlungsdienst nicht erreichbar (Internet? Firewall?)', err: '🔴 Fernbedienung wird von diesem Browser nicht unterstützt' }[RC.hostSt] || '';
-  $('rcHostBox').innerHTML = RC.host ? `<div class="rc-code">${RC.code.split('').map(c => `<span>${c}</span>`).join('')}</div>
-      <p class="rc-st">${RC.conns.length ? `🟢 ${RC.conns.length === 1 ? 'Ein Gerät' : RC.conns.length + ' Geräte'} verbunden` : st}</p>
-      <div class="row" style="justify-content:center"><button id="rcHostOff" class="danger">Fernbedienung beenden</button></div>`
-    : `<p class="hint" style="margin:0">Dieses Gerät ist die <b>Tafel</b> (z. B. der Tafel-PC): Es zeigt einen Code, den du am iPad eingibst.</p><button class="primary" id="rcHostOn">📡 Code anzeigen</button>`;
-  const r = RC.remote;
-  $('rcJoinBox').innerHTML = `<p class="hint" style="margin:0">Dieses Gerät ist die <b>Fernbedienung</b> (z. B. dein iPad): Code von der Tafel eingeben.</p>
-    <div class="row"><input id="rcCodeIn" inputmode="numeric" maxlength="4" placeholder="Code" value="${esc(r ? r.code : (lsGetKm('km-rc-last') || ''))}" style="width:110px;font-size:1.4rem;letter-spacing:.2em;text-align:center"><button class="primary" id="rcJoin">Mit Tafel verbinden</button></div>`;
+  const st = { '': '', wait: '⏳ Verbinde mit dem Vermittlungsdienst …', ready: '🟢 Bereit – warte auf die Fernbedienung', noserver: '🔴 Vermittlungsdienst nicht erreichbar (Internet? Firewall?)', err: '🔴 Fernbedienung wird von diesem Browser nicht unterstützt', dup: '🟠 Diese Tafel ist schon in einem anderen Fenster erreichbar. Das andere Fenster schließen – oder „🔀 Neue Symbole“.' }[RC.hostSt] || '';
+  const ok = rcOk(), trust = lsJ('km-rc-trust', []);
+  $('rcHostBox').innerHTML = RC.host ? `<div class="rc-code">${RC.code.split('').map(c => `<span title="${RC_SYMN[+c]}">${RC_SYM[+c]}</span>`).join('')}</div>
+      <p class="rc-st">${ok.length ? `🟢 ${ok.map(c => esc(c.devName || 'Gerät')).join(', ')} verbunden` : st}</p>
+      <label class="nc-name">Name dieser Tafel (erscheint am iPad)<input id="rcRoomIn" value="${esc(rcRoom())}" maxlength="30" placeholder="z. B. Raum 12"></label>
+      ${trust.length ? `<div class="rc-trust"><b>Zugelassene Geräte</b>${trust.map(t => `<span>${esc(t.name)}<button data-untrust="${esc(t.id)}" title="Nicht mehr zulassen">✕</button></span>`).join('')}</div>` : ''}
+      <div class="row" style="justify-content:center"><button id="rcNewCode" title="Neue Symbole – gekoppelte iPads müssen neu koppeln">🔀 Neue Symbole</button><button id="rcHostOff" class="danger">Fernbedienung ausschalten</button></div>
+      <p class="hint" style="margin:0">Die Tafel bleibt erreichbar (auch nach dem Neustart des PCs), bis du die Fernbedienung ausschaltest.</p>`
+    : `<p class="hint" style="margin:0">Dieses Gerät ist die <b>Tafel</b> (z. B. der Tafel-PC): Es zeigt drei Symbole, die du am iPad antippst.</p><button class="primary" id="rcHostOn">📡 Tafel erreichbar machen</button>`;
+  $('rcJoinBox').hidden = !!RC.host;   // diese Tafel ist Gastgeber – Koppel-Feld nicht nötig
+  const known = lsJ('km-rc-known', []), pick = RC.pick || [];
+  $('rcJoinBox').innerHTML = `<p class="hint" style="margin:0">Dieses Gerät ist die <b>Fernbedienung</b> (z. B. dein iPad).</p>
+    ${known.length ? `<div class="rc-known">${known.map(k => `<span><button class="primary" data-rk="${k.code}">📡 Mit ${esc(k.room || 'Tafel')} verbinden <small>${rcSyms(k.code)}</small></button><button data-rkdel="${k.code}" title="Vergessen">✕</button></span>`).join('')}</div>` : ''}
+    <b style="font-size:.9rem">${known.length ? 'Andere Tafel koppeln' : 'Mit Tafel koppeln'}: die 3 Symbole der Tafel der Reihe nach antippen</b>
+    <div class="rc-slots">${[0, 1, 2].map(i => `<span>${pick[i] != null ? RC_SYM[pick[i]] : ''}</span>`).join('')}<button id="rcPickBack" title="Zurück"${pick.length ? '' : ' disabled'}>⌫</button></div>
+    <div class="rc-symgrid">${RC_SYM.map((s, i) => `<button data-sym="${i}" title="${RC_SYMN[i]}">${s}</button>`).join('')}</div>
+    <label class="nc-name">Name dieses Geräts (erscheint an der Tafel)<input id="rcDevIn" value="${esc(rcDev().name)}" maxlength="30"></label>`;
 }
-const lsGetKm = k => { try { return localStorage.getItem(k) || ''; } catch { return ''; } };
 $('rcDlg').addEventListener('click', e => {
-  if (e.target.id === 'rcHostOn') rcHostStart();
-  if (e.target.id === 'rcHostOff') rcHostStop();
-  if (e.target.id === 'rcClose') $('rcDlg').hidden = true;
-  if (e.target.id === 'rcJoin') { const c = ($('rcCodeIn').value || '').replace(/\D/g, ''); if (c.length !== 4) { $('rcCodeIn').focus(); return; } $('rcDlg').hidden = true; rcConnect(c); }
+  const t = e.target.closest('button') || e.target;
+  if (t.id === 'rcHostOn') rcHostStart();
+  if (t.id === 'rcHostOff') { if (window.confirm('Fernbedienung ausschalten? Die Tafel ist dann nicht mehr vom iPad aus erreichbar.')) rcHostStop(); }
+  if (t.id === 'rcNewCode') { if (window.confirm('Neue Symbole erzeugen? Alle gekoppelten Geräte müssen danach neu koppeln und an der Tafel neu zugelassen werden.')) { RC.idTries = 0; lsS('km-rc-trust', []); rcHostStart(true); } }
+  if (t.id === 'rcClose') $('rcDlg').hidden = true;
+  if (t.dataset && t.dataset.untrust) { lsS('km-rc-trust', lsJ('km-rc-trust', []).filter(x => x.id !== t.dataset.untrust)); RC.conns.filter(c => c.dev === t.dataset.untrust).forEach(c => { try { c.close(); } catch {} }); renderRcDlg(); }
+  if (t.dataset && t.dataset.sym != null) { RC.pick = (RC.pick || []).concat([+t.dataset.sym]).slice(0, 3); renderRcDlg(); if (RC.pick.length === 3) { const c = RC.pick.join(''); RC.pick = []; setTimeout(() => { $('rcDlg').hidden = true; rcConnect(c); }, 250); } }
+  if (t.id === 'rcPickBack') { RC.pick = (RC.pick || []).slice(0, -1); renderRcDlg(); }
+  if (t.dataset && t.dataset.rk) { $('rcDlg').hidden = true; rcConnect(t.dataset.rk); }
+  if (t.dataset && t.dataset.rkdel) { lsS('km-rc-known', lsJ('km-rc-known', []).filter(k => k.code !== t.dataset.rkdel)); renderRcDlg(); }
 });
-$('rcDlg').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'rcCodeIn') $('rcJoin').click(); if (e.key === 'Escape') $('rcDlg').hidden = true; });
+$('rcDlg').addEventListener('change', e => {
+  if (e.target.id === 'rcRoomIn') { lsS('km-rc-room', e.target.value.trim() || null); syncRcBtns(); rcBroadcast(true); }
+  if (e.target.id === 'rcDevIn') lsS('km-rc-devname', e.target.value.trim() || null);
+});
+$('rcDlg').addEventListener('keydown', e => { if (e.key === 'Escape') $('rcDlg').hidden = true; });
+
 
 /* ---------- Fernbedienung (iPad) ---------- */
 function rcConnect(code, keep) {
   const prevTries = RC.remote && RC.remote.code === code ? RC.remote.tries || 0 : 0;
   rcDisconnect(true);
-  try { localStorage.setItem('km-rc-last', code); } catch {}
   let P; try { P = loadPeer(); } catch (e) { setResult('Fernbedienung wird von diesem Browser nicht unterstützt.', 'warn'); return; }
   const r = RC.remote = { code, st: keep ? keep.st : 'connecting', why: keep ? keep.why : '', type: '', state: null, stop: false, tries: prevTries };
   $('rcPanel').hidden = false; renderRc();
   const peer = r.peer = new P(rcOpts());
   const fail = (st, why) => { if (r.stop || RC.remote !== r) return; r.st = st; r.why = why; renderRc(); };
   peer.on('open', () => {
-    const conn = r.conn = peer.connect(RC_PREFIX + code, { reliable: true });
+    const conn = r.conn = peer.connect(rcPid(code), { reliable: true });
     r.timer = setTimeout(() => { if (!conn.open) fail('blocked', 'Die Tafel ist erreichbar, aber das Netz lässt keine Verbindung zwischen den Geräten zu.'); }, 15000);
-    conn.on('open', async () => { clearTimeout(r.timer); r.st = 'ok'; r.tries = 0; renderRc(); r.type = await rcConnType(conn); renderRc(); });
-    conn.on('data', d => { if (d && d.t === 'state') { r.state = d; renderRc(); } });
-    conn.on('close', () => { if (r.stop || RC.remote !== r) return; r.st = 'lost'; renderRc(); rcRetry(r); });
+    conn.on('open', async () => { clearTimeout(r.timer); r.st = 'hello'; r.tries = 0; const dv = rcDev(); conn.send({ c: 'hello', dev: dv.id, name: dv.name }); renderRc(); r.type = await rcConnType(conn); renderRc(); });
+    conn.on('data', d => {
+      if (d && d.t === 'wait') { r.st = 'confirm'; renderRc(); return; }
+      if (d && d.t === 'denied') { r.stop = true; r.st = 'denied'; r.why = 'Die Tafel hat die Verbindung abgelehnt.'; renderRc(); return; }
+      if (d && d.t === 'state') { if (r.st !== 'ok') { r.st = 'ok'; rcRemember(code, d.room); } else if (d.room !== r.room) rcRemember(code, d.room); r.room = d.room; const an = d.ack && d.ack.n; if (r.lastAck === undefined) r.lastAck = an; else if (an && an !== r.lastAck) { r.lastAck = an; r.ackAt = Date.now(); setTimeout(renderRc, 4100); } r.state = d; renderRc(); } });
+    conn.on('close', () => { if (r.stop || RC.remote !== r) return; if (r.st === 'confirm' || r.st === 'hello') { r.st = 'denied'; r.why = 'Die Verbindung wurde an der Tafel nicht zugelassen.'; r.stop = true; renderRc(); return; } r.st = 'lost'; renderRc(); rcRetry(r); });
     conn.on('error', () => {});
   });
   peer.on('error', e => {
-    if (e.type === 'peer-unavailable') { fail('nocode', 'Unter diesem Code ist keine Tafel erreichbar. Ist an der Tafel „📡 Code anzeigen“ geöffnet?'); rcRetry(r, 5000); }
+    if (e.type === 'peer-unavailable') { fail('nocode', 'Unter diesen Symbolen ist keine Tafel erreichbar. Ist der Klassenmanager an der Tafel geöffnet und die Fernbedienung eingeschaltet („📡 Tafel erreichbar machen“)?'); rcRetry(r, 5000); }
     else if (['network', 'server-error', 'socket-error', 'socket-closed'].includes(e.type)) { fail('noserver', 'Der Vermittlungsdienst ist nicht erreichbar (Internet?).'); rcRetry(r, 6000); }
     else if (e.type === 'browser-incompatible') fail('blocked', 'Dieser Browser unterstützt keine Direktverbindung.');
   });
 }
+// gekoppelte Tafeln merken (neueste zuerst)
+function rcRemember(code, room) { const k = lsJ('km-rc-known', []).filter(x => x.code !== code); k.unshift({ code, room: room || 'Tafel', t: Date.now() }); lsS('km-rc-known', k.slice(0, 6)); }
 function rcRetry(r, ms) {
   if (r.stop || r.retrying) return;
   r.retrying = true; r.tries = (r.tries || 0) + 1;
@@ -7194,35 +7884,89 @@ async function rcConnType(conn) {
   } catch { return ''; }
 }
 const rcSend = msg => { const r = RC.remote; if (r && r.conn && r.conn.open) r.conn.send(msg); };
+const RC_TEAMMODES = [['pairs', 0, 'Paare'], ['size', 3, 'je 3'], ['size', 4, 'je 4'], ['size', 5, 'je 5'], ['count', 4, '4 Gruppen'], ['count', 5, '5 Gruppen'], ['count', 6, '6 Gruppen']];
 function renderRc() {
   const r = RC.remote, el = $('rcPanel'); if (!r) return;
+  if (r.drawing) { r.pend = true; return; }
+  const ae = document.activeElement; if (ae && /SELECT|INPUT|TEXTAREA/.test(ae.tagName) && el.contains(ae)) { r.pend = true; return; }   // gerade am Eintippen/Auswählen: später neu zeichnen
+  r.pend = false;
+  const keepY = el.scrollTop;
   const s = r.state, typ = { lan: 'direkt im Schulnetz', internet: 'direkt über das Internet', relay: 'über eine Umleitung (verschlüsselt)' }[r.type] || '';
-  const stl = r.st === 'ok' ? `<span class="rc-pill ok">🟢 verbunden${typ ? ' · ' + typ : ''}</span>` : r.st === 'connecting' ? '<span class="rc-pill">⏳ verbinde …</span>' : r.st === 'lost' ? '<span class="rc-pill warn">🟠 Verbindung unterbrochen – verbinde neu …</span>' : `<span class="rc-pill bad">🔴 ${r.st === 'blocked' ? 'blockiert' : 'nicht verbunden'}</span>`;
-  let h = `<div class="rc-head"><b>📡 Fernbedienung${s ? ' · ' + esc(s.cls) : ''}</b><span class="rc-code-s">Code ${esc(r.code)}</span>${stl}<span class="spacer"></span><button id="rcOff">✕ Trennen</button></div>`;
+  const stl = r.st === 'ok' ? `<span class="rc-pill ok">🟢 verbunden${typ ? ' · ' + typ : ''}</span>` : r.st === 'confirm' ? '<span class="rc-pill warn">✋ Bitte an der Tafel „Zulassen“ tippen</span>' : r.st === 'denied' ? '<span class="rc-pill bad">⛔ abgelehnt</span>' : r.st === 'connecting' || r.st === 'hello' ? '<span class="rc-pill">⏳ verbinde …</span>' : r.st === 'lost' ? '<span class="rc-pill warn">🟠 Verbindung unterbrochen – verbinde neu …</span>' : `<span class="rc-pill bad">🔴 ${r.st === 'blocked' ? 'blockiert' : 'nicht verbunden'}</span>`;
+  let h = `<div class="rc-head"><b>📡 Fernbedienung${s ? ' · ' + esc(s.cls) : ''}</b><span class="rc-code-s">${esc(r.room || '')} ${rcSyms(r.code)}</span>${stl}<span class="spacer"></span><button id="rcOff">✕ Trennen</button></div>`;
   if (r.why && r.st !== 'ok') h += `<div class="rc-why">${esc(r.why)}${r.st === 'blocked' ? '<br>Ausweichweg: Tafel direkt am PC bedienen oder das iPad spiegeln.' : ''}</div>`;
   if (s && r.st === 'ok') {
-    const on = v => (v === 'board' && s.bdPresent) || (v === 'plan' && s.present) ? ' class="on"' : '';
-    h += `<div class="rc-sec"><h3>Anzeige an der Tafel</h3><div class="rc-row"><button data-rv="board"${on('board')}>🖥 Tafelbild</button><button data-rv="plan"${on('plan')}>🪑 Sitzplan</button><button data-rv="exit">✕ Präsentation beenden</button></div></div>`;
-    if (s.boards.length) h += `<div class="rc-sec"><h3>Tafelbild</h3><div class="rc-row rc-wrap">${s.boards.map(b => `<button data-rb="${b.id}"${b.id === s.board ? ' class="on"' : ''}>🖼 ${esc(b.name)}</button>`).join('')}</div></div>`;
-    const its = s.items.filter(i => i.t !== 'due');
-    if (its.length && s.bdPresent) h += `<div class="rc-sec"><h3>Bausteine</h3><div class="rc-grid">${its.map(rcItemHtml).join('')}</div></div>`;
-    h += `<div class="rc-sec"><h3>🎯 Wer ist dran?</h3><div class="rc-row">${[1, 2, 3].map(n => `<button data-pn="${n}"${String(n) === String(s.pickN) ? ' class="on"' : ''}>${n}</button>`).join('')}<button class="primary" data-rpick="1">🎯 Ziehen</button>${s.pick ? `<span class="rc-pick">${esc(s.pick)}</span><button data-rpc="1" title="Ausblenden">✕</button>` : ''}</div></div>`;
-    h += `<div class="rc-sec"><h3>⏱ Timer im Sitzplan</h3><div class="rc-row rc-wrap">${[1, 2, 3, 5, 10, 15, 20].map(m => `<button data-rts="${m}">${m} min</button>`).join('')}</div>${s.timer ? `<div class="rc-row"><b class="rc-time${s.timer.done ? ' done' : ''}">${esc(s.timer.txt)}</b><button data-rt="go">${s.timer.run ? '❚❚ Pause' : '▶ Start'}</button><button data-rt="reset">↺</button><button data-rt="close">✕</button></div>` : ''}</div>`;
-    if (s.present) h += `<div class="rc-sec"><h3>Arbeitsphase (Einblendung)</h3><div class="rc-row rc-wrap">${Object.entries(PHASES).map(([k, ph]) => `<button data-rph="${k}" style="--pc:${ph[2]}"${s.ph === k ? ' class="on ph"' : ' class="ph"'}>${ph[0]} ${esc(ph[1])}</button>`).join('')}</div></div>`;
+    const on = c => c ? ' class="on"' : '', cur = s.cur || '';
+    if (s.ack && Date.now() - (r.ackAt || 0) < 4000) h += `<div class="rc-ack">✓ ${esc(s.ack.t)}</div>`;
+    // Anzeige
+    h += `<div class="rc-sec"><h3>Anzeige an der Tafel</h3><div class="rc-row rc-wrap"><button data-rv="board"${on(cur === 'board')}>🖥 Tafelbild</button><button data-rv="plan"${on(cur === 'plan')}>🪑 Sitzplan</button><button data-rv="tt"${on(cur === 'tt')}>🗓 Stundenplan</button><button data-rv="cal"${on(cur === 'cal')}>📅 Kalender</button>${cur ? '<button data-rv="exit">✕ Präsentation beenden</button>' : ''}</div>${cur ? '' : '<p class="hint" style="margin:6px 0 0">Wähle, was die Tafel bildschirmfüllend zeigen soll – dann erscheinen hier die passenden Einstellungen.</p>'}</div>`;
+    // Ansicht: Tafelbild
+    if (cur === 'board') {
+      h += `<div class="rc-sec"><h3>Tafelbild</h3>${s.boards.length > 1 ? `<div class="rc-row rc-wrap">${s.boards.map(b => `<button data-rb="${b.id}"${on(b.id === s.board)}>🖼 ${esc(b.name)}</button>`).join('')}</div>` : ''}`;
+      h += s.items.length ? `<div class="rc-grid" style="margin-top:10px">${s.items.map(rcItemHtml).join('')}</div>` : '<p class="hint" style="margin:0">Auf diesem Tafelbild gibt es keine steuerbaren Bausteine.</p>';
+      h += '</div>' + rcInkHtml(s);
+    }
+    // Ansicht: Sitzplan
+    if (cur === 'plan') {
+      const tm = s.teams;
+      h += `<div class="rc-sec"><h3>Sitzplan</h3>
+        <div class="rc-row rc-wrap"><button data-rlay="normal"${on(!s.gw)}>🪑 Normal</button><button data-rlay="gw"${on(s.gw)}>👥 Gruppenarbeit</button>${s.gw ? `<button data-rroom2="1"${on(s.room2)}>🚪 Gruppenraum</button>` : ''}<button data-rflip="1"${on(s.flip)}>👁 Schülersicht</button></div>
+        <div class="rc-sub">🎯 Wer ist dran?</div><div class="rc-row">${[1, 2, 3].map(n => `<button data-pn="${n}"${on(String(n) === String(s.pickN))}>${n}</button>`).join('')}<button class="primary" data-rpick="1">🎯 Ziehen</button>${s.pick ? `<span class="rc-pick">${esc(s.pick)}</span><button data-rpc="1" title="Ausblenden">✕</button>` : ''}</div>
+        <div class="rc-sub">👥 Gruppeneinteilung${tm ? ` – ${tm.n} ${tm.mode === 'pairs' ? 'Paare' : 'Gruppen'}${tm.name ? ' („' + esc(tm.name) + '“)' : ''}` : ''}</div>
+        <div class="rc-row rc-wrap">${RC_TEAMMODES.map(([m, n, l]) => `<button data-rtm="${m}" data-rtn="${n}"${on(s.tmode === m && (m === 'pairs' || String(n) === String(s.tn)))}>${l}</button>`).join('')}<button class="primary" data-rteam="make">🎲 Neu bilden</button></div>
+        ${tm ? `<div class="rc-row rc-wrap"><button data-rteam="list"${on(tm.list)}>📋 Liste neben dem Plan</button><button data-rteam="col"${on(tm.col)}>🎨 Farben im Plan</button><button data-rteam="big"${on(s.big)}>⛶ Groß anzeigen</button><button data-rteam="roles"${on(tm.roles)}>🎭 Rollen verteilen</button>${s.gw ? '<button data-rteam="seat">📍 Tische neu verteilen</button>' : ''}<button data-rteam="clear">✕ Verwerfen</button></div>` : ''}
+        ${s.sets.length ? `<div class="rc-sub">📂 Gespeicherte Einteilungen</div><div class="rc-row rc-wrap">${s.sets.map(t => `<button data-rset="${t.id}"${on(tm && tm.name === t.name)}>${esc(t.name)}</button>`).join('')}</div>` : ''}
+        <div class="rc-sub">⏱ Timer im Sitzplan</div><div class="rc-row rc-wrap">${[1, 2, 3, 5, 10, 15, 20].map(m => `<button data-rts="${m}">${m} min</button>`).join('')}</div>${s.timer ? `<div class="rc-row"><b class="rc-time${s.timer.done ? ' done' : ''}">${esc(s.timer.txt)}</b><button data-rt="go">${s.timer.run ? '❚❚ Pause' : '▶ Start'}</button><button data-rt="reset">↺</button><button data-rt="close">✕</button></div>` : ''}
+      </div>`;
+    }
+    // Ansicht: Stundenplan / Kalender
+    if (cur === 'tt' || cur === 'cal') {
+      const nav = cur === 'tt'
+        ? `<div class="rc-row"><button data-rnav="-1">◀ Woche</button><button data-rnav="0"${on(!s.ttW)}>Diese Woche</button><button data-rnav="1">Woche ▶</button></div>`
+        : `<div class="rc-row"><button data-rnav="-1">◀ Monat</button><button data-rnav="0">${esc(rcMonth(s.calM))}</button><button data-rnav="1">Monat ▶</button></div>`;
+      h += `<div class="rc-sec"><h3>${cur === 'tt' ? '🗓 Stundenplan' : '📅 Kalender'}</h3>${nav}
+        <div class="rc-row rc-wrap" style="margin-top:8px"><button class="primary" data-rform="hw"${on(r.form === 'hw')}>＋ Hausaufgabe</button><button class="primary" data-rform="ex"${on(r.form === 'ex')}>＋ Probe/Termin</button></div>${rcFormHtml(r, s)}</div>`;
+    }
+    // immer verfügbar: Abstimmung, Arbeitsphase und Vollbild
+    h += rcVoteHtml(r, s);
+    h += `<div class="rc-sec"><h3>Arbeitsphase einblenden</h3><div class="rc-row rc-wrap">${Object.entries(PHASES).map(([k, ph]) => `<button data-rph="${k}" style="--pc:${ph[2]}" class="ph${s.phs === k ? ' on' : ''}">${ph[0]} ${esc(ph[1])}</button>`).join('')}<button data-rph="off"${on(!s.phs)}>aus</button></div></div>`;
+    h += `<div class="rc-sec"><h3>Vollbild</h3><div class="rc-sub">⏱ Timer bildschirmfüllend</div><div class="rc-row rc-wrap">${[1, 2, 3, 5, 10, 15, 20, 30].map(m => `<button data-rft="${m}">${m} min</button>`).join('')}<button data-rft="up">⏱ Stoppuhr</button></div>` +
+      (s.full ? `<div class="rc-row"><b class="rc-time${s.full.done ? ' done' : ''}">${esc(s.full.txt)}</b><button data-rfa="go">${s.full.run ? '❚❚ Pause' : '▶ Start'}</button><button data-rfa="reset">↺</button>${s.full.mode === 'down' ? '<button data-rfa="m">−1</button><button data-rfa="p">＋1</button>' : ''}<button data-rfa="close">✕ Schließen</button></div>` : '') +
+      `<div class="rc-sub">🕒 Uhr bildschirmfüllend</div><div class="rc-row"><button data-rclk="digital"${on(s.clk === 'digital')}>🔢 digital</button><button data-rclk="analog"${on(s.clk === 'analog')}>🕒 analog</button><button data-rclk="off"${on(!s.clk)}>aus</button></div></div>`;
   } else if (r.st !== 'ok') h += `<div class="rc-sec"><div class="rc-row"><button class="primary" data-rretry="1">↻ Nochmal versuchen</button><button data-rnew="1">Anderen Code eingeben</button></div></div>`;
-  el.innerHTML = h;
+  el.innerHTML = h; el.scrollTop = keepY;
+  rcInkDraw();
+}
+const rcMonth = m => { const [y, mo] = String(m || '').split('-').map(Number); return y ? MONTHS[mo - 1] + ' ' + y : ''; };
+// Eingabeformular (Hausaufgabe bzw. Probe/Termin) – Werte bleiben beim Neuzeichnen erhalten
+function rcFormHtml(r, s) {
+  if (!r.form) return '';
+  const v = r.fv = r.fv || {}, val = k => esc(v[k] || '');
+  const subj = (sel, k) => `<select data-fv="${k}"><option value="">${sel}</option>${(s.subj || []).map(n => `<option${v[k] === n ? ' selected' : ''}>${esc(n)}</option>`).join('')}</select>`;
+  if (r.form === 'hw') return `<div class="rc-form"><label>Fach${subj('– Fach –', 'hsub')}</label><label class="w">Aufgabe<input data-fv="htit" value="${val('htit')}" placeholder="z. B. Buch S. 34 Nr. 2–5" enterkeyhint="done"></label>
+    <label>bis<input type="date" data-fv="hdue" value="${val('hdue')}"></label><p class="hint" style="margin:0">Ohne Datum: bis zur nächsten Stunde im Fach (laut Stundenplan).</p>
+    <div class="rc-row"><button class="primary" data-rsave="hw">✓ Eintragen</button><button data-rform="">Abbrechen</button></div></div>`;
+  const ev = v.ekind === 'ev';
+  return `<div class="rc-form"><div class="rc-row"><button data-fk="ex"${!ev ? ' class="on"' : ''}>📝 Probe</button><button data-fk="ev"${ev ? ' class="on"' : ''}>📌 Termin</button></div>
+    <label>Datum<input type="date" data-fv="edat" value="${val('edat')}"></label>${ev ? `<label>bis (mehrtägig)<input type="date" data-fv="eend" value="${val('eend')}"></label><label>Uhrzeit<input data-fv="etim" value="${val('etim')}" placeholder="z. B. 8:00"></label>` : `<label>Fach${subj('– Fach –', 'esub')}</label>`}
+    <label class="w">${ev ? 'Was?' : 'Thema / Art'}<input data-fv="etit" value="${val('etit')}" placeholder="${ev ? 'z. B. Wandertag, Elternabend' : 'z. B. Probe Bruchrechnen'}" enterkeyhint="done"></label>
+    <div class="rc-row"><button class="primary" data-rsave="ex">✓ Eintragen</button><button data-rform="">Abbrechen</button></div></div>`;
 }
 function rcItemHtml(i) {
-  if (i.t === 'timer') return `<div class="rc-card"><b>⏱ Timer</b><div class="rc-time${i.done ? ' done' : ''}">${esc(i.txt)}</div><div class="rc-row"><button data-ri="${i.id}" data-a="go">${i.run ? '❚❚' : '▶'}</button><button data-ri="${i.id}" data-a="reset">↺</button>${i.mode === 'down' ? `<button data-ri="${i.id}" data-a="m">−1</button><button data-ri="${i.id}" data-a="p">＋1</button>` : ''}</div></div>`;
-  if (i.t === 'phase') return `<div class="rc-card"><b>Arbeitsphase</b><div class="rc-row rc-wrap">${Object.entries(PHASES).map(([k, ph]) => `<button class="ph${i.ph === k ? ' on' : ''}" style="--pc:${ph[2]}" data-ri="${i.id}" data-v="${k}">${ph[0]} ${esc(ph[1])}</button>`).join('')}</div></div>`;
+  if (i.t === 'timer') return `<div class="rc-card"><b>⏱ Timer</b><div class="rc-time${i.done ? ' done' : ''}">${esc(i.txt)}</div><div class="rc-row"><button data-ri="${i.id}" data-a="go">${i.run ? '❚❚' : '▶'}</button><button data-ri="${i.id}" data-a="reset">↺</button>${i.mode === 'down' ? `<button data-ri="${i.id}" data-a="m">−1</button><button data-ri="${i.id}" data-a="p">＋1</button>` : ''}<button data-ri="${i.id}" data-a="full" title="Bildschirmfüllend">⛶</button></div>
+    <div class="rc-row rc-small"><select data-rcfg="${i.id}" data-k="mode"><option value="down"${i.mode === 'down' ? ' selected' : ''}>⏳ Countdown</option><option value="up"${i.mode === 'up' ? ' selected' : ''}>⏱ Stoppuhr</option></select>${i.mode === 'down' ? `<select data-rcfg="${i.id}" data-k="min">${[1, 2, 3, 5, 10, 15, 20, 30, 45].map(m => `<option value="${m}"${+i.min === m ? ' selected' : ''}>${m} min</option>`).join('')}</select>` : ''}<select data-rcfg="${i.id}" data-k="vis"><option value="ring"${i.vis === 'ring' ? ' selected' : ''}>◔ Kreis</option>${i.mode === 'down' ? `<option value="sand"${i.vis === 'sand' ? ' selected' : ''}>⌛ Sanduhr</option>` : ''}<option value="bar"${i.vis === 'bar' ? ' selected' : ''}>▬ Balken</option></select></div></div>`;
+  if (i.t === 'phase') return `<div class="rc-card"><b>Arbeitsphase (Baustein)</b><div class="rc-row rc-wrap">${Object.entries(PHASES).map(([k, ph]) => `<button class="ph${i.ph === k ? ' on' : ''}" style="--pc:${ph[2]}" data-ri="${i.id}" data-v="${k}">${ph[0]} ${esc(ph[1])}</button>`).join('')}</div></div>`;
   if (i.t === 'light') return `<div class="rc-card"><b>${i.meter ? '🎚 Schallpegel' : '🚦 Ampel'}</b>${i.mic ? `<div class="rc-row"><span class="rc-lamp ${i.s}"></span><span>${i.db != null ? 'ca. ' + i.db + ' dB' : 'Mikrofon'}</span></div>` : `<div class="rc-row">${['r', 'y', 'g'].map(k => `<button class="rc-lampb ${k}${i.s === k ? ' on' : ''}" data-ri="${i.id}" data-v="${k}"></button>`).join('')}</div>`}</div>`;
-  if (i.t === 'dice') return `<div class="rc-card"><b>🎲 Würfel</b><div class="rc-row"><button class="primary" data-ri="${i.id}" data-a="roll">🎲 Würfeln</button><span>${(i.vals || []).join(' · ')}</span></div></div>`;
+  if (i.t === 'dice') return `<div class="rc-card"><b>🎲 Würfel</b><div class="rc-row"><button class="primary" data-ri="${i.id}" data-a="roll">🎲 Würfeln</button><span class="rc-dv">${(i.vals || []).join(' · ')}</span></div>
+    <div class="rc-row rc-small"><select data-rdice="${i.id}" data-k="n">${[1, 2, 3, 4, 5, 6].map(n => `<option value="${n}"${+i.n === n ? ' selected' : ''}>${n} Würfel</option>`).join('')}</select><select data-rdice="${i.id}" data-k="sides">${DICE_SIDES.map(n => `<option value="${n}"${+i.sides === n ? ' selected' : ''}>W${n}</option>`).join('')}</select></div></div>`;
   if (i.t === 'score') return `<div class="rc-card"><b>🏆 Punktestand</b>${i.teams.map((t, k) => `<div class="rc-row"><span class="rc-team" style="--tc:${t.c}">${esc(t.n)}</span><button data-ri="${i.id}" data-i="${k}" data-d="-1">−</button><b>${t.s}</b><button data-ri="${i.id}" data-i="${k}" data-d="1">＋</button></div>`).join('')}</div>`;
+  if (i.t === 'clock') return `<div class="rc-card"><b>🕒 Uhr</b><div class="rc-row"><button data-ri="${i.id}" data-a="clk" data-v=""${i.analog ? '' : ' class="on"'}>🔢 digital</button><button data-ri="${i.id}" data-a="clk" data-v="1"${i.analog ? ' class="on"' : ''}>🕒 analog</button></div></div>`;
   return '';
 }
 $('rcPanel').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
   const r = RC.remote; if (!r) return;
+  const st = r.state || {};
   if (b.id === 'rcOff') { rcDisconnect(false); return; }
   if (b.dataset.rretry) { rcConnect(r.code); return; }
   if (b.dataset.rnew) { rcDisconnect(false); openRc(); return; }
@@ -7230,17 +7974,448 @@ $('rcPanel').addEventListener('click', e => {
   if (b.dataset.rb) rcSend({ c: 'board', id: b.dataset.rb });
   if (b.dataset.ri) {
     const m = { c: 'item', id: b.dataset.ri };
-    if (b.dataset.a) m.a = b.dataset.a; if (b.dataset.v) m.v = b.dataset.v; if (b.dataset.i != null) { m.i = +b.dataset.i; m.d = +b.dataset.d; }
+    if (b.dataset.a) m.a = b.dataset.a; if (b.dataset.v != null) m.v = b.dataset.v; if (b.dataset.i != null) { m.i = +b.dataset.i; m.d = +b.dataset.d; }
+    if (m.a === 'clk') m.v = !!b.dataset.v;
     rcSend(m);
   }
-  if (b.dataset.pn) { rcSend({ c: 'pickN', v: b.dataset.pn }); if (r.state) { r.state.pickN = b.dataset.pn; renderRc(); } }
-  if (b.dataset.rpick) rcSend({ c: 'pick', n: r.state && r.state.pickN });
+  if (b.dataset.pn) { rcSend({ c: 'pickN', v: b.dataset.pn }); st.pickN = b.dataset.pn; renderRc(); }
+  if (b.dataset.rpick) rcSend({ c: 'pick', n: st.pickN });
   if (b.dataset.rpc) rcSend({ c: 'pickClose' });
   if (b.dataset.rts) rcSend({ c: 'timer', a: 'start', sec: +b.dataset.rts * 60 });
   if (b.dataset.rt) rcSend({ c: 'timer', a: b.dataset.rt });
-  if (b.dataset.rph) rcSend({ c: 'ovph', v: b.dataset.rph });
+  if (b.dataset.rft) rcSend(b.dataset.rft === 'up' ? { c: 'ft', a: 'start', mode: 'up', sec: 0 } : { c: 'ft', a: 'start', mode: 'down', sec: +b.dataset.rft * 60 });
+  if (b.dataset.rfa) rcSend({ c: 'ft', a: b.dataset.rfa });
+  if (b.dataset.rclk) rcSend({ c: 'clk', v: b.dataset.rclk });
+  if (b.dataset.rph) rcSend({ c: 'phs', v: b.dataset.rph });
+  if (b.dataset.rlay) rcSend({ c: 'layout', v: b.dataset.rlay });
+  if (b.dataset.rroom2) rcSend({ c: 'room2' });
+  if (b.dataset.rflip) rcSend({ c: 'flip' });
+  if (b.dataset.rtm) { st.tmode = b.dataset.rtm; st.tn = b.dataset.rtn; renderRc(); }
+  if (b.dataset.rteam) rcSend({ c: 'teams', a: b.dataset.rteam, mode: st.tmode, n: st.tn });
+  if (b.dataset.rset) rcSend({ c: 'teams', a: 'load', id: b.dataset.rset });
+  if (b.dataset.rnav != null) rcSend({ c: st.cur === 'cal' ? 'calm' : 'ttw', d: +b.dataset.rnav });
+  if (b.dataset.rform != null) { r.form = b.dataset.rform || null; r.fv = r.fv || {}; if (r.form === 'ex' && !r.fv.edat) r.fv.edat = addDays(todayStr(), 7); renderRc(); }
+  if (b.dataset.fk) { r.fv.ekind = b.dataset.fk; renderRc(); }
+  if (b.dataset.rpcol) { RCPEN.c = b.dataset.rpcol; RCPEN.er = false; renderRc(); }
+  if (b.dataset.rpw) { RCPEN.w = +b.dataset.rpw; RCPEN.er = false; renderRc(); }
+  if (b.dataset.rpe) { RCPEN.er = !RCPEN.er; renderRc(); }
+  if (b.dataset.rink) { if (b.dataset.rink === 'clear' && !window.confirm('Alles Gezeichnete auf diesem Tafelbild löschen?')) return; rcSend({ c: 'ink', a: b.dataset.rink }); }
+  if (b.dataset.rvt) { r.vf = Object.assign(r.vf || {}, { type: b.dataset.rvt }); renderRc(); }
+  if (b.dataset.rvn) { r.vf.n = +b.dataset.rvn; if (+r.vf.corr >= r.vf.n) r.vf.corr = ''; renderRc(); }
+  if (b.dataset.rvc != null) { r.vf.corr = b.dataset.rvc; renderRc(); }
+  if (b.dataset.rvote) { const f = r.vf || {}; rcSend(b.dataset.rvote === 'start' ? { c: 'vote', a: 'start', type: f.type || 'thumbs', q: (r.fv || {}).vq || '', n: f.n || 4, corr: f.corr || '' } : { c: 'vote', a: b.dataset.rvote }); if (b.dataset.rvote === 'start' && r.fv) delete r.fv.vq; }
+  if (b.dataset.rvok || b.dataset.rvno) rcSend({ c: 'vote', a: b.dataset.rvok ? 'ok' : 'no', id: b.dataset.rvok || b.dataset.rvno });
+  if (b.dataset.rsave) {
+    const v = r.fv || {};
+    if (b.dataset.rsave === 'hw') { if (!(v.htit || '').trim()) { const i = $('rcPanel').querySelector('[data-fv="htit"]'); if (i) i.focus(); return; } rcSend({ c: 'add', kind: 'hw', subject: v.hsub || '', title: v.htit, due: v.hdue || '' }); ['htit', 'hdue'].forEach(k => delete v[k]); }
+    else { const ev = v.ekind === 'ev'; if (!v.edat || (ev && !(v.etit || '').trim())) { const i = $('rcPanel').querySelector(!v.edat ? '[data-fv="edat"]' : '[data-fv="etit"]'); if (i) i.focus(); return; } rcSend({ c: 'add', kind: ev ? 'ev' : 'ex', date: v.edat, end: v.eend || '', time: v.etim || '', subject: ev ? '' : (v.esub || ''), title: v.etit || '' }); ['etit', 'eend', 'etim'].forEach(k => delete v[k]); }
+    r.form = null; renderRc();
+  }
 });
+$('rcPanel').addEventListener('input', e => { const k = e.target.dataset.fv, r = RC.remote; if (k && r) { r.fv = r.fv || {}; r.fv[k] = e.target.value; } });
+$('rcPanel').addEventListener('focusout', () => { const r = RC.remote; if (r && r.pend) setTimeout(renderRc, 50); });
+$('rcPanel').addEventListener('change', e => {
+  const s = e.target; if (s.dataset.fv) { const r = RC.remote; if (r) { r.fv = r.fv || {}; r.fv[s.dataset.fv] = s.value; } return; }
+  e.target.blur();
+  if (s.dataset.rcfg) rcSend({ c: 'item', id: s.dataset.rcfg, a: 'cfg', [s.dataset.k]: s.value });
+  if (s.dataset.rdice) rcSend({ c: 'item', id: s.dataset.rdice, a: s.dataset.k, v: s.value });
+});
+
+window.addEventListener('resize', () => { if (RC.remote) rcInkDraw(); });
 document.addEventListener('visibilitychange', () => { const r = RC.remote; if (document.visibilityState === 'visible' && r && !r.stop && (!r.conn || !r.conn.open) && r.st !== 'connecting') rcConnect(r.code); });
+
+/* ---------- 📊 Live-Abstimmung (Tafel) ---------- */
+/* Tafel-Seite der Live-Abstimmung (Klassenmanager).
+   Nutzt Host-Funktionen: $, esc, setResult, clamp, loadPeer, rcOpts, RC_SYM, RC_SYMN, present. */
+
+var VOTE = null;
+var VT_TYPES = {
+  thumbs: { n: 'Daumen', o: ['👍', '👌', '👎'] },
+  mood:   { n: 'Blitzlicht', o: ['😀', '🙂', '😐', '🙁'] },
+  yn:     { n: 'Ja/Nein', o: ['Ja', 'Nein'] },
+  scale5: { n: 'Skala 1–5', o: ['1', '2', '3', '4', '5'] },
+  grade6: { n: 'Noten 1–6', o: ['1', '2', '3', '4', '5', '6'] },
+  abcd:   { n: 'Antwort A–D', o: null },
+  words:  { n: 'Wortwolke', o: [] }
+};
+var VT_LETTERS = 'ABCD';
+var vtInited = false, vtPopOpen = false, vtSetT = 'thumbs', vtTimer = 0, vtLast = 0;
+
+function vtRand() { return Math.random().toString(36).slice(2, 10); }
+function vtNorm(s) { return String(s).trim().toLowerCase(); }
+function vtExpect() {
+  try { return typeof present === 'function' ? present().length : 0; } catch (e) { return 0; }
+}
+function vtLabels(type, n, texts) {
+  if (type !== 'abcd') return VT_TYPES[type].o.slice();
+  n = clamp(parseInt(n, 10) || 4, 2, 4);
+  var out = [];
+  for (var i = 0; i < n; i++) {
+    var t = texts && texts[i] ? String(texts[i]).trim() : '';
+    out.push(VT_LETTERS[i] + (t ? ' – ' + t : ''));
+  }
+  return out;
+}
+function vtReply(conn, msg) { try { conn.send(msg); } catch (e) {} }
+function vtSend(msg) {
+  if (!VOTE) return;
+  VOTE.conns.forEach(function (c) { try { if (c.open) c.send(msg); } catch (e) {} });
+}
+function vtMy(dev) {
+  if (VOTE.type === 'words') return VOTE.words.get(dev) || [];
+  return VOTE.votes.has(dev) ? VOTE.votes.get(dev) : null;
+}
+
+/* ---- Verbindungen ---- */
+function vtOnData(v, conn, m) {
+  if (VOTE !== v || !m || typeof m !== 'object') return;
+  var dev = typeof m.dev === 'string' ? m.dev.slice(0, 64) : '';
+  if (!dev) return;
+  if (m.c === 'join') {
+    conn.dev = dev;
+    v.conns.forEach(function (c) { if (c !== conn && c.dev === dev) { try { c.close(); } catch (e) {} } });
+    v.conns = v.conns.filter(function (c) { return c !== conn && c.dev !== dev; });
+    v.conns.push(conn);
+    vtReply(conn, { t: 'poll', pid: v.pid, type: v.type, q: v.q, opts: v.opts, open: v.open, my: vtMy(dev) });
+    return;
+  }
+  if (m.pid !== v.pid) return;
+  if (!v.open) { vtReply(conn, { t: 'closed' }); return; }
+  if (m.c === 'ans' && v.type !== 'words') {
+    if (!Number.isInteger(m.v) || m.v < 0 || m.v >= v.opts.length) return;
+    v.votes.set(dev, m.v);
+    vtReply(conn, { t: 'ok' });
+  } else if (m.c === 'word' && v.type === 'words') {
+    var text = String(m.text == null ? '' : m.text).replace(/\s+/g, ' ').trim().slice(0, 20).trim();
+    if (!text) return;
+    var n = vtNorm(text);
+    var list = v.words.get(dev) || [];
+    if (list.some(function (s) { return vtNorm(s) === n; })) { vtReply(conn, { t: 'ok' }); return; }
+    if (list.length >= 3) { vtReply(conn, { t: 'max' }); return; }
+    list.push(text);
+    v.words.set(dev, list);
+    if (!v.ok.has(n) && !v.pending.some(function (p) { return vtNorm(p.text) === n; })) v.pending.push({ id: vtRand(), text: text, dev: dev });
+    vtReply(conn, { t: 'ok' });
+  } else {
+    return;
+  }
+  renderVote();
+}
+function vtDrop(v, conn) {
+  if (VOTE === v) v.conns = v.conns.filter(function (c) { return c !== conn; });
+}
+function vtOpenPeer(v) {
+  var code = '';
+  for (var i = 0; i < 3; i++) code += Math.floor(Math.random() * 10);
+  var peer;
+  try { peer = new (loadPeer())('jpw-theres-klassenmanager-v-' + code, rcOpts()); }
+  catch (e) { setResult('Abstimmung konnte nicht gestartet werden', 'warn'); return; }
+  v.code = code;
+  v.peer = peer;
+  peer.on('connection', function (conn) {
+    conn.on('data', function (m) { vtOnData(v, conn, m); });
+    conn.on('close', function () { vtDrop(v, conn); });
+    conn.on('error', function () { vtDrop(v, conn); });
+  });
+  peer.on('error', function (e) {
+    if (VOTE !== v) return;
+    if (e && e.type === 'unavailable-id') { try { peer.destroy(); } catch (x) {} vtOpenPeer(v); }
+    else setResult('Abstimmung: Verbindungsfehler (' + ((e && e.type) || '?') + ')', 'warn');
+  });
+  renderVote();
+}
+
+/* ---- Auswertung ---- */
+function vtCounts(v) {
+  var c = v.opts.map(function () { return 0; });
+  v.votes.forEach(function (i) { c[i]++; });
+  return c;
+}
+function vtAvg(v, c) {
+  if (v.type !== 'scale5' && v.type !== 'grade6') return null;
+  var tot = 0, s = 0;
+  c.forEach(function (n, i) { tot += n; s += n * (i + 1); });
+  return tot ? Math.round(s / tot * 10) / 10 : null;
+}
+function vtCloud(v) {
+  var m = new Map();
+  v.words.forEach(function (list) {
+    var seen = new Set();
+    list.forEach(function (s) {
+      var n = vtNorm(s);
+      if (!v.ok.has(n) || seen.has(n)) return;
+      seen.add(n);
+      var e = m.get(n) || { t: s, n: 0 };
+      e.n++;
+      m.set(n, e);
+    });
+  });
+  return Array.from(m.values()).sort(function (a, b) { return b.n - a.n || a.t.localeCompare(b.t, 'de'); });
+}
+function vtHue(s) { var h = 0; for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 360; return h; }
+
+/* ---- Öffentliche API ---- */
+function voteStart(cfg) {
+  cfg = cfg || {};
+  voteClose();
+  var type = VT_TYPES[cfg.type] ? cfg.type : 'thumbs';
+  var opts = vtLabels(type, cfg.n, cfg.texts);
+  var c = cfg.correct;
+  VOTE = {
+    pid: vtRand(), type: type, q: String(cfg.q || '').trim().slice(0, 200), opts: opts,
+    correct: type === 'abcd' && Number.isInteger(c) && c >= 0 && c < opts.length ? c : null,
+    open: true, show: false, revealed: false, code: '', peer: null,
+    conns: [], votes: new Map(), words: new Map(), pending: [], ok: new Set()
+  };
+  vtInit();
+  vtPopOpen = false;
+  $('voteFull').hidden = false;
+  vtOpenPeer(VOTE);
+}
+function voteShow(on) {
+  if (!VOTE) return;
+  VOTE.show = on === undefined ? !VOTE.show : !!on;
+  renderVote();
+}
+function voteReveal() {
+  if (!VOTE || VOTE.correct == null) return;
+  VOTE.revealed = true;
+  VOTE.show = true;
+  renderVote();
+}
+function voteEnd() {
+  if (!VOTE) return;
+  VOTE.open = false;
+  vtSend({ t: 'closed' });
+  renderVote();
+}
+function voteClose() {
+  var v = VOTE;
+  if (v) {
+    v.open = false;
+    vtSend({ t: 'closed' });
+    VOTE = null;
+    try { if (v.peer) v.peer.destroy(); } catch (e) {}
+  }
+  vtPopOpen = false;
+  var f = $('voteFull');
+  if (f) { f.hidden = true; f.innerHTML = ''; }
+}
+function voteApprove(id, yes) {
+  if (!VOTE) return;
+  var p = VOTE.pending.find(function (x) { return x.id === String(id); });
+  if (!p) return;
+  var n = vtNorm(p.text);
+  if (yes) VOTE.ok.add(n);
+  VOTE.pending = VOTE.pending.filter(function (x) { return vtNorm(x.text) !== n; });
+  renderVote();
+}
+function voteState() {
+  var v = VOTE;
+  if (!v) return { on: false };
+  var c = v.type === 'words' ? [] : vtCounts(v);
+  return {
+    on: true, type: v.type, q: v.q, opts: v.opts, open: v.open, show: v.show,
+    revealed: v.revealed, correct: v.correct, code: v.code,
+    count: v.type === 'words' ? v.words.size : v.votes.size,
+    expect: vtExpect(), counts: c, avg: vtAvg(v, c),
+    words: vtCloud(v).map(function (w) { return { t: w.t, n: w.n }; }),
+    pending: v.pending.map(function (p) { return { id: p.id, t: p.text }; })
+  };
+}
+
+/* ---- Zeichnen ---- */
+function renderVote() {
+  var wait = 200 - (Date.now() - vtLast);
+  if (wait <= 0) {
+    clearTimeout(vtTimer);
+    vtTimer = 0;
+    vtLast = Date.now();
+    vtDraw();
+  } else if (!vtTimer) {
+    vtTimer = setTimeout(function () { vtTimer = 0; renderVote(); }, wait);
+  }
+}
+function vtBarsHtml(v, c, tot) {
+  var h = '<div class="vt-bars">';
+  v.opts.forEach(function (o, i) {
+    var p = tot ? Math.round(c[i] / tot * 100) : 0;
+    var cls = 'vt-fill';
+    if (v.revealed && v.correct != null) cls += i === v.correct ? ' ok' : ' dim';
+    h += '<div class="vt-row"><div class="vt-lab">' + esc(o) + '</div>' +
+      '<div class="vt-track"><div class="' + cls + '" style="width:' + p + '%"></div></div>' +
+      '<div class="vt-num">' + c[i] + ' <small>(' + p + '%)</small></div></div>';
+  });
+  h += '</div>';
+  var avg = vtAvg(v, c);
+  if (avg != null) h += '<div class="vt-avg">Durchschnitt: ' + avg.toFixed(1).replace('.', ',') + '</div>';
+  return h;
+}
+function vtCloudHtml(v) {
+  var cl = vtCloud(v), mx = cl.length ? cl[0].n : 1;
+  var h = '<div class="vt-cloud">';
+  if (!cl.length) h += '<div class="vt-hid">Noch keine freigegebenen Wörter</div>';
+  cl.forEach(function (w) {
+    var fs = (2.5 + 6.5 * w.n / mx).toFixed(2);
+    h += '<span class="vt-w" style="font-size:' + fs + 'vh;color:hsl(' + vtHue(w.t) + ',65%,38%)">' + esc(w.t) + '</span>';
+  });
+  h += '</div>';
+  var pend = v.pending.length;
+  if (pend) h += '<div class="vt-pend">' + (pend === 1 ? '1 Wort wartet' : pend + ' Wörter warten') + ' auf Freigabe</div>';
+  return h;
+}
+function vtDraw() {
+  var f = $('voteFull');
+  if (!f || !VOTE) return;
+  var v = VOTE, isW = v.type === 'words', c = isW ? [] : vtCounts(v);
+  var tot = c.reduce(function (a, b) { return a + b; }, 0);
+  var cnt = isW ? v.words.size : v.votes.size, exp = vtExpect();
+  var h = '<div class="vt-top"><div class="vt-q">' + esc(v.q || VT_TYPES[v.type].n) + '</div></div>';
+  if (v.open) {
+    h += '<div class="vt-join"><div class="vt-jt">Mitmachen: Hausaufgabenheft → 🗳 → </div>' +
+      '<div class="vt-sym">' + v.code.split('').map(function (d) {
+        return '<span title="' + esc(RC_SYMN[+d]) + '">' + RC_SYM[+d] + '</span>';
+      }).join('') + '</div>' +
+      '<div class="vt-cnt">' + cnt + (exp ? ' von ' + exp : '') + (cnt === 1 && !exp ? ' Stimme' : ' Stimmen') + '</div></div>';
+  } else {
+    h += '<div class="vt-join vt-done">Abstimmung beendet · ' + cnt + ' Stimmen</div>';
+  }
+  h += '<div class="vt-body">';
+  if (isW) h += vtCloudHtml(v);
+  else if (!v.show) h += '<div class="vt-hid">Ergebnis verdeckt<br><small>' + tot + ' Stimmen</small></div>';
+  else h += vtBarsHtml(v, c, tot);
+  h += '</div>';
+
+  var bar = '';
+  if (!isW) bar += '<button data-act="show">👁 Ergebnis ' + (v.show ? 'verbergen' : 'zeigen') + '</button>';
+  if (v.type === 'abcd' && v.correct != null) bar += '<button data-act="reveal"' + (v.revealed ? ' disabled' : '') + '>✓ Auflösen</button>';
+  if (isW) bar += '<button data-act="pop">🛂 Freigeben (' + v.pending.length + ')</button>';
+  if (v.open) bar += '<button data-act="end">⏹ Beenden</button>';
+  bar += '<button data-act="close">✕ Schließen</button>';
+
+  var pop = '';
+  if (isW && vtPopOpen) {
+    pop = '<div class="vt-pop"><div class="vt-pop-h">Wörter freigeben' +
+      '<button data-act="pop" class="vt-x" title="Schließen">✕</button></div>' +
+      (v.pending.length ? '' : '<div class="vt-hid">Keine offenen Wörter</div>');
+    v.pending.forEach(function (p) {
+      pop += '<div class="vt-pi"><span>' + esc(p.text) + '</span>' +
+        '<button data-act="ok" data-id="' + p.id + '" class="vt-ok" title="Freigeben">✓</button>' +
+        '<button data-act="no" data-id="' + p.id + '" class="vt-no" title="Ablehnen">✕</button></div>';
+    });
+    pop += '</div>';
+  }
+  h += '<div class="vt-ctl">' + pop + '<div class="vt-bar">' + bar + '</div></div>';
+  f.innerHTML = h;
+}
+
+/* ---- Einrichtungsdialog ---- */
+function vtSetType(t) {
+  vtSetT = t;
+  document.querySelectorAll('#voteSetup [data-type]').forEach(function (b) {
+    b.classList.toggle('on', b.dataset.type === t);
+  });
+  $('voteAbcd').hidden = t !== 'abcd';
+}
+function vtAbcdFields() {
+  var n = clamp(parseInt($('voteN').value, 10) || 4, 2, 4);
+  var box = $('voteTexts');
+  var keep = [].map.call(box.querySelectorAll('input'), function (i) { return i.value; });
+  box.innerHTML = '';
+  for (var i = 0; i < n; i++) {
+    var l = document.createElement('label'), s = document.createElement('span'), inp = document.createElement('input');
+    l.className = 'vt-tx';
+    s.textContent = VT_LETTERS[i];
+    inp.maxLength = 60;
+    inp.placeholder = 'Text (optional)';
+    inp.value = keep[i] || '';
+    l.appendChild(s);
+    l.appendChild(inp);
+    box.appendChild(l);
+  }
+  var sel = '<option value="">keine</option>';
+  for (i = 0; i < n; i++) sel += '<option value="' + i + '">' + VT_LETTERS[i] + '</option>';
+  $('voteCorr').innerHTML = sel;
+}
+function vtGo() {
+  var texts = [].map.call(document.querySelectorAll('#voteTexts input'), function (i) { return i.value; });
+  var k = $('voteCorr').value;
+  voteStart({ type: vtSetT, q: $('voteQ').value, n: $('voteN').value, texts: texts, correct: k === '' ? null : +k });
+  $('voteSetup').hidden = true;
+  setResult('Abstimmung gestartet', 'ok');
+}
+function openVoteSetup() {
+  vtInit();
+  var s = $('voteSetup');
+  if (!s) return;
+  vtSetType(vtSetT);
+  s.hidden = false;
+  $('voteQ').focus();
+}
+function vtInit() {
+  if (vtInited || !$('voteFull') || !$('voteSetup')) return;
+  vtInited = true;
+  $('voteFull').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-act]');
+    if (!b || !VOTE) return;
+    var a = b.dataset.act;
+    if (a === 'show') voteShow();
+    else if (a === 'reveal') voteReveal();
+    else if (a === 'pop') { vtPopOpen = !vtPopOpen; renderVote(); }
+    else if (a === 'end') voteEnd();
+    else if (a === 'close') voteClose();
+    else if (a === 'ok' || a === 'no') voteApprove(b.dataset.id, a === 'ok');
+  });
+  var s = $('voteSetup');
+  s.addEventListener('click', function (e) {
+    if (e.target === s) { s.hidden = true; return; }
+    var b = e.target.closest('[data-vt]');
+    if (!b) return;
+    var a = b.dataset.vt;
+    if (a === 'type') vtSetType(b.dataset.type);
+    else if (a === 'go') vtGo();
+    else if (a === 'cancel') s.hidden = true;
+  });
+  $('voteN').addEventListener('change', vtAbcdFields);
+  vtAbcdFields();
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    if (vtPopOpen && VOTE) { vtPopOpen = false; renderVote(); e.preventDefault(); }
+    else if (!s.hidden) { s.hidden = true; e.preventDefault(); }
+  });
+}
+
+function rcVoteHtml(r, s) {
+  const v = s.vote || {}, on = c => c ? ' class="on"' : '';
+  let h = '<div class="rc-sec"><h3>📊 Abstimmung</h3>';
+  if (!v.on) {
+    const f = r.vf = r.vf || { type: 'thumbs', n: 4, corr: '' };
+    h += `<div class="rc-row rc-wrap rc-vt">${Object.entries(VT_TYPES).map(([k, t]) => `<button data-rvt="${k}"${on(f.type === k)}>${esc(t.n)}</button>`).join('')}</div>
+      <div class="rc-form"><label class="w">Frage (optional)<input data-fv="vq" value="${esc((r.fv || {}).vq || '')}" maxlength="200" placeholder="z. B. Hast du es verstanden?" enterkeyhint="done"></label>
+      ${f.type === 'abcd' ? `<div class="rc-sub">Anzahl Antworten</div><div class="rc-row">${[2, 3, 4].map(n => `<button data-rvn="${n}"${on(+f.n === n)}>${n}</button>`).join('')}</div>
+        <div class="rc-sub">Richtige Antwort (optional)</div><div class="rc-row"><button data-rvc=""${on(f.corr === '')}>keine</button>${'ABCD'.slice(0, f.n).split('').map((L, i) => `<button data-rvc="${i}"${on(f.corr === String(i))}>${L}</button>`).join('')}</div>` : ''}
+      <div class="rc-row"><button class="primary" data-rvote="start">▶ Abstimmung starten</button></div></div>`;
+  } else {
+    const tot = (v.counts || []).reduce((a, b) => a + b, 0);
+    h += `<div class="rc-row rc-wrap"><b>${esc(v.q || VT_TYPES[v.type].n)}</b></div>
+      <div class="rc-row">${v.open ? `<span class="rc-vsym">${rcSyms(v.code)}</span>` : '<span class="rc-pill">⏹ beendet</span>'}<b>${v.count}${v.expect ? ' von ' + v.expect : ''} ${v.count === 1 && !v.expect ? 'Stimme' : 'Stimmen'}</b></div>`;
+    if (v.type !== 'words') h += (v.counts || []).map((n, i) => `<div class="rc-vbar"><span>${esc(v.opts[i])}</span><i${v.correct === i ? ' class="ok"' : ''} style="width:${tot ? Math.round(n / tot * 100) : 0}%"></i><b>${n}</b></div>`).join('') + (v.avg != null ? `<div class="rc-sub">Durchschnitt: ${String(v.avg).replace('.', ',')}</div>` : '');
+    else {
+      h += v.words.length ? `<div class="rc-row rc-wrap">${v.words.map(w => `<span class="rc-vw">${esc(w.t)} <b>${w.n}</b></span>`).join('')}</div>` : '';
+      if (v.pending.length) h += `<div class="rc-sub">Wörter freigeben (${v.pending.length})</div><div class="rc-row rc-wrap">${v.pending.map(p => `<span class="rc-vw">${esc(p.t)}<button data-rvok="${p.id}" title="Freigeben">✓</button><button data-rvno="${p.id}" title="Ablehnen">✕</button></span>`).join('')}</div>`;
+    }
+    h += `<div class="rc-row rc-wrap" style="margin-top:8px">${v.type !== 'words' ? `<button data-rvote="show"${on(v.show)}>👁 Ergebnis an der Tafel ${v.show ? 'verbergen' : 'zeigen'}</button>` : ''}${v.type === 'abcd' && v.correct != null ? `<button data-rvote="reveal"${on(v.revealed)}>✓ Auflösen</button>` : ''}${v.open ? '<button data-rvote="end">⏹ Beenden</button>' : ''}<button data-rvote="close">✕ Schließen</button></div>`;
+  }
+  return h + '</div>';
+}
+function rcVoteCmd(d) {
+  if (d.a === 'start') { $('voteSetup') && ($('voteSetup').hidden = true); voteStart({ type: d.type, q: d.q, n: d.n, correct: d.corr === '' || d.corr == null ? null : +d.corr }); RC.ack = { n: Date.now(), t: '📊 Abstimmung gestartet' }; }
+  if (d.a === 'show') voteShow();
+  if (d.a === 'reveal') voteReveal();
+  if (d.a === 'end') voteEnd();
+  if (d.a === 'close') voteClose();
+  if (d.a === 'ok' || d.a === 'no') voteApprove(d.id, d.a === 'ok');
+}
 
 /* ---------- Start ---------- */
 state = { classes: [], current: null, seq: 0 };
@@ -7287,7 +8462,9 @@ function openSend() {
 function renderSend() {
   const o = ui.qrOpts = { tt: $('qrTT').checked, hw: $('qrHW').checked, ex: $('qrEX').checked, ms: $('qrMS').checked };
   if (cls().pub) cls().pub.opt = { ...o };
+  if (cls().gh) cls().gh.opt = { ...o };
   if (typeof renderPubBox === 'function') renderPubBox();
+  if (typeof renderGhBox === 'function') renderGhBox();
   clearInterval(qrState.timer);
   const P = buildPayload(o), info = [];
   if (o.tt) info.push(P.tt ? 'Stundenplan' : 'kein Stundenplan angelegt');

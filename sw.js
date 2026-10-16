@@ -2,7 +2,7 @@
 // Es werden NUR die Programmdateien zwischengespeichert – nie Sitzplan-Dateien oder Schülerdaten.
 // Die Seite selbst wird immer zuerst aus dem Internet geladen (neue Version sofort da);
 // nur ohne Verbindung kommt sie aus dem Zwischenspeicher.
-const CACHE = 'klassenmanager-v4';
+const CACHE = 'klassenmanager-v7';
 const FILES = ['./', './index.html', './manifest.webmanifest',
   './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png', './icons/apple-touch-icon.png', './icons/favicon-48.png'];
 
